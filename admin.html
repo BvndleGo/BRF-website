@@ -13,7 +13,11 @@
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
   <link rel="stylesheet" href="css/site.css">
   <!-- match the landing page: charcoal #111, never pure black -->
-  <style>:root { --night: #111; } body { background: #111; } .nav__logo img { filter: none; }</style>
+  <style>:root { --night: #111; } body { background: #111; } .nav__logo img { filter: none; }
+    .admin-tiles--4 { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+    .admin-bar--split { display: flex; gap: 12px; flex-wrap: wrap; } .admin-bar--split .affix { flex: 1 1 320px; } .admin-bar--split select { flex: 0 0 auto; width: auto; }
+    .checkin.is-in { display: inline-flex; align-items: center; gap: 6px; color: #7be0a6; font-weight: 600; white-space: nowrap; }
+    @media (max-width: 700px) { .admin-tiles--4 { grid-template-columns: 1fr 1fr; } }</style>
 </head>
 <body>
 <div class="grain" aria-hidden="true"></div>
@@ -24,7 +28,8 @@
   </div>
 </header>
 <main class="admin wrap" id="admin"></main>
-<script src="js/store.js"></script>
-<script src="js/admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="js/store.js?v=4"></script>
+<script src="js/admin.js?v=2"></script>
 </body>
 </html>

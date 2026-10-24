@@ -12,53 +12,63 @@ window.BRF = {
   galleryUrl: "https://bvndleincorporated.pixieset.com/bvndlerewardsfestival/",
 };
 
-/* Prototype storage: sign-ups live in this browser's localStorage only.
-   Before launch, swap these functions for calls to a real backend.
-   count() becomes the public, read-only endpoint that drives the tree lights. */
+/* Supabase project for the free tickets (Bvndle Go). The publishable key is meant to be public:
+   the database only lets visitors claim a ticket and read the total. Everything else needs an admin login. */
+window.BRF_DB = {
+  url: "https://jyqakzduwtnymmaplnfa.supabase.co",
+  key: "sb_publishable_XAKiJE8pip0lTq-HBUbQtA_IUNNPQez",
+};
+
+/* Free ticket storage, backed by Supabase (supabase/migrations in this repo).
+   claim() -> { ok, isNew, pass } or { ok: false, error } where error is one of:
+   invalid_phone, invalid_email, missing_tag, email_taken, phone_taken, network. */
 window.PassStore = (() => {
-  const KEY = "brf_passes_v1";
+  const { url, key } = window.BRF_DB;
+  let total = 0;
 
-  function read() {
+  async function rpc(name, body) {
+    let res;
     try {
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
+      res = await fetch(`${url}/rest/v1/rpc/${name}`, {
+        method: "POST",
+        headers: { apikey: key, "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+    } catch (e) {
+      throw Object.assign(new Error("network"), { code: "network" });
     }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const code = data && data.code === "P0001" ? data.message : "network";
+      throw Object.assign(new Error(code), { code });
+    }
+    return data;
   }
 
-  function write(list) {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(list));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  function makeCode() {
-    const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-    return "BRF-" + code;
+  function source() {
+    const q = new URLSearchParams(location.search);
+    const utm = ["utm_source", "utm_medium", "utm_campaign"].map((k) => q.get(k)).filter(Boolean).join(" / ");
+    if (utm) return utm.slice(0, 120);
+    try { return document.referrer ? new URL(document.referrer).hostname : "direct"; } catch (e) { return "direct"; }
   }
 
   return {
-    all: read,
-    count: () => read().length,
-    findByPhone(phone) {
-      return read().find((p) => p.phone === phone) || null;
+    count: () => total,
+    async refreshCount() {
+      try { total = Number(await rpc("free_pass_count")) || 0; } catch (e) {}
+      return total;
     },
-    add({ name, first, last, phone, tag }) {
-      const list = read();
-      const existing = list.find((p) => p.phone === phone);
-      if (existing) return { pass: existing, isNew: false, saved: true };
-      const pass = { code: makeCode(), name, first: first || "", last: last || "", phone, tag: tag || "", createdAt: new Date().toISOString() };
-      list.push(pass);
-      return { pass, isNew: true, saved: write(list) };
-    },
-    replaceAll(list) {
-      return write(list);
+    async claim({ first, last, email, phone, tag }) {
+      try {
+        const r = await rpc("claim_free_pass", {
+          p_first_name: first, p_last_name: last, p_email: email, p_phone: phone,
+          p_has_tag: !!tag, p_tag: tag || null, p_source: source(),
+        });
+        if (!r.existing) total += 1;
+        return { ok: true, isNew: !r.existing, pass: { code: r.pass_code, name: `${first} ${last}`.trim(), first, last, email, phone, tag: tag || "" } };
+      } catch (e) {
+        return { ok: false, error: e.code || "network" };
+      }
     },
   };
 })();

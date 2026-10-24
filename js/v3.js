@@ -547,9 +547,8 @@
 
   /* ===== form + your ticket ===== */
   const coinCount = $("#coinCount"), coinLabel = $("#coinLabel");
-  const DEMO_COINS = 300; // TODO: remove when the live counter is connected to the backend
   function syncCoins(fresh) {
-    const n = window.PassStore.count() + DEMO_COINS, want = Math.min(PILE_COLS * 12, Math.ceil(n / COIN_PER));
+    const n = window.PassStore.count(), want = Math.min(PILE_COLS * 12, Math.ceil(n / COIN_PER));
     coinCount.textContent = n.toLocaleString("en-NG");
     coinLabel.textContent = n === 1 ? "ticket claimed" : "tickets claimed";
     if (coinLive) while (coinsShown < want) addPileCoin(fresh && coinsShown === want - 1);
@@ -578,8 +577,11 @@
     $("#passCard").focus({ preventScroll: true });
     $("#another").addEventListener("click", () => { area.innerHTML = formHTML; bindForm($("#passForm")); $("#first").focus(); });
   }
+  // server-side problems reuse the field's error line with a more specific message, restored on the next edit
+  function failField(id, msg) { const fl = $("#" + id), p = $(".err", fl); if (p) { if (p.dataset.def === undefined) p.dataset.def = p.textContent; p.textContent = msg; } setInvalid(id, true); $(".input", fl)?.focus(); }
+  function resetErr(fl) { const p = $(".err", fl); if (p && p.dataset.def !== undefined) p.textContent = p.dataset.def; }
   function bindForm(f) {
-    f.addEventListener("input", (e) => { const fl = e.target.closest(".field"); if (fl && fl.classList.contains("is-invalid")) setInvalid(fl.id, false); });
+    f.addEventListener("input", (e) => { const fl = e.target.closest(".field"); if (fl && fl.classList.contains("is-invalid")) { setInvalid(fl.id, false); resetErr(fl); } });
     // "Do you have a Bvndle tag?" Yes shows the tag box, No skips it
     const tagField = $("#f-tag", f);
     f.addEventListener("change", (e) => {
@@ -592,39 +594,48 @@
       e.preventDefault();
       const clean = (v) => v.trim().replace(/\s+/g, " ");
       const first = clean(f.first.value), last = clean(f.last.value), name = `${first} ${last}`.trim();
+      const email = f.email.value.trim().toLowerCase(), emailOk = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
       const phone = window.normalizeNgPhone(f.phone.value), has = (f.querySelector('[name="hasTag"]:checked') || {}).value;
       const tag = has === "yes" ? f.tag.value.trim().replace(/^@/, "") : "";
-      setInvalid("f-first", first.length < 1); setInvalid("f-last", last.length < 1); setInvalid("f-phone", !phone);
+      setInvalid("f-first", first.length < 1); setInvalid("f-last", last.length < 1); setInvalid("f-email", !emailOk); setInvalid("f-phone", !phone);
       $("#f-has", f).classList.toggle("is-invalid", !has); setInvalid("f-tag", has === "yes" && !tag);
       if (!first) return f.first.focus();
       if (!last) return f.last.focus();
+      if (!emailOk) return f.email.focus();
       if (!phone) return f.phone.focus();
       if (!has) return f.querySelector('[name="hasTag"]').focus();
       if (has === "yes" && !tag) return f.tag.focus();
-      const btn = $("#passSubmit", f); btn.disabled = true; btn.textContent = "Claiming your ticket...";
-      setTimeout(() => {
-        const { pass, isNew, saved } = window.PassStore.add({ name, first, last, phone, tag });
-        if (saved) {
-          try {
-            localStorage.setItem("brf-claimed", "1");
-            // "my ticket": the first ticket claimed on this device (a ticket for someone else does not replace it)
-            if (!localStorage.getItem("brf-my-pass")) localStorage.setItem("brf-my-pass", JSON.stringify(pass));
-          } catch (e) {}
-          storyCta();
+      const btn = $("#passSubmit", f), label = btn.innerHTML; btn.disabled = true; btn.textContent = "Claiming your ticket...";
+      window.PassStore.claim({ first, last, email, phone, tag }).then(({ ok, pass, isNew, error }) => {
+        if (!ok) {
+          btn.disabled = false; btn.innerHTML = label;
+          if (error === "email_taken") return failField("f-email", "This email already has a ticket, under a different phone number.");
+          if (error === "phone_taken") return failField("f-phone", "This number already has a ticket, under a different email.");
+          if (error === "invalid_email") return failField("f-email", "That email doesn't look right. Check it and try again.");
+          if (error === "invalid_phone") return failField("f-phone", "Enter a valid Nigerian number, like 0803 123 4567.");
+          if (error === "missing_tag") return failField("f-tag", 'Type your tag, or choose "No, skip".');
+          btn.textContent = "Try again";
+          return alert("We couldn't reach our ticket desk. Check your connection and try again.");
         }
-        if (!saved) { btn.disabled = false; btn.textContent = "Try again"; alert("We couldn't save your ticket on this device. Please check your browser settings and try again."); return; }
+        try {
+          localStorage.setItem("brf-claimed", "1");
+          // "my ticket": the first ticket claimed on this device (a ticket for someone else does not replace it)
+          if (!localStorage.getItem("brf-my-pass")) localStorage.setItem("brf-my-pass", JSON.stringify(pass));
+        } catch (e) {}
+        storyCta();
         // mint: initials on the back face, flip to show it, then the pile grows
         $("#coinMine").textContent = name.split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase();
         if (isNew) spin.ty = Math.ceil((spin.y + 360) / 360) * 360 + 180;
         syncCoins(isNew); showPass(pass, isNew); lightGuide(true);
-      }, 650);
+      });
     });
   }
   bindForm($("#passForm"));
   syncCoins(false);
+  window.PassStore.refreshCount().then(() => syncCoins(false));
   // returning ticket holders see their ticket in the section, not an empty form
   { let mine = null; try { mine = JSON.parse(lsGet("brf-my-pass") || "null"); } catch (e) {}
-    if (mine && mine.phone && window.PassStore.findByPhone(mine.phone)) showPass(mine, false); }
+    if (mine && mine.code) showPass(mine, false); }
 
   /* ===== the ticket button follows the story (nav + phone bar): "See the experience" until the zones are behind you,
      then "Get free ticket", then "My ticket" once you have one. First-timers are pulled into the story instead of

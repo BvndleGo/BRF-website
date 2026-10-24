@@ -34,7 +34,7 @@ When you edit a CSS or JS file, bump its ?v= number in index.html (e.g. festival
 
 ## Before launch
 
-1. Sign-ups currently save to the visitor's own browser (localStorage), so admin.html only shows sign-ups made on that same browser. PassStore in js/store.js needs to be pointed at a real backend or form service before tickets open.
+1. Free tickets are stored in Supabase (project "Bvndle Go"). The schema lives in supabase/migrations. Visitors can only claim a ticket and read the total; the list is visible only to admins in admin.html.
 2. tixUrl in js/store.js is the TIX homepage. Swap in the actual concert event link.
 3. Confirm the dates: datesLabel ("11th – 12th December 2026") and eventStart, which drives the countdown.
 
@@ -65,3 +65,10 @@ To move a stand, change its x_pct / y_pct (position as a percentage of the drawi
 Works on any static host. On Netlify, deploy the folder as is (_headers is picked up automatically), then add rewardfest.bvndle.com as a custom domain.
 
 Fonts come from Google Fonts (Anton, Doto, Inter Tight) and icons from Phosphor Icons via unpkg. No keys needed.
+
+## Free tickets and admin
+
+- Form → `claim_free_pass` in Supabase. Each person gets a code like `BRF-1A2B3C4D`. Duplicate emails or phone numbers are blocked; claiming again with the same email and phone returns the same ticket.
+- `admin.html` → Supabase sign-in. Only users listed in `public.admins` can see sign-ups, check people in at the gate and export CSV.
+- Adding an admin: add their email to `public.admin_emails`, then create their login in Supabase → Authentication → Users → Add user. Approved emails become admins automatically.
+- Customer.io sync + confirmation email: `supabase/functions/sync-customerio` (not deployed yet).
