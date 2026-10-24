@@ -6,8 +6,8 @@ window.BRF = {
   datesLabel: "11th – 12th December 2026",   // client wording, 23 Oct
   shortDates: "11th – 12th Dec",
   venue: "Landmark Event Centre, Lagos",
-  // TODO: replace with the real TIX event link once tickets are live.
-  tixUrl: "https://tix.africa/",
+
+  tixUrl: "https://tix.africa/discover/bvndlerewardfestival2026",
   partnerUrl: "https://forms.gle/rPUGVDK9qsWDw4ij7?utm_source=web&utm_medium=landing+page&utm_campaign=BRF+2026",
   galleryUrl: "https://bvndleincorporated.pixieset.com/bvndlerewardsfestival/",
 };
