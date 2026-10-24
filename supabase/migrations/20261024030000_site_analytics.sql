@@ -1,0 +1,7 @@
+-- Anonymous site analytics (applied to the live project on 24 Oct 2026 as "site_analytics").
+-- Tables: analytics_sessions (one row per visit), analytics_events (what happened in it). No names, emails, phones or IPs.
+-- Ingest: public.track(session, visitor, meta, events) — public, capped at 60 events per call and 3,000 per visit,
+--         event names must match ^[a-z_]+$, and a visit can only be written by the browser that started it.
+-- Read:   public.admin_analytics(from, to) — admins only; feeds the Analytics tab in admin.html.
+-- Retention: a nightly job deletes visits older than 365 days.
+-- Tracker: js/analytics.js (respects Do Not Track). Key actions are sent from js/v3.js via window.brfTrack().

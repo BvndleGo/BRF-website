@@ -609,6 +609,7 @@
       window.PassStore.claim({ first, last, email, phone, tag }).then(({ ok, pass, isNew, error }) => {
         if (!ok) {
           btn.disabled = false; btn.innerHTML = label;
+          (window.brfTrack || (() => {}))("ticket_error", error);
           if (error === "email_taken") return failField("f-email", "This email already has a ticket, under a different phone number.");
           if (error === "phone_taken") return failField("f-phone", "This number already has a ticket, under a different email.");
           if (error === "invalid_email") return failField("f-email", "That email doesn't look right. Check it and try again.");
@@ -624,6 +625,7 @@
         } catch (e) {}
         storyCta();
         dispatchEvent(new Event("brf:claimed"));
+        (window.brfTrack || (() => {}))(isNew ? "ticket_claimed" : "ticket_reopened");
         // mint: initials on the back face, flip to show it, then the pile grows
         $("#coinMine").textContent = name.split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase();
         if (isNew) spin.ty = Math.ceil((spin.y + 360) / 360) * 360 + 180;
@@ -907,7 +909,7 @@
     });
     $("#guessForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      const v = $("#guessInput").value.trim(); if (!v) return $("#guessInput").focus();
+      const v = $("#guessInput").value.trim(); if (!v) return $("#guessInput").focus(); (window.brfTrack || (() => {}))("headliner_guess", "Headliner " + (gi + 1));
       const tag = $("#guessTag").value.trim().replace(/^@/, "");
       $("#f-gtag").classList.toggle("is-invalid", !tag); $("#guessTag").setAttribute("aria-invalid", tag ? "false" : "true");
       if (!tag) return $("#guessTag").focus();
@@ -1260,12 +1262,13 @@
     async function qIdle() {
       stop();
       const tok = token();
-      if (!tok) {
+      if (!tok) {                                                       // no ticket yet: same choices for everyone
         quiz.innerHTML = `<div class="quiz__card quiz__card--start">
           <p class="quiz__big" aria-hidden="true">?</p>
-          <h3>Play for entries and coins</h3><p>Every right answer is an entry into the draw. Every 10 right answers earns 5 BvndleCoins.</p>
-          <p class="quiz__best">Claim your free ticket to play the real questions.</p>
-          <div class="quiz__ctas"><a class="btn" href="#ticket">Claim free ticket <i class="ph-bold ph-ticket" aria-hidden="true"></i></a><button class="btn btn--ghost" type="button" id="quizPractice">Practice first <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
+          <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every right answer is a draw entry, every 10 earn 5 BvndleCoins</p>
+          <div class="quiz__ctas"><button class="btn" type="button" id="quizGo">Play for entries <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizPractice">Practice first <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>
+          <p class="quiz__note">Practice is open to everyone and doesn't count.</p>${sampleNote}</div>`;
+        $("#quizGo").addEventListener("click", needTicket);
         $("#quizPractice").addEventListener("click", practiceStart);
         return;
       }
@@ -1288,9 +1291,24 @@
       $("#quizPractice").addEventListener("click", practiceStart);
     }
     function forget() { try { localStorage.removeItem("brf-my-pass"); } catch (e) {} qIdle(); }
+    // "Play for entries" without a ticket: ask for one, then bring them straight back to the game
+    let wantsToPlay = false;
+    function needTicket() {
+      wantsToPlay = true; (window.brfTrack || (() => {}))("quiz_needs_ticket");
+      quiz.innerHTML = `<div class="quiz__card quiz__card--start">
+        <p class="quiz__big" aria-hidden="true"><i class="ph-bold ph-ticket"></i></p>
+        <h3>Your entries need a free ticket</h3><p>It's free and takes a minute. Your entries, coins and draw prizes are tied to it.</p>
+        <div class="quiz__ctas"><a class="btn" href="#ticket" id="quizClaim">Get my free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><button class="btn btn--ghost" type="button" id="quizPractice">Practice instead <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div></div>`;
+      $("#quizPractice").addEventListener("click", practiceStart);
+    }
+    addEventListener("brf:claimed", () => {
+      if (!wantsToPlay) return;
+      wantsToPlay = false;
+      setTimeout(() => $("#trivia").scrollIntoView({ behavior: "smooth", block: "start" }), 1600);
+    });
 
     /* ---- the real round ---- */
-    function liveStart() { roundRight = 0; roundCoins = 0; roundN = 0; last = null; liveNext(); }
+    function liveStart() { (window.brfTrack || (() => {}))("quiz_play"); roundRight = 0; roundCoins = 0; roundN = 0; last = null; liveNext(); }
     async function liveNext() {
       if (roundN >= ROUND) return liveDone();
       quiz.innerHTML = `<div class="quiz__card"><div class="quiz__top"><span>Question ${roundN + 1} / ${ROUND}</span><span>Right ${roundRight}</span></div><h3 class="quiz__q">Loading...</h3></div>`;
@@ -1324,7 +1342,7 @@
       setTimeout(liveNext, a.correct ? (a.coins_awarded ? 1800 : 1100) : 1700);
     }
     function liveDone(outOfQuestions) {
-      stop();
+      stop(); (window.brfTrack || (() => {}))("quiz_round_done", null, roundRight);
       const st = last || { correct: 0, coins_earned: 0, next_award_in: 10 };
       const line = outOfQuestions ? "You've answered every question." : roundRight === ROUND ? "Perfect round." : roundRight === 0 ? "No right answers this round. Have another go." : `${roundRight} right this round.`;
       quiz.innerHTML = `<div class="quiz__card quiz__card--end">
@@ -1338,7 +1356,7 @@
 
     /* ---- practice (sample questions, nothing saved) ---- */
     let pqs = [], pi = 0, pscore = 0;
-    function practiceStart() { pqs = TV.questions.slice().sort(() => Math.random() - 0.5).slice(0, PRACTICE_ROUND); pi = 0; pscore = 0; practiceShow(); }
+    function practiceStart() { (window.brfTrack || (() => {}))("quiz_practice"); pqs = TV.questions.slice().sort(() => Math.random() - 0.5).slice(0, PRACTICE_ROUND); pi = 0; pscore = 0; practiceShow(); }
     function practiceShow() {
       const q = pqs[pi]; answered = false;
       quiz.innerHTML = `<div class="quiz__card">
@@ -1364,9 +1382,9 @@
       const has = !!token();
       quiz.innerHTML = `<div class="quiz__card quiz__card--end">
         <p class="quiz__big">${pscore}<small> / ${PRACTICE_ROUND}</small></p><h3>${pscore >= 4 ? "You're ready." : pscore >= 2 ? "Warming up nicely." : "Good warm-up."}</h3>
-        <p class="quiz__best">That was practice, so no entries or coins. ${has ? "Play the real questions when you're ready." : "Claim your free ticket to play the real questions."}</p>
-        <div class="quiz__ctas">${has ? `<button class="btn" type="button" id="quizReal">Play for real <i class="ph-bold ph-play" aria-hidden="true"></i></button>` : `<a class="btn" href="#ticket">Claim free ticket <i class="ph-bold ph-ticket" aria-hidden="true"></i></a>`}<button class="btn btn--ghost" type="button" id="quizAgain">Practice again <i class="ph-bold ph-arrow-counter-clockwise" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
-      if (has) $("#quizReal").addEventListener("click", liveStart);
+        <p class="quiz__best">That was practice, so no entries or coins. Play for entries when you're ready.</p>
+        <div class="quiz__ctas"><button class="btn" type="button" id="quizReal">Play for entries <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizAgain">Practice again <i class="ph-bold ph-arrow-counter-clockwise" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
+      $("#quizReal").addEventListener("click", has ? liveStart : needTicket);
       $("#quizAgain").addEventListener("click", practiceStart);
     }
 

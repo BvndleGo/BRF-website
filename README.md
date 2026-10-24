@@ -81,3 +81,9 @@ Fonts come from Google Fonts (Anton, Doto, Inter Tight) and icons from Phosphor 
 - Every right answer is a draw entry. Every 10 right answers earns 5 BvndleCoins, recorded as pending.
 - admin.html → Coins tab: approve or reject awards, then "Export approved" for a per-person list (email, phone, Bvndle tag, coins, naira value) to credit in the Bvndle app.
 - The question bank is in Supabase only (the repo is public). To update questions, ask for a re-import from the Google Sheet.
+
+## Analytics
+
+- js/analytics.js records anonymous visits into Supabase: sections reached, clicks, scroll depth, active time, key actions and where people were when they left. Visitors who have Do Not Track switched on are skipped.
+- admin.html → Analytics tab: visits, unique visitors, ticket conversion, time on site, how far people get, where they leave, most clicked, sources (UTM or referrer), devices, busiest hours and the latest 50 visits.
+- Add `?utm_source=...&utm_campaign=...` to links you share so the Sources chart shows which posts bring people in.

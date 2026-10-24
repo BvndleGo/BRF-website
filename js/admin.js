@@ -9,9 +9,10 @@
   const COLS = "id,created_at,pass_code,first_name,last_name,email,phone,has_bvndle_tag,bvndle_tag,source,checked_in_at,checked_in_by";
   const tabs = (on) => `<nav class="admin-tabs" aria-label="Admin sections">
       <button type="button" data-tab="tickets" class="${on === "tickets" ? "is-on" : ""}">Tickets</button>
-      <button type="button" data-tab="coins" class="${on === "coins" ? "is-on" : ""}">Coins</button></nav>`;
+      <button type="button" data-tab="coins" class="${on === "coins" ? "is-on" : ""}">Coins</button>
+      <button type="button" data-tab="analytics" class="${on === "analytics" ? "is-on" : ""}">Analytics</button></nav>`;
   function bindTabs() {
-    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : renderDashboard())));
+    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
   }
 
   function renderLogin(msg) {
@@ -301,6 +302,81 @@
     a.download = `bvndle-approved-coins-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /* ===================== Analytics: visits, what people do, where they leave ===================== */
+  const SECTIONS = [["hero", "Top of page"], ["journey", "Experience"], ["trivia", "1 Million Questions"], ["talks", "Main stage talks"], ["partners", "Partners"], ["numbers", "Last year in numbers"], ["concert", "Concert"], ["lineup", "Headliners"], ["vip", "Concert tickets"], ["voices", "Testimonials"], ["day", "Your day"], ["access", "Two tickets"], ["ticket", "Free ticket form"], ["why", "Why loyalty matters"], ["brands", "Become a partner"], ["faq", "FAQs"]];
+  const SEC = Object.fromEntries(SECTIONS); SEC.top = "Top of page"; SEC.nav = "Menu"; SEC.footer = "Footer"; SEC["phone-bar"] = "Phone ticket bar";
+  const ACTIONS = { ticket_claimed: "Claimed a free ticket", ticket_reopened: "Re-opened their ticket", ticket_error: "Ticket form error", quiz_play: "Started a trivia round (for entries)", quiz_practice: "Started a practice round", quiz_round_done: "Finished a trivia round", quiz_needs_ticket: "Tried to play without a ticket", headliner_guess: "Guessed a headliner" };
+  const dur = (sec) => { sec = Math.round(sec || 0); if (sec < 60) return sec + "s"; const m = Math.floor(sec / 60), r = sec % 60; return m < 60 ? `${m}m ${String(r).padStart(2, "0")}s` : `${Math.floor(m / 60)}h ${m % 60}m`; };
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+  const bars = (rows, max) => rows.map(([lab, n, sub]) => `<div class="abar"><span class="abar__lab">${esc(lab)}</span><span class="abar__track"><i style="width:${max ? Math.max(2, (n / max) * 100) : 0}%"></i></span><span class="abar__n">${esc(sub ?? n.toLocaleString("en-NG"))}</span></div>`).join("");
+
+  function renderAnalytics() {
+    root.innerHTML = `${tabs("analytics")}
+      <div class="admin-head">
+        <div><h1 class="display">Site analytics</h1><p>Anonymous visits to the festival site: where people come from, how far they get, what they do and where they leave. Times are Lagos time.</p></div>
+        <div class="admin-actions">
+          <select class="input" id="anRange" aria-label="Date range" style="width:auto"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="30">Last 30 days</option><option value="3650">All time</option></select>
+          <button class="btn btn--ghost" id="anRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
+          <button class="btn btn--ghost" id="signOut" type="button">Sign out</button>
+        </div>
+      </div>
+      <div id="anBody"><div class="empty"><p>Loading analytics...</p></div></div>`;
+    bindTabs();
+    document.getElementById("signOut").addEventListener("click", signOut);
+    document.getElementById("anRefresh").addEventListener("click", loadAnalytics);
+    document.getElementById("anRange").addEventListener("change", loadAnalytics);
+    loadAnalytics();
+  }
+
+  async function loadAnalytics() {
+    const days = +document.getElementById("anRange").value;
+    const from = new Date(); if (days === 1) from.setHours(0, 0, 0, 0); else from.setDate(from.getDate() - days);
+    const { data: a, error } = await sb.rpc("admin_analytics", { p_from: from.toISOString(), p_to: new Date(Date.now() + 60000).toISOString() });
+    const body = document.getElementById("anBody");
+    if (error) { body.innerHTML = `<div class="empty"><p>Couldn't load analytics: ${esc(error.message)}</p></div>`; return; }
+    if (!a.visits) { body.innerHTML = `<div class="empty"><i class="ph-duotone ph-chart-line" aria-hidden="true"></i><h2 class="display">No visits yet</h2><p>Visits show up here a few seconds after people open the site.</p></div>`; return; }
+    const reach = Object.fromEntries(a.sections.map((x) => [x.section, x.n]));
+    const exits = a.exits.reduce((m, x) => m + x.n, 0);
+    const dayMax = Math.max(...a.by_day.map((d) => d.visits));
+    const hours = Array.from({ length: 24 }, (_, h) => (a.by_hour.find((x) => x.hour === h) || { visits: 0 }).visits);
+    const hourMax = Math.max(...hours);
+    body.innerHTML = `
+      <div class="admin-tiles admin-tiles--4">
+        <div class="atile atile--glare"><span>Visits</span><b>${a.visits.toLocaleString("en-NG")}</b></div>
+        <div class="atile"><span>Unique visitors</span><b>${a.visitors.toLocaleString("en-NG")}</b></div>
+        <div class="atile"><span>Visits that claimed a ticket</span><b>${pct(a.claimed, a.visits)}%</b></div>
+        <div class="atile"><span>Average active time</span><b>${dur(a.avg_active_s)}</b></div>
+      </div>
+      <div class="admin-tiles admin-tiles--4 an-small">
+        <div class="atile"><span>Typical visit length</span><b>${dur(a.median_span_s)}</b></div>
+        <div class="atile"><span>Average scroll depth</span><b>${a.avg_scroll}%</b></div>
+        <div class="atile"><span>Left within 10 seconds</span><b>${pct(a.bounced, a.visits)}%</b></div>
+        <div class="atile"><span>Came back more than once</span><b>${a.returning.toLocaleString("en-NG")}</b></div>
+      </div>
+      <div class="an-grid">
+        <section class="an-card an-card--wide"><h2>Visits per day</h2>
+          <div class="an-cols">${a.by_day.map((d) => `<div class="an-col" title="${esc(d.day)}: ${d.visits} visits, ${d.claims} tickets"><span class="an-col__n">${d.visits}</span><i style="height:${Math.max(3, (d.visits / dayMax) * 100)}%"></i><span class="an-col__lab">${esc(d.day.slice(5))}</span></div>`).join("")}</div></section>
+        <section class="an-card"><h2>How far people get</h2><p class="muted">Share of visits that reached each part of the page</p>
+          ${bars(SECTIONS.map(([id, lab]) => [lab, reach[id] || 0, pct(reach[id] || 0, a.visits) + "%"]), a.visits)}</section>
+        <section class="an-card"><h2>Where people left</h2><p class="muted">The part of the page on screen when they closed or left</p>
+          ${bars(a.exits.slice(0, 12).map((x) => [SEC[x.section] || x.section, x.n, pct(x.n, exits) + "%"]), Math.max(...a.exits.map((x) => x.n)))}</section>
+        <section class="an-card"><h2>What people did</h2>
+          ${a.actions.length ? bars(a.actions.map((x) => [ACTIONS[x.name] || x.name, x.people, `${x.people} ${x.people === 1 ? "visit" : "visits"}`]), Math.max(...a.actions.map((x) => x.people))) : '<p class="muted">No actions yet.</p>'}</section>
+        <section class="an-card"><h2>Most clicked</h2>
+          ${a.clicks.length ? bars(a.clicks.map((x) => [x.target, x.n]), a.clicks[0].n) : '<p class="muted">No clicks yet.</p>'}</section>
+        <section class="an-card"><h2>Where visits come from</h2>
+          ${bars(a.sources.map((x) => [x.source, x.n, `${x.n} · ${x.claims} tickets`]), a.sources[0]?.n || 0)}</section>
+        <section class="an-card"><h2>Devices</h2>
+          ${bars(a.devices.map((x) => [x.device, x.n, pct(x.n, a.visits) + "%"]), a.devices[0]?.n || 0)}</section>
+        <section class="an-card an-card--wide"><h2>Busiest hours</h2>
+          <div class="an-cols an-cols--hours">${hours.map((n, h) => `<div class="an-col" title="${h}:00 – ${n} visits"><span class="an-col__n">${n || ""}</span><i style="height:${hourMax ? Math.max(n ? 3 : 0, (n / hourMax) * 100) : 0}%"></i><span class="an-col__lab">${h}</span></div>`).join("")}</div></section>
+      </div>
+      <h2 class="an-h">Latest visits</h2>
+      <div class="table-wrap"><table><thead><tr><th>Arrived</th><th>Left</th><th>From</th><th>Device</th><th>Active</th><th>Scrolled</th><th>Did</th><th>Left at</th><th>Ticket</th></tr></thead><tbody>${
+        a.recent.map((r) => `<tr><td>${fmt.format(new Date(r.started_at))}</td><td class="muted">${fmt.format(new Date(r.left_at))}</td><td>${esc(r.source)}</td><td>${esc(r.device || "")}</td><td>${dur(r.active_seconds)}</td><td>${r.max_scroll}%</td>
+          <td class="an-did">${esc((r.did || "").split(", ").map((x) => ACTIONS[x] || x).join(", ")) || '<span class="muted">Just looked</span>'}</td><td>${esc(SEC[r.exit_section] || r.exit_section || "")}</td><td>${r.claimed ? '<span class="cstatus cstatus--approved">Claimed</span>' : ""}</td></tr>`).join("")}</tbody></table></div>`;
   }
 
   boot();

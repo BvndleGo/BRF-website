@@ -23,6 +23,26 @@
     .cstatus--pending { background: rgba(255,210,63,.18); color: #FFD23F; }
     .cstatus--approved { background: rgba(123,224,166,.16); color: #7be0a6; }
     .cstatus--rejected { background: rgba(255,122,110,.16); color: #ff7a6e; }
+    .an-small .atile b { font-size: 34px; }
+    .an-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 8px 0 32px; }
+    .an-card { padding: 22px 24px; border-radius: var(--r-card, 20px); background: var(--night-2, #1a1a1a); border: 1px solid rgba(243,240,235,.14); min-width: 0; }
+    .an-card--wide { grid-column: 1 / -1; }
+    .an-card h2, .an-h { font: 700 18px/1.2 var(--font-body, inherit); margin: 0 0 6px; }
+    .an-h { margin: 8px 0 14px; }
+    .an-card p.muted { font-size: 13px; margin: 0 0 14px; }
+    .abar { display: grid; grid-template-columns: minmax(110px, 38%) 1fr auto; gap: 12px; align-items: center; padding: 6px 0; font-size: 14px; }
+    .abar__lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .abar__track { height: 10px; border-radius: 99px; background: rgba(243,240,235,.08); overflow: hidden; }
+    .abar__track i { display: block; height: 100%; border-radius: 99px; background: #FF3E8E; }
+    .abar__n { font-variant-numeric: tabular-nums; color: var(--cloud-dim, #aaa); white-space: nowrap; }
+    .an-cols { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-top: 20px; overflow-x: auto; }
+    .an-col { flex: 1 0 28px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
+    .an-col i { width: 100%; max-width: 44px; border-radius: 6px 6px 0 0; background: #8B80F9; }
+    .an-col__n { font-size: 12px; color: var(--cloud-dim, #aaa); }
+    .an-col__lab { font-size: 11px; color: var(--cloud-dim, #aaa); white-space: nowrap; }
+    .an-cols--hours .an-col { flex-basis: 18px; }
+    .an-did { white-space: normal !important; min-width: 220px; max-width: 360px; }
+    @media (max-width: 900px) { .an-grid { grid-template-columns: 1fr; } }
     .checkin.is-in { display: inline-flex; align-items: center; gap: 6px; color: #7be0a6; font-weight: 600; white-space: nowrap; }
     @media (max-width: 700px) { .admin-tiles--4 { grid-template-columns: 1fr 1fr; } }</style>
 </head>
@@ -37,6 +57,6 @@
 <main class="admin wrap" id="admin"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/store.js?v=6"></script>
-<script src="js/admin.js?v=3"></script>
+<script src="js/admin.js?v=4"></script>
 </body>
 </html>
