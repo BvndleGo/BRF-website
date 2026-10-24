@@ -1,0 +1,236 @@
+/* Theme switch (19 Oct 2026). Loads last.
+   Dark is the default; html[data-theme="light"] flips surfaces, text and lines.
+   Brand colours (pink, purple, gift-card gradients, concert blue) stay the same in both themes.
+   Mirrors the Figma "Bvndle tokens" collection (Dark / Light modes). */
+
+/* ---------- chart colours (read by js/v3.js through var()) ---------- */
+:root { --c-txt: #F3F0EB; --c-mut: #A69DF5; --c-grid: #3A3350; --c-data: #8B80F9; --c-hero: #FF3E8E; }
+
+/* ---------- theme switch button + paired logos ---------- */
+.nav__end { display: flex; align-items: center; gap: 12px; }
+.theme-toggle { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; border: 1.5px solid rgba(243,240,235,.35); background: transparent; color: var(--cloud); font-size: 20px; cursor: pointer; transition: transform .16s var(--ease), border-color .2s; }
+.theme-toggle:hover { transform: rotate(-12deg); border-color: var(--pink); }
+.theme-toggle .ph-moon { display: none; }
+.logo--light { display: none; }
+
+/* ======================= LIGHT ======================= */
+html[data-theme="light"] {
+  color-scheme: light;
+  --cloud: #111111;          /* primary text (was cream) */
+  --cloud-dim: #5E5852;      /* muted text */
+  --ink-2: #F4F1EC;          /* raised surfaces: inputs, tabs, FAQ */
+  --c-txt: #111111; --c-mut: #5B4BD6; --c-grid: #D9D3E8;
+}
+html[data-theme="light"] .theme-toggle { border-color: rgba(17,17,17,.24); }
+html[data-theme="light"] .theme-toggle .ph-sun { display: none; }
+html[data-theme="light"] .theme-toggle .ph-moon { display: block; }
+html[data-theme="light"] .logo--dark { display: none; }
+html[data-theme="light"] .logo--light { display: block; }
+html[data-theme="light"] .nav__logo .logo--light { display: inline-block; }
+
+/* page and section backgrounds */
+html[data-theme="light"] body,
+html[data-theme="light"] .poster--sun,
+html[data-theme="light"] .brands,
+html[data-theme="light"] .poster--tree,
+html[data-theme="light"] .cdm { background: #fff; }
+html[data-theme="light"] .nav { background: rgba(255,255,255,.86); border-bottom-color: rgba(17,17,17,.12); }
+html[data-theme="light"] .nav__links a:hover { background: #111; color: #fff; }
+
+/* raised panels */
+html[data-theme="light"] .form,
+html[data-theme="light"] .mini,
+html[data-theme="light"] .upsell,
+html[data-theme="light"] .chart,
+html[data-theme="light"] .cd { background: #F4F1EC; }
+html[data-theme="light"] .mini { color: #111; }
+html[data-theme="light"] .round { background: #fff; }
+html[data-theme="light"] .linkish { color: #111; }
+
+/* lines and borders */
+html[data-theme="light"] .input { border-color: rgba(17,17,17,.24); }
+html[data-theme="light"] .tabs,
+html[data-theme="light"] .faq details { border-color: rgba(17,17,17,.12); }
+html[data-theme="light"] .faq details[open] { border-color: var(--pink); }
+html[data-theme="light"] .poster--tree .form { border-color: rgba(17,17,17,.12); }
+html[data-theme="light"] .partners { border-block-color: rgba(17,17,17,.12); }
+html[data-theme="light"] .footer,
+html[data-theme="light"] .footer__bottom { border-top-color: rgba(17,17,17,.12); }
+html[data-theme="light"] .socials a { border-color: rgba(17,17,17,.24); }
+html[data-theme="light"] .chart { border-color: rgba(17,17,17,.12); }
+
+/* text that was hard-coded for dark */
+html[data-theme="light"] .chart__sub,
+html[data-theme="light"] .chart__reach span { color: #5B4BD6; }
+html[data-theme="light"] .chart__src { color: #5E5852; }
+
+/* glass chip in the hero */
+html[data-theme="light"] .chipglass { background: rgba(17,17,17,.05); border-color: rgba(17,17,17,.14); }
+html[data-theme="light"] .chipglass .sep { background: rgba(17,17,17,.35); }
+
+/* logo wall: cream tiles on a white page, white tile on hover */
+html[data-theme="light"] .logowall { background: #fff; }
+html[data-theme="light"] .logowall li { background: #EFEBE4; }
+html[data-theme="light"] .logowall li:hover { background: #fff; box-shadow: inset 0 0 0 1px rgba(17,17,17,.12); }
+html[data-theme="light"] .logowall li.logowall__more { background: var(--pink); }
+html[data-theme="light"] .ltab__bar { background: rgba(17,17,17,.16); }
+html[data-theme="light"] .ltab__bar i { background: #111; }
+
+/* stats unit row */
+html[data-theme="light"] .ubar__cells i { background: rgba(17,17,17,.08); }
+html[data-theme="light"] .ubar__cells i.is-on { background: var(--c); }
+
+/* testimonials: paper cards a step darker than the page */
+html[data-theme="light"] .qcard { background: #EFEBE4; }
+html[data-theme="light"] .qcard--pink { background: var(--pink); }
+html[data-theme="light"] .qcard--lav { background: var(--lavender); }
+
+/* neo-brutalist offset shadows turn black on white */
+html[data-theme="light"] .zcard { box-shadow: 10px 10px 0 #111; }
+html[data-theme="light"] .zcard:hover { box-shadow: 14px 14px 0 #111; }
+html[data-theme="light"] .zcard:active { box-shadow: 4px 4px 0 #111; }
+
+/* gratitude tree: drawn for white in js (solid dots, no glow); heading and counter take the page text colour */
+html[data-theme="light"] .poster--tree { color: var(--cloud); }
+html[data-theme="light"] .tree__count b { color: var(--pink); }
+
+/* DECEMBER sign-off: the cover fill hides the inner half of the outline, so it must match the page */
+html[data-theme="light"] .so__fill,
+html[data-theme="light"] .so__stroke,
+html[data-theme="light"] .so__mask { fill: #fff; }
+html[data-theme="light"] .so__fill { stroke-opacity: .16; }
+/* "See you in" in brand pink on white */
+html[data-theme="light"] .signoff__see { color: var(--pink) !important; }
+
+/* ===== Footer socials: icon centred in each circle, a gap between circles ===== */
+.footer .socials { display: flex; gap: 10px; }
+.footer .socials li { display: block; }
+.footer .socials a { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; line-height: 1; }
+.footer .socials a i { display: block; }
+
+/* ===== Concert: copy row over a drag-to-explore globe of 2025 photos =====
+   Photos sit on the inside of a sphere; the camera is at its centre. js/v3.js sets the world rotation,
+   fades photos towards the edge of view and draws the latitude/longitude grid on the canvas. */
+.poster--globe { padding-bottom: 0; }
+.concert--globe { grid-template-columns: 1.35fr 1fr; align-items: end; gap: 24px clamp(28px, 5vw, 72px); }
+.concert--globe .concert__title { margin-bottom: 0; }
+.concert--globe .concert__sub { margin-bottom: 22px; }
+.globe { position: relative; margin-top: clamp(28px, 4vw, 48px); height: clamp(520px, 80vh, 780px); overflow: hidden; perspective: var(--gp, 1000px); cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; border-top: 1px solid rgba(255,255,255,.22); }
+.globe.is-drag { cursor: grabbing; }
+.globe__grid { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.globe__world { position: absolute; inset: 0; z-index: 1; transform-style: preserve-3d; }
+.gtile { position: absolute; left: 50%; top: 50%; width: var(--gw, 220px); margin: calc(var(--gw, 220px) * -.375) 0 0 calc(var(--gw, 220px) * -.5); padding: 0; border: 0; background: none; color: #fff; text-align: left; cursor: pointer; backface-visibility: hidden; transition: filter .2s; }
+.gtile img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: rgba(255,255,255,.12); pointer-events: none; }
+.gtile__cap { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font: 600 10px/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; opacity: .72; }
+.gtile:hover .gtile__cap, .gtile:focus-visible .gtile__cap { opacity: 1; }
+.gtile:hover img, .gtile:focus-visible img { outline: 3px solid #fff; outline-offset: -3px; }
+.gtile:focus-visible { outline: none; }
+.globe__coord { position: absolute; z-index: 2; top: 50%; transform: translateY(-50%); margin: 0; font: 600 13px/1.25 var(--font-mono, ui-monospace, monospace); letter-spacing: .04em; color: #fff; background: #1f3dff; padding: 4px 6px; pointer-events: none; }
+.globe__coord b { display: block; }
+.globe__coord--l { left: clamp(16px, 2vw, 28px); }
+.globe__coord--r { right: clamp(16px, 2vw, 28px); text-align: right; }
+.globe__hint { position: absolute; z-index: 2; left: 50%; bottom: 18px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 8px 14px; border-radius: 999px; background: #fff; color: #111; font-size: 13px; font-weight: 600; white-space: nowrap; pointer-events: none; transition: opacity .4s; }
+.globe.is-used .globe__hint { opacity: 0; }
+@media (max-width: 760px) {
+  .concert--globe { grid-template-columns: 1fr; }
+  .globe { height: 460px; }
+  .globe__coord { top: 12px; transform: none; font-size: 11px; }
+}
+
+/* ===== Hero event line: date and venue as one quiet line of text, no container ===== */
+.eventline { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: var(--fs-small); line-height: 1.3; color: var(--cloud-dim); }
+.eventline i { color: var(--pink); font-size: 16px; }
+.eventline b { color: var(--cloud); font-weight: 700; }
+.eventline__dot { width: 5px; height: 5px; border-radius: 50%; background: var(--pink); }
+/* phones: two deliberate lines, venue aligned under the date text, no dangling dot */
+@media (max-width: 760px) {
+  .eventline { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; row-gap: 2px; }
+  .eventline__dot { display: none; }
+  .eventline [data-brf="venue"] { grid-column: 2; }
+}
+.gtile__cap > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) { .gtile__cap { font-size: 9px; } }
+/* ===== Nav: hides while scrolling down, returns on scroll up (js/v3.js) ===== */
+.nav { transition: transform .32s var(--ease), background-color .2s; }
+.nav.is-hidden { transform: translateY(-100%); }
+.nav:focus-within { transform: none; }
+@media (prefers-reduced-motion: reduce) { .nav { transition: none; } }
+/* the globe's height is set by js/v3.js from the ball size; this is only the pre-script fallback */
+.globe { height: clamp(460px, 62vw, 100svh); }
+
+/* ===== 1. Hero: "Be the moment." is short, so it can be big ===== */
+.hero__title { font-size: clamp(64px, min(10vw, 17vh), 200px); }
+.hero__sub b { color: var(--cloud); font-weight: 700; }
+
+/* ===== 11. Free ticket coin (replaces the gratitude tree). CSS 3D: two SVG faces + a rim of thin slices.
+   Flat gold, no glow; the pile is flat ellipses with a hard offset edge. ===== */
+.coinbay { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.coin3d { --d: clamp(220px, 28vw, 360px); --t: calc(var(--d) * .075); width: var(--d); height: var(--d); perspective: 1100px; cursor: grab; touch-action: pan-y; user-select: none; margin: 8px 0 6px; }
+.coin3d.is-drag { cursor: grabbing; }
+.coin3d__spin { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+.coin3d__face { position: absolute; inset: 0; border-radius: 50%; background: #FFD23F; backface-visibility: hidden; }
+.coin3d__front { transform: translateZ(calc(var(--t) / 2)); }
+.coin3d__back { transform: rotateY(180deg) translateZ(calc(var(--t) / 2)); }
+.coin3d__face svg { display: block; width: 100%; height: 100%; }
+.coin__rim { fill: none; stroke: #111; stroke-width: 3; }
+.coin__inner { fill: #F5C21B; stroke: #111; stroke-width: 2.5; }
+.coin__ring { font: 800 13px var(--font-body); letter-spacing: .12em; fill: #111; }
+.coin__mark { font: 800 112px var(--font-num); fill: #111; letter-spacing: -.04em; }
+.coin__dot { fill: #FF3E8E; stroke: #111; stroke-width: 2.5; }
+.coin__mine { font: 400 64px var(--font-display); fill: #111; letter-spacing: .02em; }
+.coin3d__edge { position: absolute; left: 50%; top: 50%; width: calc(var(--d) * 3.1416 / 60 + 1px); height: var(--t); margin: calc(var(--t) / -2) 0 0 calc(var(--d) * -3.1416 / 120 - .5px); background: #D9A400; transform: rotateZ(var(--a)) translateY(calc(var(--d) / -2)) rotateX(90deg); }
+.coin3d__edge:nth-child(odd) { background: #C29200; }   /* reeded edge */
+.coin__count { margin: 0; text-align: center; }
+.coin__count b { display: block; font: 800 var(--fs-title)/1 var(--font-num); letter-spacing: -.04em; color: #FFD23F; }
+.coin__count span { font-weight: 600; }
+.coin__key { margin: 0; font-size: var(--fs-caption); color: var(--cloud-dim); text-align: center; max-width: 34ch; }
+.coinpile { --pw: 26px; --ph: 9px; --rows: 1; position: relative; width: calc(14 * var(--pw) + 13 * 3px); height: calc(var(--rows) * 6px + var(--ph) + 6px); margin-top: 6px; }
+.pcoin { position: absolute; left: calc(var(--c) * (var(--pw) + 3px)); bottom: calc(var(--r) * 6px); width: var(--pw); height: var(--ph); border-radius: 50%; background: #FFD23F; box-shadow: 0 3px 0 #C29200; border: 1px solid #111; }
+.pcoin.is-fresh { background: #FF3E8E; box-shadow: 0 3px 0 #b8205f; animation: pcoinDrop .7s var(--ease) both; }
+@keyframes pcoinDrop { from { transform: translateY(-240px); } }
+html[data-theme="light"] .coin__count b { color: #111; }
+html[data-theme="light"] .coin__count b::after { content: ""; }
+@media (prefers-reduced-motion: reduce) { .pcoin.is-fresh { animation: none; } }
+@media (max-width: 760px) { .coinpile { --pw: 19px; --ph: 7px; } }
+
+/* ===== 8b. 1 Million Questions (practice trivia) ===== */
+.trivia__grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(28px, 5vw, 72px); align-items: center; }
+.champ { display: inline-grid; gap: 4px; margin-top: 28px; padding: 18px 22px; border: 2px solid var(--cloud); border-radius: 18px; box-shadow: 6px 6px 0 var(--pink); }
+.champ__tag { font: 700 12px/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--pink); }
+.champ__name { font: 400 clamp(40px, 5vw, 64px)/1 var(--font-display); text-transform: uppercase; }
+.champ__ask { font-weight: 600; color: var(--cloud-dim); }
+.quiz__card { position: relative; padding: clamp(20px, 3vw, 34px); border-radius: 24px; background: var(--ink-2); border: 1px solid rgba(243,240,235,.14); min-height: 420px; display: flex; flex-direction: column; }
+.quiz__card--start, .quiz__card--end { align-items: center; justify-content: center; text-align: center; gap: 8px; }
+.quiz__card h3 { font: 700 var(--fs-h3)/1.25 var(--font-body); margin: 0; }
+.quiz__big { margin: 0; font: 400 clamp(96px, 12vw, 160px)/.9 var(--font-display); color: var(--pink); }
+.quiz__big small { font-size: .4em; color: var(--cloud-dim); }
+.quiz__best { margin: 4px 0 8px; color: var(--cloud-dim); }
+.quiz__best b { color: var(--cloud); }
+.quiz__ctas { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 14px; }
+.quiz__note { margin: 14px 0 0; font-size: var(--fs-caption); color: var(--cloud-dim); }
+.quiz__top { display: flex; justify-content: space-between; font: 600 13px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--cloud-dim); }
+.quiz__time { height: 6px; margin: 12px 0 22px; border-radius: 3px; background: rgba(243,240,235,.14); overflow: hidden; }
+.quiz__time i { display: block; height: 100%; background: var(--pink); transform-origin: left; transition: transform .1s linear; }
+.quiz__q { margin: 0 0 18px !important; font-size: clamp(22px, 2.2vw, 30px) !important; }
+.quiz__opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quiz__opt { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 12px 14px; border-radius: 14px; border: 2px solid rgba(243,240,235,.2); background: transparent; color: var(--cloud); font: 600 16px/1.25 var(--font-body); text-align: left; cursor: pointer; transition: border-color .15s, transform .15s var(--ease); }
+.quiz__opt b { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--cloud); color: #111; font-size: 13px; }
+.quiz__opt:hover:not(:disabled) { border-color: var(--pink); transform: translateY(-2px); }
+.quiz__opt:disabled { cursor: default; opacity: .55; }
+.quiz__opt.is-ok { opacity: 1; border-color: #FFD23F; background: #FFD23F; color: #111; }
+.quiz__opt.is-ok b { background: #111; color: #FFD23F; }
+.quiz__opt.is-no { opacity: 1; border-color: var(--pink); text-decoration: line-through; }
+.quiz__say { min-height: 1.4em; margin: 16px 0 0; font: 700 var(--fs-lead)/1.3 var(--font-body); }
+.quiz__say.is-ok { color: #FFD23F; }
+.quiz__say.is-near { color: var(--pink); }
+.quiz__say.is-no { color: var(--cloud-dim); }
+html[data-theme="light"] .quiz__card { background: #F4F1EC; border-color: rgba(17,17,17,.12); }
+html[data-theme="light"] .quiz__opt { border-color: rgba(17,17,17,.2); }
+html[data-theme="light"] .quiz__opt b { background: #111; color: #fff; }
+html[data-theme="light"] .quiz__time { background: rgba(17,17,17,.12); }
+html[data-theme="light"] .quiz__say.is-ok { color: #8a6a00; }
+html[data-theme="light"] .champ { border-color: #111; }
+@media (max-width: 760px) { .trivia__grid { grid-template-columns: 1fr; } .quiz__opts { grid-template-columns: 1fr; } .quiz__card { min-height: 0; } }
+@media (prefers-reduced-motion: reduce) { .quiz__time i { transition: none; } }
+
+

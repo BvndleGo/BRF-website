@@ -1,0 +1,83 @@
+/* v3.2 feedback pass (16 Oct 2026). Loads last. */
+
+/* faded, edge-to-edge words on gift cards */
+.gc__big--fit { position: absolute; left: 0; right: auto; bottom: -.12em; margin: 0; width: max-content; white-space: nowrap; line-height: .82; letter-spacing: -.06em;
+  font-family: var(--font-num); font-weight: 800; color: #fff; opacity: .2; pointer-events: none; z-index: 0; }
+.gc--way > *:not(.gc__big--fit):not(.gc__tag) { position: relative; z-index: 1; }
+.gc--way .gc__tag { z-index: 1; }
+
+/* ===== Recognition: plain black, reward cards carry the colour ===== */
+.poster--sun { background: #000; color: var(--cloud); }
+.poster--sun::after { display: none; }
+.poster--sun .eyebrow, .why__lede { color: var(--cloud-dim); }
+.why__title { color: var(--cloud); }
+.flips__cap { color: var(--cloud); }
+.flip { aspect-ratio: 1.45; }
+.flip__back { display: flex; flex-direction: column; justify-content: space-between; padding: 22px 24px; overflow: hidden; }
+.flip__back .gc__label, .flip__back .gc__tag { position: relative; z-index: 1; }
+.flip__back .gc__tag { position: absolute; top: 22px; right: 22px; }
+.flip__info { position: relative; z-index: 1; display: grid; gap: 6px; max-width: 30ch; margin-top: auto; margin-bottom: 18%; }
+.flip__info b { font: 700 var(--fs-lead)/1.2 var(--font-body); }
+.flip__info span { font-size: var(--fs-small); line-height: 1.4; opacity: .92; }
+.receipt { background: #fffdf8; }
+
+/* ===== Numbers ===== */
+.charts { grid-template-columns: 1fr 1fr; }
+.chart--wide { grid-column: 1 / -1; grid-row: auto; }
+.chart__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+.legend { list-style: none; margin: 0; padding: 0; display: flex; gap: 22px; flex-wrap: wrap; font-size: var(--fs-small); color: var(--cloud-dim); }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.legend b { color: var(--cloud); font-weight: 700; }
+.sw { width: 16px; height: 16px; border-radius: 4px; display: inline-block; }
+.sw--all { background: linear-gradient(90deg, var(--pink) 50%, transparent 50%); outline: 2px solid var(--purple); outline-offset: -2px; }
+.sw--came { background: var(--pink); }
+.sw--home { border: 2px solid var(--purple); }
+.chart svg { flex: none; }
+.chart--wide svg { margin-top: 22px; }
+
+/* ===== Hero ===== */
+.hero__copy { bottom: auto; top: 50%; transform: translateY(-50%); }
+.hero__meta { margin-bottom: 20px; }
+.chipglass { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 18px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); color: var(--cloud); font-size: var(--fs-small); }
+.chipglass i { color: var(--pink); font-size: 16px; }
+.chipglass .sep { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.45); }
+@media (max-width: 760px) { .hero__copy { top: auto; transform: none; bottom: 28px; } }
+
+/* ===== Concert: flat electric blue ===== */
+.poster--blue { background: #1f3dff; }
+
+/* ===== Footer sign-off ===== */
+.footer { padding-top: clamp(40px, 6vw, 80px); }
+.signoff { position: relative; overflow: hidden; text-align: center; margin-bottom: clamp(40px, 5vw, 72px); }
+.signoff__see { position: relative; z-index: 1; font-size: clamp(28px, 4vw, 64px); color: var(--cloud); margin-bottom: -.35em; }
+.signoff__dec { position: static; display: block; width: max-content; margin: 0 auto; opacity: 1; color: var(--pink); font-family: var(--font-display); font-weight: 700; letter-spacing: 0; line-height: .9; text-transform: uppercase; }
+
+/* ===== Steps: faded numerals + progress ===== */
+.gc--step { display: flex; flex-direction: column; }
+.gc--step > *:not(.step__num) { position: relative; z-index: 1; }
+.step__num { position: absolute; right: -.04em; top: 50%; transform: translateY(-46%); font: 800 clamp(200px, 17vw, 300px)/.8 var(--font-num); letter-spacing: -.06em; color: #fff; opacity: .16; pointer-events: none; }
+.step__bar { display: flex; gap: 6px; margin-top: auto; padding-top: 22px; }
+.step__bar i { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.28); }
+.step__bar i:nth-child(-n + 1) { background: #fff; }
+.step__bar[style*="--n:2"] i:nth-child(-n + 2), .step__bar[style*="--n:3"] i:nth-child(-n + 3), .step__bar[style*="--n:4"] i { background: #fff; }
+.pass { --w: clamp(170px, 19vw, 320px); }
+@media (min-width: 1400px) { .pass { --w: clamp(240px, 17vw, 330px); } }
+
+/* sign-off v3.3: faded DECEMBER, "See you in" centred on it, outline revealed around the cursor */
+.signoff { position: relative; display: grid; place-items: center; overflow: hidden; margin-bottom: clamp(40px, 5vw, 72px); }
+.signoff > .signoff__dec, .signoff > .signoff__see { grid-area: 1 / 1; }
+.signoff__dec { color: var(--pink); opacity: .2; margin: 0; }
+.signoff__stroke { position: static; display: block; width: max-content; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; line-height: .9; letter-spacing: 0;
+  color: transparent; -webkit-text-stroke: 2px #ffd6e8; opacity: 0; transition: opacity .3s;
+  -webkit-mask-image: radial-gradient(circle 220px at var(--mx, 50%) var(--my, 50%), #000 0%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(circle 220px at var(--mx, 50%) var(--my, 50%), #000 0%, #000 35%, transparent 100%); }
+.signoff.is-lit .signoff__stroke { opacity: 1; }
+.signoff__see { position: relative; z-index: 1; margin: 0; font-size: clamp(40px, 6.5vw, 120px); color: var(--cloud); line-height: 1; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (hover: none) { .signoff__stroke { display: none; } }
+
+/* reward cards: copy sits up top under the label, the faded number owns the bottom */
+.flip__info { margin-top: 14px; margin-bottom: auto; max-width: 34ch; }
+.flip__back .gc__big--fit { bottom: -.14em; }
+@media (max-width: 1400px) { .flip { aspect-ratio: 1.22; } }
+.flip__back .gc__big--fit { left: 0; right: 0; width: auto; text-align: center; }

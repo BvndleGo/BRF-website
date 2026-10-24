@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free Ticket | Bvndle Rewards Festival 2026, Lagos</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <meta name="description" content="Two days of games, brand deals, prizes and a headline concert at Landmark Event Centre, Lagos. Get a free ticket to Lagos' biggest rewards festival, 11-12 December.">
+  <meta name="theme-color" content="#111111">
+  <!-- set the saved theme before the page paints, so there is no dark-to-light flash -->
+  <script>try{if(localStorage.getItem("brf-theme-v2")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
+  <!-- first visit this session: the hero plays its arrival (skipped for reduced motion, review links and Figma capture) -->
+  <script>try{if(!sessionStorage.getItem("brf-intro")&&!/[?&]at=|figmacapture/.test(location.search+location.hash)&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("hero-arrive")}catch(e){}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Anton + Inter Tight stand in for PP Formula Condensed / PP Neue Montreal until licensed files arrive -->
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Doto:wght@900&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <link rel="stylesheet" href="css/v3.css?v=20">
+  <link rel="stylesheet" href="css/v31.css?v=20">
+  <link rel="stylesheet" href="css/v32.css?v=40">
+  <link rel="stylesheet" href="css/v34.css?v=110">
+  <link rel="stylesheet" href="css/theme.css?v=20">
+  <link rel="stylesheet" href="css/v4.css?v=93">
+</head>
+<body>
+
+
+<div class="topbar">
+  <span>Gates open in</span>
+  <b class="dots" id="clock">--d --h --m</b>
+  <a href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
+</div>
+
+<header class="nav">
+  <a class="nav__logo" href="#top" aria-label="Bvndle Rewards Festival home"><img class="logo--dark" src="assets/logo-white.svg?v=2" alt="Bvndle Rewards Festival"><img class="logo--light" src="assets/logo.svg?v=2" alt="Bvndle Rewards Festival"></a>
+  <nav aria-label="Main">
+    <ul class="nav__links">
+      <li><a href="#journey">Experience</a></li>
+      <li><a href="#trivia">Trivia</a></li>
+      <li><a href="#concert">Concert</a></li>
+      <li><a href="#day">Your day</a></li>
+      <li><a href="#" data-gallery target="_blank" rel="noopener">Gallery</a></li>
+      <li><a href="#brands">Partner</a></li>
+      <li><a href="#faq">FAQs</a></li>
+    </ul>
+  </nav>
+  <div class="nav__end">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" aria-pressed="false"><i class="ph-bold ph-sun" aria-hidden="true"></i><i class="ph-bold ph-moon" aria-hidden="true"></i></button>
+    <a class="btn btn--sm nav__cta" href="#ticket">Get free ticket</a>
+    <button class="nav__menu" id="menuBtn" type="button" aria-label="Open menu" aria-controls="menu" aria-expanded="false"><i class="ph-bold ph-list" aria-hidden="true"></i></button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- 1. Hero: globe of 2025 photos; scrolling swells it past the camera and unveils BE THE MOMENT. Was: photo overload. ~120 photos from the 2025 edition flood a black screen, then swirl out into a slow
+       orbiting ring that clears the centre for BE THE MOMENT. Cursor scatters photos, drag spins the ring, click a photo
+       to bring it to the centre, scrolling blows the ring off-screen. Canvas: js/v3.js. Plays on every load. -->
+  <section class="hero hero--burst" id="hero">
+    <div class="burst__pin">
+      <canvas class="burst__cv" id="burstCv" aria-hidden="true"></canvas>
+      <div class="burst__copy" id="burstCopy">
+        <!-- kept simple (Paul, 23 Oct): label, headline, one date + venue line, the button -->
+        <p class="burst__eyebrow">Lagos&#39; largest gamified reward experience</p>
+        <h1 class="display burst__h1"><span>Be the </span><span>moment.</span></h1>
+        <p class="bline"><b class="bline__date" data-brf="datesLabel">11th &ndash; 12th December 2026</b><span class="bline__dot" aria-hidden="true">&middot;</span><span data-brf="venue">Landmark Event Centre, Lagos</span></p>
+        <div class="burst__ctas bline__cta"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
+      </div>
+      <figure class="burst__zoom" id="burstZoom" hidden><img alt=""><figcaption>2025 &middot; tap to close</figcaption></figure>
+      <p class="burst__top" aria-hidden="true"><span>Bvndle Rewards Festival 2026</span><span>Lagos&#39; largest gamified reward experience</span></p>
+      <!-- navigation frame (Paul, 23 Oct): a thin rectangle with corner brackets; the line breaks around the readouts,
+           the north marker and the hint (gaps measured from the labels in js/v3.js) -->
+      <svg class="burst__hud" id="burstHud" aria-hidden="true"><path class="hud__line"/><path class="hud__corner"/></svg>
+      <p class="burst__north" aria-hidden="true"><i class="ph-fill ph-triangle"></i>N</p>
+      <p class="burst__coord burst__coord--l" id="bLat" aria-hidden="true">N 6.52&deg;</p><p class="burst__coord burst__coord--r" id="bLon" aria-hidden="true">E 3.38&deg;</p>
+      <p class="burst__hint" aria-hidden="true"><i class="ph-bold ph-hand-grabbing"></i>Drag any way to look around &middot; scroll to step in</p>
+    </div>
+  </section>
+
+  <!-- 5. The journey: a sticky scroll-through. The screen holds while you scroll; each zone fills it in its own colour
+       and you move through its four steps (three things to do, then "Redeem here", where its stamp lands), zone after zone.
+       Data: js/festival-data.js -->
+  <section class="journey" id="journey">
+    <div class="wrap journey__head">
+      <div><p class="eyebrow">The experience</p><h2 class="display h2">One floor. Five zones.</h2></div>
+      <div><p class="lede">Talks from 10am, zones open at 1pm, games all afternoon. Walk the floor station by station: every stop earns coins, every zone has its own prize.</p><a class="jskip" href="#day">Skip the tour <i class="ph-bold ph-arrow-down" aria-hidden="true"></i></a></div>
+    </div>
+    <div class="jscroll" id="jscroll">
+      <div class="jpin">
+        <div class="jnav" id="jnav">
+          <svg class="jnav__map" id="jmap" aria-hidden="true"></svg>
+          <article class="jnav__card" id="jcard2" aria-live="polite"></article>
+          <aside class="jnav__pass" id="jpass" aria-label="Festival passport"></aside>
+          <div class="jnav__bar" id="jbar" aria-hidden="true"></div>
+          <p class="jnav__hint" id="jhint" aria-hidden="true"><i class="ph-bold ph-mouse-scroll"></i>Scroll to walk the floor</p>
+          <a class="jnav__skip" href="#day">Skip the tour <i class="ph-bold ph-arrow-down" aria-hidden="true"></i></a>
+          <!-- return visits: the tour is optional (client 23 Oct). The whole map shows at once with this panel -->
+          <!-- return visits: the map stays in view and a zone bar docks along its bottom edge. Tap a zone to fly there. -->
+          <div class="jdock" id="jseen" hidden>
+            <p class="jdock__lead">Your map of the day <span>Tap a zone to look closer</span></p>
+            <div class="jdock__bar">
+              <ul class="jdock__zones" id="jseenZones"></ul>
+              <button class="jdock__replay" type="button" id="jreplay"><i class="ph-bold ph-play" aria-hidden="true"></i><span>Replay the tour</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8b. 1 Million Questions: practice trivia (questions in js/trivia.js) -->
+  <section class="section trivia" id="trivia">
+    <div class="wrap trivia__grid">
+      <div class="trivia__intro">
+        <p class="eyebrow">1 Million Questions</p>
+        <h2 class="display h2">Answer. Enter. Win on the day.</h2>
+        <p class="lede">Every right answer is an entry into the 1 Million Questions draw. Claim your free ticket to lock your entries in. Winners are announced live on 12 December.</p>
+        <div class="champ">
+          <span class="champ__tag">2025 winner</span>
+          <b class="champ__name" id="champName">Carhoot</b>
+          <span class="champ__ask">Who wins 2026?</span>
+        </div>
+      </div>
+      <div class="quiz" id="quiz" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- Main stage talks, 10am-1pm (own chapter since 23 Oct). Built from BRF_DATA.stage: dummy topics until the client sends them -->
+  <section class="section talks" id="talks">
+    <div class="wrap">
+      <div class="talks__head"><div><p class="eyebrow">Main stage &middot; mornings from 10am</p><h2 class="display h2">Ideas before the games.</h2></div><p class="stage__note" id="stageNote"></p></div>
+      <div class="agenda__tabs" id="stageTabs" role="tablist" aria-label="Festival days" hidden></div>
+      <div class="agenda__frame" id="stageFrame"><ol class="agenda" id="stageTalks"></ol></div>
+      <p class="agenda__hint" id="stageHint" hidden><i class="ph-bold ph-arrow-down" aria-hidden="true"></i>Scroll for more talks</p>
+    </div>
+  </section>
+
+  <!-- 2. Partners: mono logo wall (colour on hover) -->
+  <section class="partners" id="partners" aria-labelledby="partners-h">   <!-- back on 23 Oct (client: "partners from last year are not here"); NGX kept, Paul 23 Oct -->
+    <div class="wrap partners__head">
+      <h2 class="partners__title" id="partners-h">Our 2025 sponsors and partners</h2>
+      <p class="partners__count"><b>23</b> brands in 2025</p>
+    </div>
+    <div class="wrap lslides" aria-roledescription="carousel" aria-label="2025 sponsors and partners">
+      <div class="ltabs">
+        <button class="ltab" type="button" aria-label="Show sponsors, slide 1 of 2"><span>Sponsors <b>19</b></span><i class="ltab__bar"><i></i></i></button>
+        <button class="ltab" type="button" aria-label="Show partners, slide 2 of 2"><span>Partners <b>4</b></span><i class="ltab__bar"><i></i></i></button>
+      </div>
+      <div class="lslides__view">
+        <div class="lslides__track">
+          <ul class="logowall" id="logoWall" aria-roledescription="slide" aria-label="Sponsors, 1 of 2"></ul>
+          <ul class="logowall" id="logoWallP" aria-roledescription="slide" aria-label="Partners, 2 of 2"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Last December: the 2025 numbers told as one giant sentence, numbers in colour blocks, photo pills inline.
+       Words light up as you scroll through it (js/v3.js). No charts. -->
+  <section class="section story" id="numbers">
+    <!-- pinned: the sentence holds in one screen while scrolling lights it word by word, then the page moves on -->
+    <div class="story__track" id="storyTrack"><div class="story__pin">
+    <div class="wrap">
+      <p class="eyebrow">Last December</p>
+      <p class="story__text display" id="storyText">Last December, <mark class="hlb" style="--c:#FFD23F">7,000</mark> of you signed up <img class="pill" src="assets/img/concert/c14.jpg" alt=""> and <mark class="hlb" style="--c:#FF3E8E">5,000</mark> came through the gates. <mark class="hlb" style="--c:#8B80F9">23 brands</mark> turned up with rewards <img class="pill" src="assets/img/zones/redemption-1.jpg" alt="">, <mark class="hlb" style="--c:#2e4bff;--t:#fff">10 million</mark> people watched online, and you rated the whole thing <mark class="hlb" style="--c:#FF5A2D">8.6 out of 10</mark>. <img class="pill" src="assets/img/concert/c02.jpg" alt=""> And that was nothing compared to <mark class="hlb" style="--c:#F3F0EB">this December</mark>: five zones, three secret headliners and a bigger concert night.</p>
+    </div>
+    </div></div>
+  </section>
+
+  <!-- 8. Concert: copy row + a drag-to-explore globe of 2025 photos (photos on the inside of a sphere) -->
+  <section class="poster poster--blue poster--globe" id="concert">
+    <div class="wrap concert concert--globe">
+      <div class="concert__head">
+        <p class="eyebrow">After dark &middot; 12 December</p>
+        <h2 class="display concert__title">When the lights drop, the concert starts.</h2>
+      </div>
+      <div class="concert__copy">
+        <p class="concert__sub">The Bvndle Rewards Concert is a separate ticket. Line-up drops soon. Tickets are sold on TIX.</p>
+        <a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Concert tickets <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>
+      </div>
+    </div>
+    <div class="globe" id="globe" role="group" aria-label="The 2025 concert in photos. Drag to look around. Select a photo to open its zone.">
+      <canvas class="globe__grid" id="globeGrid" aria-hidden="true"></canvas>
+      <div class="globe__world" id="globeWorld"></div>
+      <p class="globe__coord globe__coord--l" aria-hidden="true"><b>N</b><span id="globeN">06.43&deg;</span></p>
+      <p class="globe__coord globe__coord--r" aria-hidden="true"><b>E</b><span id="globeE">003.43&deg;</span></p>
+      <p class="globe__hint" aria-hidden="true"><i class="ph-bold ph-hand-grabbing"></i>Drag to look around &middot; the 2025 concert</p>
+    </div>
+  </section>
+
+  <!-- Night: guess the headliners (moved under the concert intro, client 23 Oct: it is about the concert, not the day): 2025 artists, then three hidden 2026 headliners you can guess (data: js/festival-data.js) -->
+  <section class="section lineup" id="lineup">
+    <div class="wrap">
+      <div class="lineup__head">
+        <div><p class="eyebrow">The concert &middot; night of 12th December</p><h2 class="display h2">Guess who's headlining.</h2></div>
+        <div><p class="lede">Three names. No announcement yet. A new clue drops every week. Lock in a guess with your Bvndle tag.</p><p class="reward-tag"><i class="ph-bold ph-gift" aria-hidden="true"></i>Guess right, get rewarded</p></div>
+      </div>
+      <div class="mystery" id="mystery"></div>
+      <!-- client 23 Oct: "Buy concert ticket below guess who is headlining" -->
+      <div class="lineup__cta">
+        <p>The headliners play the concert on the night of <b>12th December</b>. It's a paid ticket, sold on TIX.</p>
+        <div class="lineup__btns"><a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Buy concert ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a><a class="btn btn--ghost" href="#vip">See ticket prices</a></div>
+      </div>
+      <div class="past">
+        <p class="past__label">On the Bvndle stage in 2025</p>
+        <ul class="past__row" id="pastRow"></ul>
+      </div>
+    </div>
+    <dialog class="guess" id="guessBox" aria-labelledby="guessTitle">
+      <form method="dialog" class="guess__form" id="guessForm">
+        <p class="guess__num" id="guessNum">01</p>
+        <h3 id="guessTitle">Who is headliner <span id="guessWhich">01</span>?</h3>
+        <ul class="guess__clues" id="guessClues"></ul>
+        <label class="sr-only" for="guessInput">Your guess</label>
+        <input class="input" id="guessInput" autocomplete="off" placeholder="Type an artist's name" maxlength="40">
+        <div class="field guess__tag" id="f-gtag"><label for="guessTag">Your Bvndle tag</label><div class="affix affix--at"><span>@</span><input class="input" id="guessTag" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="yourtag" maxlength="30" aria-describedby="gtag-help gtag-err"></div><p class="help" id="gtag-help">If your guess is right, we reward this tag at the reveal.</p><p class="err" id="gtag-err">Add your Bvndle tag so we know who to reward.</p></div>
+        <p class="guess__say" id="guessSay" aria-live="polite"></p>
+        <div class="guess__next" id="guessNext"></div>
+        <div class="guess__ctas"><button class="btn" type="submit" id="guessGo" value="go">Lock in my guess</button><button class="btn btn--ghost" type="button" id="guessClose">Close</button></div>
+      </form>
+    </dialog>
+  </section>
+
+  <!-- VIP: its own section and surface (cream in Dark, charcoal in Light) so it never reads as part of the blue concert poster -->
+  <section class="vipsec" id="vip" aria-label="Concert tickets">
+    <div class="wrap vip">
+      <div class="vip__head">
+        <div><p class="eyebrow">Concert tickets &middot; 12 December</p><h3 class="display vip__title">Choose your night.</h3></div>
+        <p class="vip__note" id="vipNote"></p>
+      </div>
+      <div class="vip__grid">
+        <div class="vmap">
+          <svg class="vmap__svg" id="vmapSvg" viewBox="0 0 600 440" role="group" aria-label="Concert hall plan. Choose an area to see the view from there."></svg>
+          <div class="vpop" id="vpop" hidden></div>
+        </div>
+        <ul class="vtiers" id="vtiers"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Heard on the floor: video testimonials as tall Reels-style cards; tap opens a full-screen player (data: js/festival-data.js) -->
+  <section class="section voices" id="voices">
+    <div class="wrap voices__head">
+      <div><p class="eyebrow">Heard on the floor</p><h2 class="display h2">Don't take our word for it.</h2></div>
+      <div class="voices__side"><p class="lede">Real people from last December. Their videos are coming soon.</p>
+        <div class="arrows"><button class="round" type="button" id="qPrev" aria-label="Previous videos"><i class="ph-bold ph-arrow-left"></i></button><button class="round" type="button" id="qNext" aria-label="Next videos"><i class="ph-bold ph-arrow-right"></i></button></div></div>
+    </div>
+    <div class="vrow" id="quotes" tabindex="0" aria-label="Video testimonials, scroll sideways"></div>
+    <dialog class="vplayer" id="vplayer" aria-label="Video testimonial"><div class="vplayer__stage" id="vstage"></div><button class="round vplayer__x" type="button" id="vclose" aria-label="Close video"><i class="ph-bold ph-x"></i></button></dialog>
+  </section>
+
+  <!-- 5b. Your day: the run of each festival day (same on 11 and 12 Dec, client 23 Oct). Times not yet confirmed
+       by the client are worded loosely ("through the afternoon", "night of 12 Dec") rather than invented. -->
+  <section class="section day" id="day">
+    <div class="wrap">
+      <div class="day__head">
+        <div><p class="eyebrow">Your day &middot; same on 11th &amp; 12th December</p><h2 class="display h2">How the day runs.</h2></div>
+        <p class="lede">Talks in the morning, the zones from 1pm, games all afternoon. The concert is the night of the 12th, on a separate ticket.</p>
+      </div>
+      <ol class="day__rail">
+        <li class="dstop" style="--c:#FFD23F"><p class="dstop__time">10am&ndash;1pm</p><h3>Main stage talks</h3><p>Thought leadership: founders, creators and brands on money, music and Lagos life.</p></li>
+        <li class="dstop" style="--c:#FF3E8E"><p class="dstop__time">1pm</p><h3>Zones open</h3><p>All five zones switch on. Meet the brands, play, watch, then redeem your coins.</p></li>
+        <li class="dstop" style="--c:#8B80F9"><p class="dstop__time">Through the afternoon</p><h3>Games at intervals</h3><p>Game rounds run across the live zones, with 1 Million Questions draws along the way.</p></li>
+        <li class="dstop" style="--c:#FF5A2D"><p class="dstop__time">Through the afternoon</p><h3>Group activities</h3><p>Team challenges on the main stage. Bring your crew.</p><span class="dstop__tag"><i class="ph-bold ph-trophy" aria-hidden="true"></i>Win prizes</span></li>
+        <li class="dstop dstop--night" style="--c:#5b4bd6"><p class="dstop__time">Night of 12 Dec</p><h3>The concert</h3><p>The Bvndle Rewards Concert. Paid ticket, sold on TIX.</p><a class="dstop__link" href="#vip">See ticket prices <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 10b. Access: free day pass vs paid night concert, side by side (client 23 Oct: clarity on what each ticket gets you) -->
+  <section class="section access" id="access" aria-labelledby="access-h">
+    <div class="wrap">
+      <div class="access__head"><p class="eyebrow">Two tickets</p><h2 class="display h2" id="access-h">Your day is free. The night is the concert.</h2></div>
+      <div class="access__grid">
+        <article class="acard acard--day">
+          <div class="acard__top"><span class="acard__kind">Free ticket &middot; Day pass</span><b class="acard__price">Free</b></div>
+          <p class="acard__when">11th &ndash; 12th December &middot; from 10am</p>
+          <ul class="acard__list">
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Entry on both festival days</li>
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Main stage talks and group activities</li>
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>All five zones and their redemption booths</li>
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Games, raffles and the 1 Million Questions draw</li>
+            <li class="is-no"><i class="ph-bold ph-x" aria-hidden="true"></i>The concert (separate ticket)</li>
+          </ul>
+          <a class="btn btn--block" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
+        </article>
+        <article class="acard acard--night">
+          <div class="acard__top"><span class="acard__kind">Paid ticket &middot; Night</span><b class="acard__price">From ₦15,000</b></div>
+          <p class="acard__when">12 December &middot; night</p>
+          <ul class="acard__list">
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>The Bvndle Rewards Concert</li>
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Regular from ₦15,000 (Early Bird), VIP ₦250,000, Premium ₦500,000, tables ₦2,000,000</li>
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Bought and checked in through TIX</li>
+            <li class="is-no"><i class="ph-bold ph-x" aria-hidden="true"></i>Daytime zones need the free day pass</li>
+          </ul>
+          <div class="acard__ctas"><a class="btn btn--white" href="#vip">See ticket prices <i class="ph-bold ph-arrow-up" aria-hidden="true"></i></a><a class="btn btn--ghost acard__ghost" href="#" data-tix target="_blank" rel="noopener">Buy on TIX <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. Free ticket: an interactive festival token (drag to spin) over a pile that grows by one token per 5 tickets. Tokens are keepsakes, not BvndleCoins -->
+  <section class="poster poster--tree" id="ticket">
+    <div class="wrap gate">
+      <div class="coinbay">
+        <!-- the guide: Paul's artwork, plus an effects layer drawn in the art's own pixel space (870 x 1019). The orb, the
+             floating screens and the light bars are cut from the art itself (assets/img/guide/), so only their own pixels
+             brighten; a light runs round the orb's painted ring; sparkles twinkle among the painted dots. -->
+        <figure class="guide" id="guide"><div class="guide__art">
+          <img src="assets/img/festival-guide.webp" alt="The Bvndle festival guide, holding a glowing reward orb" width="870" height="1019">
+          <svg class="guide__fx" viewBox="0 0 870 1019" aria-hidden="true">
+            <defs><filter id="gfxSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+            <image class="gfx-orb" href="assets/img/guide/orb.webp" x="548" y="150" width="260" height="195"/>
+            <image class="gfx-scr" style="--t:5.2s;--d:0s" href="assets/img/guide/s1.webp" x="196" y="152" width="138" height="92"/>
+            <image class="gfx-scr" style="--t:4.1s;--d:1.2s" href="assets/img/guide/s2.webp" x="192" y="246" width="74" height="74"/>
+            <image class="gfx-scr" style="--t:6.3s;--d:.6s" href="assets/img/guide/s3.webp" x="262" y="288" width="78" height="68"/>
+            <image class="gfx-scr" style="--t:4.7s;--d:2.1s" href="assets/img/guide/s4.webp" x="662" y="386" width="104" height="72"/>
+            <image class="gfx-scr gfx-scr--bars" style="--t:3.3s;--d:.9s" href="assets/img/guide/bars.webp" x="648" y="462" width="52" height="156"/>
+            <g transform="rotate(-23.5 675 273)"><ellipse class="gfx-ring" cx="675" cy="273" rx="134" ry="30" pathLength="100" filter="url(#gfxSoft)"/><ellipse class="gfx-ring gfx-ring--core" cx="675" cy="273" rx="134" ry="30" pathLength="100"/></g>
+            <path class="gfx-star" style="--d:0s" transform="translate(170 372) scale(1.1)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:1.3s" transform="translate(206 430) scale(0.8)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:2.4s" transform="translate(146 470) scale(0.9)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:0.7s" transform="translate(598 168) scale(1)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:2.9s" transform="translate(812 196) scale(0.8)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:1.8s" transform="translate(806 330) scale(1.1)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:0.4s" transform="translate(742 520) scale(0.9)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/><path class="gfx-star" style="--d:3.4s" transform="translate(560 130) scale(0.7)" d="M0 -10 C1.2 -2 2 -1.2 10 0 C2 1.2 1.2 2 0 10 C-1.2 2 -2 1.2 -10 0 C-2 -1.2 -1.2 -2 0 -10Z"/>
+          </svg>
+        </div></figure>
+        <div class="coin3d" id="coin" hidden role="img" aria-label="The Bvndle Rewards Festival 2026 token. Drag to spin it.">
+          <div class="coin3d__spin" id="coinSpin">
+            <div class="coin3d__face coin3d__front"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="coinRingA" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0"/></defs><circle cx="100" cy="100" r="95" class="coin__rim"/><circle cx="100" cy="100" r="60" class="coin__inner"/><text class="coin__ring"><textPath href="#coinRingA" textLength="462">BVNDLE REWARDS FESTIVAL &#183; LAGOS &#183; 2026 &#183; </textPath></text><text x="94" y="124" class="coin__mark" text-anchor="middle">b</text><circle cx="124" cy="118" r="7" class="coin__dot"/></svg></div>
+            <div class="coin3d__face coin3d__back"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="coinRingB" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0"/></defs><circle cx="100" cy="100" r="95" class="coin__rim"/><circle cx="100" cy="100" r="60" class="coin__inner"/><text class="coin__ring"><textPath href="#coinRingB" textLength="462">FESTIVAL TOKEN &#183; FREE TICKET &#183; 11&#8211;12 DEC &#183; </textPath></text><text x="100" y="118" class="coin__mine" text-anchor="middle" id="coinMine">YOU</text></svg></div>
+          </div>
+        </div>
+        <p class="coin__count"><b id="coinCount">0</b><span id="coinLabel">tickets claimed</span></p>
+        <div class="coinpile" id="coinPile" aria-hidden="true" hidden></div>
+        <p class="coin__key" id="guideKey">Claim your ticket and watch her light up.</p>
+      </div>
+      <div class="gate__form">
+        <p class="eyebrow gate__eyebrow">Become a Bvndle citizen</p>
+        <h2 class="display gate__title">Claim your free ticket.</h2>
+        <p class="gate__sub">Free entry to two days of games, brands and rewards. It takes a minute.</p>
+        <p class="daypass"><i class="ph-bold ph-sun-horizon" aria-hidden="true"></i><span><b>This is your day pass.</b> Both days, 11th &ndash; 12th December, from 10am. The night concert is a separate paid ticket on TIX.</span></p>
+        <div id="passArea">
+          <form class="form" id="passForm" novalidate>
+            <div class="field-row">
+              <div class="field" id="f-first"><label for="first">First name</label><input class="input" id="first" name="first" autocomplete="given-name" placeholder="e.g. Adaeze" required aria-describedby="first-err"><p class="err" id="first-err">Please add your first name.</p></div>
+              <div class="field" id="f-last"><label for="last">Last name</label><input class="input" id="last" name="last" autocomplete="family-name" placeholder="e.g. Okafor" required aria-describedby="last-err"><p class="err" id="last-err">Please add your last name.</p></div>
+            </div>
+            <div class="field" id="f-phone"><label for="phone">Phone number</label><div class="affix"><span>+234</span><input class="input" id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="803 123 4567" required aria-describedby="phone-help phone-err"></div><p class="help" id="phone-help">We use this to find your ticket at the gate.</p><p class="err" id="phone-err">Enter a valid Nigerian number, like 0803 123 4567.</p></div>
+            <fieldset class="field yesno" id="f-has">
+              <legend>Do you have a Bvndle tag?</legend>
+              <div class="yesno__opts"><label><input type="radio" name="hasTag" value="yes"><span>Yes</span></label><label><input type="radio" name="hasTag" value="no"><span>No, skip</span></label></div>
+              <p class="err" id="has-err">Choose yes or no.</p>
+            </fieldset>
+            <div class="field" id="f-tag" hidden><label for="tag">Your Bvndle tag</label><div class="affix affix--at"><span>@</span><input class="input" id="tag" name="tag" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="yourtag" aria-describedby="tag-help tag-err"></div><p class="help" id="tag-help">Your username on the Bvndle app.</p><p class="err" id="tag-err">Type your tag, or choose "No, skip".</p></div>
+            <button class="btn btn--block" type="submit" id="passSubmit">Claim free ticket <i class="ph-bold ph-ticket" aria-hidden="true"></i></button>
+            <p class="fine">Concert tickets are sold separately on TIX.</p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Why loyalty matters: an editorial numbered list. Each row fills with its own flat colour on hover/focus and shows a photo -->
+  <section class="section why2" id="why">
+    <div class="wrap">
+      <div class="why2__head">
+        <div><p class="eyebrow">Why loyalty matters now</p><h2 class="display h2">Recognition builds the relationship.</h2></div>
+        <p class="lede">Bvndle Rewards Festival exists to turn every receipt into something you can feel.</p>
+      </div>
+      <ol class="why2__list">
+        <li class="wrow" tabindex="0" style="--c:#2e4bff;--t:#fff"><span class="wrow__n">01</span><h3 class="wrow__t">Turn transactions into recognition.</h3><p class="wrow__d">Every game and brand mission earns BvndleCoins. Loyalty you can see, not a receipt in the bin.</p><span class="wrow__tag">+150 coins</span><img class="wrow__img" src="assets/img/zones/games-6.jpg" alt="" loading="lazy"></li>
+        <li class="wrow" tabindex="0" style="--c:#FF3E8E;--t:#111"><span class="wrow__n">02</span><h3 class="wrow__t">Make rewards visible and instant.</h3><p class="wrow__d">Swap coins at the redemption booths for appliances, gadgets, skincare, merch and cash, handed over the same day.</p><span class="wrow__tag">Win on the spot</span><img class="wrow__img" src="assets/img/zones/redemption-3.jpg" alt="" loading="lazy"></li>
+        <li class="wrow" tabindex="0" style="--c:#FFD23F;--t:#111"><span class="wrow__n">03</span><h3 class="wrow__t">Create real experiences from loyalty.</h3><p class="wrow__d">Two days of music, games and brands. Free entry to the festival floor at Landmark Event Centre, Lagos.</p><span class="wrow__tag">11&ndash;12 Dec</span><img class="wrow__img" src="assets/img/concert/c13.jpg" alt="" loading="lazy"></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 10. For brands: the partner pass -->
+  <section class="section brands" id="brands">
+    <div class="wrap brands__grid">
+      <div class="brands__copy">
+        <p class="eyebrow">For brands</p>
+        <h2 class="display h2">Bring your brand to 5,000+ loyal shoppers.</h2>
+        <p class="lede">Sponsors design the experience, provide the rewards and meet thousands of customers face to face.</p>
+        <a class="btn" href="#" data-partner target="_blank" rel="noopener">Become a Partner <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>
+      </div>
+      <article class="stub" aria-label="Partner pass 2026">
+        <div class="stub__top"><span>Partner pass</span><span>Bvndle Rewards Festival &middot; 2026</span></div>
+        <ol class="stub__rows">
+          <li><span class="stub__n">01</span><div><h3>Real engagement</h3><p>Face to face with thousands of loyal shoppers. Measurable exposure and loyalty activation.</p></div></li>
+          <li><span class="stub__n">02</span><div><h3>Your own experience</h3><p>Design a booth, a challenge or an exclusive giveaway inside one of the five zones.</p></div></li>
+          <li><span class="stub__n">03</span><div><h3>We handle the floor</h3><p>You bring the rewards. Bvndle handles distribution on the day.</p></div></li>
+        </ol>
+        <div class="stub__tear" aria-hidden="true"></div>
+        <div class="stub__foot"><b>23</b><span>brands showed up<br>in 2025</span><a class="stub__go" href="#" data-partner target="_blank" rel="noopener" aria-label="Become a Partner">Join them <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 12. FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap faq">
+      <div>
+        <h2 class="display h2">Frequently asked questions</h2>
+        <div class="tabs" role="tablist" aria-label="FAQ audience">
+          <button role="tab" aria-selected="true" aria-controls="faq-people" id="tab-people">For Attendees</button>
+          <button role="tab" aria-selected="false" aria-controls="faq-brands" id="tab-brands" tabindex="-1">For Brands/Sponsors</button>
+        </div>
+      </div>
+      <div>
+        <div class="faq__list" role="tabpanel" id="faq-people" aria-labelledby="tab-people">
+          <details><summary>Is it really free?<i class="ph-bold ph-plus"></i></summary><p>Yes. The festival ticket is free and covers the market, games, raffles and brand activities. The Bvndle Rewards Concert is a separate paid ticket on TIX.</p></details>
+          <details><summary>What is Bvndle Rewards Festival?<i class="ph-bold ph-plus"></i></summary><p>A two-day festival where brands reward their loyal customers with games, raffles, prizes, music and experiences.</p></details>
+          <details><summary>When and where is it happening?<i class="ph-bold ph-plus"></i></summary><p><span data-brf="datesLabel">11th &ndash; 12th December 2026</span> at <span data-brf="venue">Landmark Event Centre, Lagos</span>.</p></details>
+          <details><summary>What are the rewards, and how do I redeem them?<i class="ph-bold ph-plus"></i></summary><p>Prizes include appliances, gadgets, skincare, merch and cash. Redemption happens instantly at the redemption booths.</p></details>
+          <details><summary>Can I combine festival rewards with other discounts?<i class="ph-bold ph-plus"></i></summary><p>Festival rewards stand alone but may unlock special brand offers.</p></details>
+          <details><summary>Do my points expire after the event?<i class="ph-bold ph-plus"></i></summary><p>Festival-only rewards must be claimed during the event. Your BvndleCoins in the app stay valid.</p></details>
+        </div>
+        <div class="faq__list" role="tabpanel" id="faq-brands" aria-labelledby="tab-brands" hidden>
+          <details><summary>What's the ROI of sponsoring a rewards festival?<i class="ph-bold ph-plus"></i></summary><p>Direct engagement with thousands of consumers, measurable brand exposure and loyalty activation.</p></details>
+          <details><summary>Can we co-create custom experiences or offers?<i class="ph-bold ph-plus"></i></summary><p>Yes. Sponsors can design tailored booths, challenges or exclusive giveaways.</p></details>
+          <details><summary>How are rewards distributed and who bears the cost?<i class="ph-bold ph-plus"></i></summary><p>Sponsors provide their rewards. Bvndle handles distribution logistics during the festival.</p></details>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <!-- sign-off (Cosmos ref "Join the ride"): a 3D glass tube sweeps across the footer; pink-then-purple liquid fills it as you
+       scroll, and "See you in December." types in letter by letter as the liquid's head passes. Tube layers are built in js/v3.js -->
+  <div class="ride__track" id="signoffTrack">
+  <div class="ride" id="signoff">
+    <svg class="ride__svg" viewBox="0 0 1600 640" preserveAspectRatio="none" aria-hidden="true">
+      <path id="rideSpine" fill="none" stroke="none" d="M-40 530 C 320 530, 600 490, 800 340 S 1110 110, 1310 60 S 1560 0, 1680 -14"/>
+    </svg>
+    <div class="ride__copy wrap">
+      <p class="ride__title" id="rideTitle" aria-label="See you in December.">See you in December.</p>
+      <p class="ride__date"><span data-brf="datesLabel">11th &ndash; 12th December 2026</span> &middot; <span data-brf="venue">Landmark Event Centre, Lagos</span></p>
+      <div class="ride__ctas"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><a class="btn btn--ghost ride__ghost" href="#" data-partner target="_blank" rel="noopener">Become a Partner <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+    </div>
+  </div>
+  </div>
+  <div class="wrap">
+    
+    <div class="footer__grid">
+      <div><img class="footer__logo logo--dark" src="assets/logo-footer-white.svg?v=2" alt="Bvndle Rewards Festival"><img class="footer__logo logo--light" src="assets/logo-footer.svg?v=2" alt="Bvndle Rewards Festival"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
+      <div><h3>Festival</h3><ul><li><a href="#ticket">Free ticket</a></li><li><a href="#journey">Experience</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">2025 gallery</a></li><li><a href="#" data-tix target="_blank" rel="noopener">Concert on TIX</a></li></ul></div>
+      <div><h3>Bvndle</h3><ul><li><a href="https://bvndle.com" target="_blank" rel="noopener">About Bvndle</a></li><li><a href="#" data-partner target="_blank" rel="noopener">Become a Partner</a></li><li><a href="mailto:engage@bvndle.com">Contact us</a></li><li><a href="https://bvndle.com/terms" target="_blank" rel="noopener">Terms</a> and <a href="https://bvndle.com/privacy" target="_blank" rel="noopener">Privacy</a></li></ul></div>
+      <div><h3>Follow</h3><ul class="socials"><li><a href="https://www.instagram.com/trybvndle" target="_blank" rel="noopener" aria-label="Instagram"><i class="ph-bold ph-instagram-logo"></i></a></li><li><a href="https://www.tiktok.com/@bvndlerewardsfest" target="_blank" rel="noopener" aria-label="TikTok"><i class="ph-bold ph-tiktok-logo"></i></a></li><li><a href="https://x.com/trybvndle" target="_blank" rel="noopener" aria-label="X"><i class="ph-bold ph-x-logo"></i></a></li><li><a href="https://www.youtube.com/@Bvndleapp" target="_blank" rel="noopener" aria-label="YouTube"><i class="ph-bold ph-youtube-logo"></i></a></li></ul></div>
+    </div>
+    <div class="footer__bottom"><span>&copy; 2026 Bvndle</span></div>
+  </div>
+</footer>
+
+<!-- Zone photos: CD jewel-case shelf -->
+<div class="cdm" id="cdModal" role="dialog" aria-modal="true" aria-labelledby="cdmTitle" hidden>
+  <div class="cdm__bar wrap"><div><p class="cdm__count dots" id="cdmCount">1 / 9</p><h2 class="display cdm__title" id="cdmTitle">Funtime</h2></div><button class="round" type="button" id="cdmClose" aria-label="Close photos"><i class="ph-bold ph-x"></i></button></div>
+  <div class="cdm__stage" id="cdmStage"><div class="cdm__row" id="cdmRow"></div></div>
+  <div class="cdm__foot wrap"><p class="cdm__hint">Scroll, swipe or use the arrow keys</p><div class="arrows"><button class="round" type="button" id="cdmPrev" aria-label="Previous photo"><i class="ph-bold ph-arrow-left"></i></button><button class="round" type="button" id="cdmNext" aria-label="Next photo"><i class="ph-bold ph-arrow-right"></i></button></div></div>
+</div>
+
+<div class="mobile-cta is-hidden" id="mobileCta"><a class="btn btn--block" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
+<!-- phone menu: a full-screen sheet with every section -->
+<dialog class="menu" id="menu" aria-label="Menu">
+  <div class="menu__top"><span class="menu__title">Menu</span><button class="nav__menu" type="button" id="menuClose" aria-label="Close menu"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div>
+  <ul class="menu__links">
+    <li><a href="#journey">Experience</a></li><li><a href="#trivia">Trivia</a></li><li><a href="#talks">Main stage</a></li><li><a href="#concert">Concert</a></li><li><a href="#day">Your day</a></li>
+    <li><a href="#vip">VIP night</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">Gallery</a></li><li><a href="#brands">Partner</a></li><li><a href="#faq">FAQs</a></li>
+  </ul>
+  <a class="btn btn--block" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
+</dialog>
+
+<script src="js/store.js?v=3"></script>
+<script src="js/festival-data.js?v=14"></script>
+<script src="js/trivia.js?v=3"></script>
+<script src="js/v3.js?v=217"></script>
+</body>
+</html>

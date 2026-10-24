@@ -1,0 +1,198 @@
+/* v3.4 (16 Oct 2026): sticky-scroll storytelling, neo-brutalist zone cards, softer sign-off. Loads last. */
+
+
+/* ===== Zone cards: solid colour, neo-brutalist elevation ===== */
+.zcard { background: var(--zc, var(--pink)) !important; color: #000; border: 3px solid #000; border-radius: 22px; box-shadow: 10px 10px 0 #f3f0eb; padding: 12px 12px 18px; transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
+.zcard::after { display: none; }
+.zcard:hover { transform: translate(-4px, -4px) rotate(-.6deg); box-shadow: 14px 14px 0 #f3f0eb; }
+.zcard:active { transform: translate(6px, 6px); box-shadow: 4px 4px 0 #f3f0eb; }
+.zcard__photo { border: 3px solid #000; border-radius: 14px; }
+.zcard__name { color: #000; }
+.zcard__line { color: #000; opacity: .8; }
+.zcard__open { background: #000; color: #fff; }
+.zcard.g-blue { --zc: #8b80f9; } .zcard.g-sun { --zc: #ff3e8e; } .zcard.g-candy { --zc: #e987e6; } .zcard.g-night { --zc: #ff5a2d; } .zcard.g-gold { --zc: #ffd23f; }
+.zscroll .zrow { padding-top: 14px; padding-bottom: 24px; gap: 30px; }
+
+/* ===== Sign-off: whitish, Neue line, gradient light on hover ===== */
+.signoff .signoff__dec.gc__big--fit { color: var(--cloud); opacity: .12; }
+.signoff__see { font: 600 clamp(28px, 4.2vw, 76px)/1 var(--font-body) !important; letter-spacing: -.03em; text-transform: none; color: var(--cloud); }
+
+/* sticky needs no overflow clipping on the section; fit the pinned story to one screen */
+.whypin { overflow: visible; }
+@media (min-width: 761px) {
+  .whypin .why { gap: clamp(18px, 3vh, 40px); }
+  .whypin .why__title { font-size: clamp(40px, min(5.4vw, 9vh), 104px); }
+  .whypin .flips__cap { margin-top: 10px; }
+  .zpin .h2 { font-size: clamp(36px, min(5vw, 8vh), 76px); }
+}
+
+/* sign-off as SVG: edge to edge, faded whitish fill, gradient stroke under the cursor */
+.signoff__svg { grid-area: 1 / 1; display: block; width: 100vw; height: auto; overflow: visible; }
+.signoff__svg text { font-family: var(--font-display); font-weight: 700; font-size: 200px; letter-spacing: 0; }
+.so__fill { fill: var(--cloud); opacity: .12; }
+.so__stroke { fill: none; stroke: url(#soGrad); stroke-width: 2.2px; vector-effect: non-scaling-stroke; }
+.signoff__line { opacity: 0; transition: opacity .3s;
+  -webkit-mask-image: radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), #000 0%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(circle 240px at var(--mx, 50%) var(--my, 50%), #000 0%, #000 35%, transparent 100%); }
+.signoff.is-lit .signoff__line { opacity: 1; }
+@media (hover: none) { .signoff__line { display: none; } }
+.so__stroke { stroke-width: 3.5px; }
+.signoff__line { -webkit-mask-image: radial-gradient(circle 280px at var(--mx, 50%) var(--my, 50%), #000 0%, #000 55%, transparent 100%); mask-image: radial-gradient(circle 280px at var(--mx, 50%) var(--my, 50%), #000 0%, #000 55%, transparent 100%); }
+
+/* ===== v3.5: receipts flip on tap only (no scroll pin) ===== */
+.whypin__stick { padding: var(--section-y) 0; }
+
+/* tree sits on flat blue, no pale patch behind it */
+.poster--tree { background: #1a35f0; }
+
+/* sign-off light: Anton has one weight, so no faux-bold doubled outlines; one crisp gradient line,
+   a faint gradient wash inside the letters, wider and softer spotlight */
+.signoff__svg text { font-weight: 400; }
+.so__stroke { fill: url(#soGrad); fill-opacity: .16; stroke-width: 2px; stroke-linejoin: round; }
+.signoff__line { transition: opacity .5s var(--ease);
+  -webkit-mask-image: radial-gradient(circle 380px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0,0,0,.85) 35%, transparent 100%);
+  mask-image: radial-gradient(circle 380px at var(--mx, 50%) var(--my, 50%), #000 0%, rgba(0,0,0,.85) 35%, transparent 100%); }
+
+/* reward cards: wide rectangles, numerals run the full card width */
+.flip { aspect-ratio: 1.7; min-height: 0; }
+@media (max-width: 1400px) { .flip { aspect-ratio: 1.6; } }
+.flip__back .gc__big--fit { left: 0; right: 0; bottom: -.16em; line-height: 1; letter-spacing: -.04em; }
+
+/* tree counter centred under the tree */
+.tree__count { display: block; text-align: center; margin-top: 12px; }
+.tree__count b { margin-right: .25em; }
+
+/* DECEMBER: a hand cursor while the light follows */
+
+.flip.no-anim .flip__face { transition: none !important; }
+
+/* ===== v3.6 gratitude tree: lights only, on near-black ===== */
+.poster--tree { background: #07060b; }
+.poster--tree .form { border: 1px solid rgba(243,240,235,.16); }
+#tree { aspect-ratio: .82; }
+
+/* hero: one neat pile, cards a touch larger */
+.pass { --w: clamp(210px, 24vw, 400px); }
+
+/* ===== v3.7 base: soft charcoal #111 instead of pure black (Paul's reference); raised surfaces one step up ===== */
+:root { --black: #111; --ink-2: #1a1a1a; }
+body, .poster--sun, .brands, .poster--tree, .cdm { background: #111; }
+.nav { background: rgba(17,17,17,.78); }
+.form, .mini, .upsell, .chart, .cd { background: #1a1a1a; }
+.round { background: #111; }
+
+/* tree fits the screen with its counter: never taller than the viewport minus nav, counter and padding */
+#tree { max-height: calc(100dvh - 240px); min-height: 360px; }
+
+/* DECEMBER in the sans (Neue Montreal stand-in), heavy and tight; the light is a pink-only gradient */
+.signoff__svg text { font-family: var(--font-body); font-weight: 800; letter-spacing: -.045em; }
+.so__stroke { stroke-width: 1.6px; }
+.logowall { background: #111; }
+
+/* The font builds some letters from overlapping pieces (the D is a stem plus a bowl), so a plain outline shows the
+   seams inside. Draw the outline twice as thick, then cover its inner half with the letters' own faded colour
+   (cloud at 12% over #111 = #2c2c2b): only the outer edge stays visible. The pink wash sits on top. */
+.so__stroke { fill: none; stroke-width: 3.2px; }
+
+/* ===== logo wall slides: sponsors / partners, story-style white bars ===== */
+.ltabs { display: flex; gap: 16px; margin-bottom: 18px; max-width: 520px; }
+.ltab { flex: 1; display: grid; gap: 10px; padding: 0; border: 0; background: none; color: var(--cloud-dim); font: 600 var(--fs-body)/1.2 var(--font-body); text-align: left; cursor: pointer; }
+.ltab b { color: inherit; font-weight: 800; margin-left: 4px; }
+.ltab.is-on { color: var(--cloud); }
+.ltab.is-on b { color: var(--pink); }
+.ltab__bar { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,.28); overflow: hidden; }
+.ltab__bar i { display: block; height: 100%; background: #fff; transform: scaleX(0); transform-origin: left; }
+.ltab.is-done .ltab__bar i { transform: scaleX(1); }
+.ltab.is-on .ltab__bar i { animation: ltabFill 7s linear forwards; }
+.partners.is-paused .ltab.is-on .ltab__bar i { animation-play-state: paused; }
+@keyframes ltabFill { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .ltab.is-on .ltab__bar i { animation: none; transform: scaleX(1); } .lslides__track { transition: none !important; } }
+.ltab:focus-visible { outline: 2px solid var(--pink); outline-offset: 6px; border-radius: 4px; }
+.lslides__view { overflow: hidden; border-radius: 22px; transition: height .6s var(--ease); touch-action: pan-y; }
+.lslides__track { display: flex; align-items: flex-start; transition: transform .7s var(--ease); }
+.lslides__track > .logowall { flex: 0 0 100%; width: 100%; }
+.logowall { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1000px) { .logowall { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 560px) { .logowall { grid-template-columns: repeat(3, 1fr); } }
+
+/* brands cluster: legend and reach in HTML so they keep the type scale at any card width */
+.chart__reach { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 6px 0 4px; }
+.chart__reach b { font: 800 var(--fs-title)/1 var(--font-num); letter-spacing: -.04em; color: var(--cloud); }
+.chart__reach span { font-size: var(--fs-small); color: #a69df5; }
+
+/* brands: unit row, one block per brand; groups sized by count */
+.ubar { flex: 1; display: flex; align-items: center; gap: clamp(10px, 1.6vw, 22px); padding: 28px 0 20px; }
+.ubar__grp { flex: var(--n) 1 0; min-width: 0; display: grid; gap: 12px; }
+.ubar__grp p { font: 600 var(--fs-small)/1.2 var(--font-body); color: var(--cloud-dim); white-space: nowrap; }
+.ubar__grp b { display: block; font: 800 var(--fs-title)/1 var(--font-num); letter-spacing: -.04em; color: var(--c); margin-bottom: 4px; }
+.ubar__cells { display: flex; gap: 4px; height: clamp(90px, 12vw, 180px); }
+.ubar__cells i { flex: 1; min-width: 4px; border-radius: 6px; background: rgba(243,240,235,.08); transition: background .3s, transform .3s var(--ease); transform-origin: bottom; transform: scaleY(.35); }
+.ubar__cells i.is-on { background: var(--c); transform: scaleY(1); }
+.ubar__cells i:hover { filter: brightness(1.2); }
+.chart__reach { margin-top: auto; }
+.ubar__grp p { white-space: normal; overflow-wrap: anywhere; }
+.ubar { min-width: 0; overflow: hidden; }
+.ubar { flex-wrap: wrap; align-content: center; }
+.ubar__key { display: none; flex-basis: 100%; list-style: none; padding: 0; margin: 4px 0 0; gap: 6px 16px; flex-wrap: wrap; font: 600 var(--fs-small)/1.2 var(--font-body); color: var(--cloud-dim); }
+.ubar__key li { display: inline-flex; align-items: center; gap: 8px; }
+.ubar__key i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.chart { container-type: inline-size; }
+@container (max-width: 520px) {
+  .ubar__grp p span { display: none; }
+  .ubar__key { display: flex; }
+}
+
+/* ===== v3.8 finishing touches ===== */
+/* stat cards stack on narrow screens (v3.2's two-column rule had overridden the breakpoint) */
+@media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+/* comfortable tap targets: footer links and the top-bar link get 44px of hit area without changing the look */
+.footer ul { gap: 0; }
+.footer ul a { display: inline-block; padding: 12px 0; }
+.topbar a { padding-block: 10px; margin-block: -10px; }
+/* phones: smaller pass cards so the star fits the width */
+@media (max-width: 760px) { .pass { --w: 150px; } }
+/* phones: the date chip breaks after the date, so drop the dot that would dangle at the line end */
+@media (max-width: 760px) { .chipglass { border-radius: 22px; row-gap: 6px; } .chipglass > b + .sep { display: none; } .chipglass > b { flex-basis: calc(100% - 30px); } }
+
+/* DECEMBER, outline only. paint-order: the stroke is painted first, then a fill in the page colour covers its inner
+   half and any seams where the font's pieces overlap, so only one clean outer line shows (visible width = half the stroke).
+   At rest: a faint cloud outline. Under the cursor: the same outline in a pink gradient. */
+.so__fill { fill: #111; opacity: 1; stroke: var(--cloud); stroke-opacity: .32; stroke-width: 1.6px; vector-effect: non-scaling-stroke; paint-order: stroke fill; stroke-linejoin: round; }
+.so__stroke { fill: #111; stroke: url(#soGrad); stroke-width: 2.2px; paint-order: stroke fill; stroke-linejoin: round; }
+
+/* phones: logo wall heading and count stack, count on one line */
+@media (max-width: 760px) { .partners__head { flex-direction: column; align-items: flex-start; gap: 6px; } .partners__count { white-space: nowrap; } }
+
+/* magic-wand cursor (Phosphor magic-wand, fill, mirrored so the tip points up-left) over DECEMBER only; hotspot = the tip */
+.signoff, .signoff * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='-8 -8 272 272'%3E%3Cg transform='translate%28256 0%29 scale%28-1 1%29'%3E%3Cpath d='M248,152a8,8,0,0,1-8,8H224v16a8,8,0,0,1-16,0V160H192a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16A8,8,0,0,1,248,152ZM56,72H72V88a8,8,0,0,0,16,0V72h16a8,8,0,0,0,0-16H88V40a8,8,0,0,0-16,0V56H56a8,8,0,0,0,0,16ZM184,192h-8v-8a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0v-8h8a8,8,0,0,0,0-16ZM219.31,80,80,219.31a16,16,0,0,1-22.62,0L36.68,198.63a16,16,0,0,1,0-22.63L176,36.69a16,16,0,0,1,22.63,0l20.68,20.68A16,16,0,0,1,219.31,80ZM208,68.69,187.31,48l-32,32L176,100.69Z' fill='%23FF3E8E' stroke='%23111' stroke-width='16' stroke-linejoin='round' paint-order='stroke'/%3E%3C/g%3E%3C/svg%3E") 8 8, crosshair; }
+
+/* stacked hero up to 900px (was 760), so the star never sits on the headline on tablets */
+@media (max-width: 900px) {
+  .hero { height: auto; min-height: 820px; }
+  .hero__copy { top: auto; transform: none; bottom: 28px; }
+  .hero__copy > * { max-width: none; }
+  .hint { top: 14px; bottom: auto; left: 20px; right: auto; }
+  .pass { --w: 180px; }
+}
+@media (max-width: 760px) { .pass { --w: 150px; } }
+
+/* DECEMBER outline, two layers per SVG: every letter's stroke first, then one solid page-colour fill of all letters on top.
+   The fill hides the inner half of each stroke, the seams where glyph pieces overlap (the R's leg, the D's stem) and
+   any spots where letters touch, so a single clean outer line remains. Spacing loosened so letters don't touch. */
+.signoff__svg text { letter-spacing: -.02em; }
+.so__fill { fill: none; paint-order: normal; }
+.so__stroke { fill: none; paint-order: normal; }
+.so__mask { fill: #111; stroke: none; }
+
+/* cursors: hand on anything clickable, open/closed hand on anything draggable, wand only on DECEMBER */
+.lslides__view, #tree { cursor: grab; }
+.lslides__view:active, #tree:active, .pass:active, .qrow:active { cursor: grabbing; }
+label[for], .logowall a, .cd { cursor: pointer; }
+.btn[disabled], button:disabled { cursor: not-allowed; }
+.ubar__cells i { cursor: help; }
+
+/* Figma export snapshot (only when opened with #figmacapture): no motion, zones laid out as a wrapped grid */
+.is-capture *, .is-capture *::before, .is-capture *::after { transition: none !important; animation: none !important; }
+.is-capture .zscroll { height: auto !important; }
+.is-capture .zpin { position: static; height: auto; overflow: visible; padding: var(--section-y) 0; }
+.is-capture .zscroll .zrow { transform: none !important; flex-wrap: wrap; }
