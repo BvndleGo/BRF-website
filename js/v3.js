@@ -569,7 +569,7 @@
         <p class="gc__label">${isNew ? "You're in." : "Welcome back."} Show this at the gate.</p><span class="gc__tag">FREE TICKET &middot; DAY PASS</span>
         <p class="yourpass__name">${esc(pass.name)}</p>
         <div class="yourpass__meta"><span>${esc(cfg.datesLabel)}</span><span>${esc(cfg.venue)}</span>${pass.tag ? `<span>@${esc(pass.tag)}</span>` : ""}</div>
-        <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} locked in</p>` : ""; })()}
+        <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} in the draw</p>` : ""; })()}
         <p class="gc__big gc__big--r" aria-hidden="true">2026</p>
       </div>
       ${nudges(["play", "guess", "concert"], "Your day pass is set. What's next?")}
@@ -623,6 +623,7 @@
           if (!localStorage.getItem("brf-my-pass")) localStorage.setItem("brf-my-pass", JSON.stringify(pass));
         } catch (e) {}
         storyCta();
+        dispatchEvent(new Event("brf:claimed"));
         // mint: initials on the back face, flip to show it, then the pile grows
         $("#coinMine").textContent = name.split(" ").map((w) => w[0]).join("").slice(0, 3).toUpperCase();
         if (isNew) spin.ty = Math.ceil((spin.y + 360) / 360) * 360 + 180;
@@ -1225,78 +1226,152 @@
     $$(".vtier").forEach((t) => { t.addEventListener("pointerenter", () => hi(t.dataset.z)); t.addEventListener("pointerleave", () => hi(null)); });
   }
 
-  /* ===== 8b. 1 Million Questions: a practice round. Five random questions from js/trivia.js, 15 s each.
-     A wrong answer that is the question's "near" option earns "So close!". Best score is kept on this device. ===== */
+  /* ===== 8b. 1 Million Questions. Ticket holders play the real questions, marked on the server (js/store.js ->
+     Supabase): one question at a time, options shuffled per person, 15 s each, every question answered once.
+     Every right answer is a draw entry; every 10 right answers earns 5 BvndleCoins (pending until an admin approves).
+     Anyone can play a practice round on the sample questions in js/trivia.js (no entries, no coins). ===== */
   const quiz = $("#quiz"), TV = window.BRF_TRIVIA;
   if (quiz && TV) {
-    const ROUND = 5, SECS = 15, BEST = "brf-trivia-best";
-    let qs = [], qi = 0, score = 0, qTimer = 0, qEnd = 0, answered = false;
-    const best = () => { try { return +localStorage.getItem(BEST) || 0; } catch (e) { return 0; } };
-    const sampleNote = TV.sample ? `<p class="quiz__note">Sample questions. The real ones are set by the 1 Million Questions team.</p>` : "";
-    let practice = false;
-    function qStart(isPractice) {
-      practice = !!isPractice;
-      qs = TV.questions.slice().sort(() => Math.random() - 0.5).slice(0, ROUND); qi = 0; score = 0; qShow();
+    const ROUND = 10, SECS = 15, PRACTICE_ROUND = 5;
+    const T = window.PassStore.trivia;
+    const token = () => { try { return (JSON.parse(localStorage.getItem("brf-my-pass") || "null") || {}).token || null; } catch (e) { return null; } };
+    const plural = (n, one, many) => `${n.toLocaleString("en-NG")} ${n === 1 ? one : many}`;
+    const sampleNote = TV.sample ? `<p class="quiz__note">Practice uses sample questions. The real round uses the 1 Million Questions set.</p>` : "";
+    let timer = 0, answered = false, roundRight = 0, roundCoins = 0, roundN = 0, last = null;
+
+    function stop() { clearInterval(timer); }
+    // the ticket card and the "next step" nudges read the entry count from here
+    const remember = (st) => { try { localStorage.setItem("brf-trivia-best", String(st.correct || 0)); } catch (e) {} };
+    function bar(secs, onEnd) {
+      const end = performance.now() + secs * 1000; stop();
+      timer = setInterval(() => {
+        const left = Math.max(0, end - performance.now()), el = $("#quizBar");
+        if (el) el.style.transform = `scaleX(${left / (SECS * 1000)})`;
+        if (!left) { stop(); onEnd(); }
+      }, 100);
     }
-    function qIdle() {
-      const b = best();
+    function oops(msg) {
+      stop();
+      quiz.innerHTML = `<div class="quiz__card quiz__card--start"><p class="quiz__big" aria-hidden="true">!</p><h3>${esc(msg)}</h3>
+        <div class="quiz__ctas"><button class="btn" type="button" id="quizBack">Back <i class="ph-bold ph-arrow-left" aria-hidden="true"></i></button></div></div>`;
+      $("#quizBack").addEventListener("click", qIdle);
+    }
+
+    async function qIdle() {
+      stop();
+      const tok = token();
+      if (!tok) {
+        quiz.innerHTML = `<div class="quiz__card quiz__card--start">
+          <p class="quiz__big" aria-hidden="true">?</p>
+          <h3>Play for entries and coins</h3><p>Every right answer is an entry into the draw. Every 10 right answers earns 5 BvndleCoins.</p>
+          <p class="quiz__best">Claim your free ticket to play the real questions.</p>
+          <div class="quiz__ctas"><a class="btn" href="#ticket">Claim free ticket <i class="ph-bold ph-ticket" aria-hidden="true"></i></a><button class="btn btn--ghost" type="button" id="quizPractice">Practice first <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
+        $("#quizPractice").addEventListener("click", practiceStart);
+        return;
+      }
+      quiz.innerHTML = `<div class="quiz__card quiz__card--start"><p class="quiz__big" aria-hidden="true">?</p><h3>Loading your score...</h3></div>`;
+      const r = await T.status(tok);
+      if (!r.ok) return r.error === "invalid_token" ? forget() : oops("We couldn't load your score. Check your connection and try again.");
+      const st = r.data; remember(st);
+      if (st.questions_left <= 0) {
+        quiz.innerHTML = `<div class="quiz__card quiz__card--end"><p class="quiz__big">${st.correct}<small> ${st.correct === 1 ? "entry" : "entries"}</small></p>
+          <h3>You've answered every question.</h3><p class="quiz__best">${plural(st.coins_earned, "coin", "coins")} earned. Winners are announced live on ${esc(TV.drawDay || "the day")}.</p></div>`;
+        return;
+      }
       quiz.innerHTML = `<div class="quiz__card quiz__card--start">
         <p class="quiz__big" aria-hidden="true">?</p>
-        <h3>Play for entries</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; 1 entry per right answer</p>
-        ${b ? `<p class="quiz__best">You have <b>${b} ${b === 1 ? "entry" : "entries"}</b> so far</p>` : ""}
-        <div class="quiz__ctas"><button class="btn btn--ghost" type="button" id="quizPractice">Practice first <i class="ph-bold ph-barbell" aria-hidden="true"></i></button><button class="btn" type="button" id="quizGo">Play for entries <i class="ph-bold ph-play" aria-hidden="true"></i></button></div>
-        <p class="quiz__note">Practice rounds don't count. Warm up as many times as you like.</p>${sampleNote}</div>`;
-      $("#quizGo").addEventListener("click", () => qStart(false));
-      $("#quizPractice").addEventListener("click", () => qStart(true));
+        <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every 10 right answers earns 5 BvndleCoins</p>
+        <p class="quiz__best">You have <b>${plural(st.correct, "entry", "entries")}</b> and <b>${plural(st.coins_earned, "coin", "coins")}</b>. ${st.next_award_in} more right ${st.next_award_in === 1 ? "answer" : "answers"} for your next 5 coins.</p>
+        <div class="quiz__ctas"><button class="btn" type="button" id="quizGo">Play ${ROUND} questions <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizPractice">Practice <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>
+        <p class="quiz__note">Each question can only be answered once, and the clock is checked on our side. Coins are added to your Bvndle account after the festival team approves them.</p></div>`;
+      $("#quizGo").addEventListener("click", liveStart);
+      $("#quizPractice").addEventListener("click", practiceStart);
     }
-    function qShow() {
-      const q = qs[qi]; answered = false;
+    function forget() { try { localStorage.removeItem("brf-my-pass"); } catch (e) {} qIdle(); }
+
+    /* ---- the real round ---- */
+    function liveStart() { roundRight = 0; roundCoins = 0; roundN = 0; last = null; liveNext(); }
+    async function liveNext() {
+      if (roundN >= ROUND) return liveDone();
+      quiz.innerHTML = `<div class="quiz__card"><div class="quiz__top"><span>Question ${roundN + 1} / ${ROUND}</span><span>Right ${roundRight}</span></div><h3 class="quiz__q">Loading...</h3></div>`;
+      const r = await T.next(token());
+      if (!r.ok) return oops("We couldn't load the next question. Check your connection and try again.");
+      const q = r.data;
+      if (q.done) { last = q.summary; return liveDone(true); }
+      answered = false;
       quiz.innerHTML = `<div class="quiz__card">
-        <div class="quiz__top"><span>${practice ? '<b class="quiz__mode">Practice</b> ' : ""}Question ${qi + 1} / ${ROUND}</span><span>Score ${score}</span></div>
+        <div class="quiz__top"><span>Question ${roundN + 1} / ${ROUND}</span><span>Right ${roundRight}</span></div>
+        <div class="quiz__time"><i id="quizBar"></i></div>
+        <h3 class="quiz__q">${esc(q.question)}</h3>
+        <div class="quiz__opts">${q.options.map((t, k) => `<button class="quiz__opt" type="button" data-k="${k}"><b>${"ABCD"[k]}</b><span>${esc(t)}</span></button>`).join("")}</div>
+        <p class="quiz__say" id="quizSay"></p></div>`;
+      $$(".quiz__opt", quiz).forEach((b) => b.addEventListener("click", () => liveAnswer(q, +b.dataset.k)));
+      $(".quiz__opt", quiz).focus({ preventScroll: true });
+      bar(Math.min(SECS, q.seconds_left ?? SECS), () => liveAnswer(q, -1));
+    }
+    async function liveAnswer(q, k) {
+      if (answered) return; answered = true; stop();
+      $$(".quiz__opt", quiz).forEach((b) => (b.disabled = true));
+      const r = await T.answer(token(), q.id, k);
+      if (!r.ok) return r.error === "already_answered" ? liveNext() : oops("We couldn't save that answer. Check your connection and try again.");
+      const a = r.data; last = a.summary; roundN++; remember(a.summary);
+      if (a.correct) roundRight++;
+      roundCoins += a.coins_awarded || 0;
+      $$(".quiz__opt", quiz).forEach((b, i) => { b.classList.toggle("is-ok", i === a.correct_choice); b.classList.toggle("is-no", i === k && !a.correct); });
+      const say = $("#quizSay");
+      say.textContent = a.correct ? (a.coins_awarded ? `Correct! +${a.coins_awarded} BvndleCoins` : "Correct!") : a.timed_out ? "Time's up." : "Not this time.";
+      say.className = "quiz__say " + (a.correct ? "is-ok" : "is-no");
+      setTimeout(liveNext, a.correct ? (a.coins_awarded ? 1800 : 1100) : 1700);
+    }
+    function liveDone(outOfQuestions) {
+      stop();
+      const st = last || { correct: 0, coins_earned: 0, next_award_in: 10 };
+      const line = outOfQuestions ? "You've answered every question." : roundRight === ROUND ? "Perfect round." : roundRight === 0 ? "No right answers this round. Have another go." : `${roundRight} right this round.`;
+      quiz.innerHTML = `<div class="quiz__card quiz__card--end">
+        <div class="stubs" aria-hidden="true">${Array.from({ length: Math.max(roundN, 1) }, (_, i) => `<span class="rstub${i < roundRight ? " is-won" : ""}" style="--i:${i}">#${String(1000 + Math.floor(Math.random() * 9000))}</span>`).join("")}</div>
+        <p class="quiz__big">${st.correct}<small> ${st.correct === 1 ? "entry" : "entries"}</small></p><h3>${line}</h3>
+        <p class="quiz__best">${roundCoins ? `You earned <b>${roundCoins} BvndleCoins</b> this round. ` : ""}Total: <b>${plural(st.coins_earned, "coin", "coins")}</b>, pending approval. ${outOfQuestions ? "" : `${st.next_award_in} more right ${st.next_award_in === 1 ? "answer" : "answers"} for your next 5 coins.`} Winners are announced live on ${esc(TV.drawDay || "the day")}.</p>
+        ${nudges(["guess", "concert"], "Next:")}
+        <div class="quiz__ctas">${outOfQuestions ? "" : `<button class="btn" type="button" id="quizAgain">Play ${ROUND} more <i class="ph-bold ph-play" aria-hidden="true"></i></button>`}</div></div>`;
+      if (!outOfQuestions) $("#quizAgain").addEventListener("click", liveStart);
+    }
+
+    /* ---- practice (sample questions, nothing saved) ---- */
+    let pqs = [], pi = 0, pscore = 0;
+    function practiceStart() { pqs = TV.questions.slice().sort(() => Math.random() - 0.5).slice(0, PRACTICE_ROUND); pi = 0; pscore = 0; practiceShow(); }
+    function practiceShow() {
+      const q = pqs[pi]; answered = false;
+      quiz.innerHTML = `<div class="quiz__card">
+        <div class="quiz__top"><span><b class="quiz__mode">Practice</b> Question ${pi + 1} / ${PRACTICE_ROUND}</span><span>Score ${pscore}</span></div>
         <div class="quiz__time"><i id="quizBar"></i></div>
         <h3 class="quiz__q">${esc(q.q)}</h3>
         <div class="quiz__opts">${q.a.map((t, k) => `<button class="quiz__opt" type="button" data-k="${k}"><b>${"ABCD"[k]}</b><span>${esc(t)}</span></button>`).join("")}</div>
         <p class="quiz__say" id="quizSay"></p></div>`;
-      $$(".quiz__opt", quiz).forEach((b) => b.addEventListener("click", () => qAnswer(+b.dataset.k)));
+      $$(".quiz__opt", quiz).forEach((b) => b.addEventListener("click", () => practiceAnswer(+b.dataset.k)));
       $(".quiz__opt", quiz).focus({ preventScroll: true });
-      qEnd = performance.now() + SECS * 1000; clearInterval(qTimer);
-      qTimer = setInterval(() => {
-        const left = Math.max(0, qEnd - performance.now()), bar = $("#quizBar");
-        if (bar) bar.style.transform = `scaleX(${left / (SECS * 1000)})`;
-        if (!left) qAnswer(-1);
-      }, 100);
+      bar(SECS, () => practiceAnswer(-1));
     }
-    function qAnswer(k) {
-      if (answered) return; answered = true; clearInterval(qTimer);
-      const q = qs[qi], right = k === q.ok;
-      if (right) score++;
+    function practiceAnswer(k) {
+      if (answered) return; answered = true; stop();
+      const q = pqs[pi], right = k === q.ok;
+      if (right) pscore++;
       $$(".quiz__opt", quiz).forEach((b, i) => { b.disabled = true; b.classList.toggle("is-ok", i === q.ok); b.classList.toggle("is-no", i === k && !right); });
       $("#quizSay").textContent = right ? "Correct!" : k === -1 ? "Time's up." : k === q.near ? "So close! Not quite." : "Not this time.";
       $("#quizSay").className = "quiz__say " + (right ? "is-ok" : k === q.near ? "is-near" : "is-no");
-      setTimeout(() => (++qi < ROUND ? qShow() : qDone()), right ? 1100 : 1700);
+      setTimeout(() => (++pi < PRACTICE_ROUND ? practiceShow() : practiceDone()), right ? 1100 : 1700);
     }
-    function qDone() {
-      if (practice) {                                                    // practice: no entries saved, straight to the real thing
-        quiz.innerHTML = `<div class="quiz__card quiz__card--end">
-          <p class="quiz__big">${score}<small> / ${ROUND}</small></p><h3>${score >= 4 ? "You're ready." : score >= 2 ? "Warming up nicely." : "Good warm-up."}</h3>
-          <p class="quiz__best">That was practice, so no entries this time. Play for real when you're ready.</p>
-          <div class="quiz__ctas"><button class="btn" type="button" id="quizReal">Play for entries <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizAgain">Practice again <i class="ph-bold ph-arrow-counter-clockwise" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
-        $("#quizReal").addEventListener("click", () => qStart(false));
-        $("#quizAgain").addEventListener("click", () => qStart(true));
-        return;
-      }
-      const b = best(); if (score > b) try { localStorage.setItem(BEST, score); } catch (e) {}
-      const kept = Math.max(score, b);
-      const line = score === 0 ? "No entries this round. Have another go." : score === ROUND ? "Perfect round. Maximum entries." : `${score} right answers.`;
+    function practiceDone() {
+      const has = !!token();
       quiz.innerHTML = `<div class="quiz__card quiz__card--end">
-        <div class="stubs" aria-hidden="true">${Array.from({ length: ROUND }, (_, i) => `<span class="rstub${i < score ? " is-won" : ""}" style="--i:${i}">#${String(1000 + Math.floor(Math.random() * 9000))}</span>`).join("")}</div>
-        <p class="quiz__big">${score}<small> ${score === 1 ? "entry" : "entries"}</small></p><h3>${line}</h3>
-        <p class="quiz__best">Your best round counts: <b>${kept} ${kept === 1 ? "entry" : "entries"}</b>. Winners are announced live on ${esc(TV.drawDay || "the day")}.</p>
-        ${doneSteps().claim ? nudges(["guess", "concert"], "Entries locked to your day pass. Next:") : nudges(["claim", "guess"], "Lock your entries in")}
-        <div class="quiz__ctas"><button class="btn btn--ghost" type="button" id="quizAgain">Play again <i class="ph-bold ph-arrow-counter-clockwise" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
-      $("#quizAgain").addEventListener("click", () => qStart(false));
+        <p class="quiz__big">${pscore}<small> / ${PRACTICE_ROUND}</small></p><h3>${pscore >= 4 ? "You're ready." : pscore >= 2 ? "Warming up nicely." : "Good warm-up."}</h3>
+        <p class="quiz__best">That was practice, so no entries or coins. ${has ? "Play the real questions when you're ready." : "Claim your free ticket to play the real questions."}</p>
+        <div class="quiz__ctas">${has ? `<button class="btn" type="button" id="quizReal">Play for real <i class="ph-bold ph-play" aria-hidden="true"></i></button>` : `<a class="btn" href="#ticket">Claim free ticket <i class="ph-bold ph-ticket" aria-hidden="true"></i></a>`}<button class="btn btn--ghost" type="button" id="quizAgain">Practice again <i class="ph-bold ph-arrow-counter-clockwise" aria-hidden="true"></i></button></div>${sampleNote}</div>`;
+      if (has) $("#quizReal").addEventListener("click", liveStart);
+      $("#quizAgain").addEventListener("click", practiceStart);
     }
+
     if (TV.champion2025) $("#champName").textContent = TV.champion2025;
+    addEventListener("brf:claimed", qIdle);
     qIdle();
   }
 

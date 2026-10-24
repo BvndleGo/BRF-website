@@ -73,3 +73,11 @@ Fonts come from Google Fonts (Anton, Doto, Inter Tight) and icons from Phosphor 
 - Adding an admin: add their email to `public.admin_emails`, then create their login in Supabase → Authentication → Users → Add user. Approved emails become admins automatically.
 - Customer.io: every new ticket is sent from the database to Customer.io (workspace 220452) as the person (by email, BRF data in `brf_*` attributes) plus a `free_pass_claimed` event. A job every 5 minutes retries anything that didn't go through. See supabase/migrations/20261024010000_customerio_sync.sql.
 - Confirmation email: Customer.io automation "BRF 2026 — Free Ticket Confirmation" (triggered by `free_pass_claimed`).
+
+## 1 Million Questions and BvndleCoins
+
+- Ticket holders play the real questions; everyone else can play a practice round on the sample questions in js/trivia.js.
+- Questions are marked in Supabase, never in the browser: one at a time, options shuffled per person, 15 seconds each, each question answered once.
+- Every right answer is a draw entry. Every 10 right answers earns 5 BvndleCoins, recorded as pending.
+- admin.html → Coins tab: approve or reject awards, then "Export approved" for a per-person list (email, phone, Bvndle tag, coins, naira value) to credit in the Bvndle app.
+- The question bank is in Supabase only (the repo is public). To update questions, ask for a re-import from the Google Sheet.

@@ -1,0 +1,18 @@
+-- 1 Million Questions + BvndleCoin awards. Applied to the live project on 24 Oct 2026.
+-- The question bank itself (public.trivia_questions) is NOT in this repo: the repo is public and the rows hold the answers.
+-- Questions were imported from the "one million questions" Google Sheet (complete rows only, duplicates removed).
+--
+-- Rules live in public.brf_trivia_rules(): 15 s per question (+10 s grace for slow networks),
+-- 5 coins for every 10 correct answers. Each question can be answered once per ticket. A question that is
+-- served and not answered in time counts as wrong. Options are shuffled per person; answers never reach the browser.
+-- Awards are recorded in public.coin_awards as 'pending' until an admin approves them (admin_review_coins).
+--
+-- Public RPCs (anon): trivia_status(token), trivia_next(token), trivia_answer(token, question_id, choice).
+-- The token is free_passes.player_token, returned by claim_free_pass (re-claiming with the same email + phone returns it again).
+--
+-- Full DDL: see the "trivia_and_coins" migration in Supabase (supabase_migrations.schema_migrations), plus:
+--   revoke select on public.free_passes from anon, authenticated;
+--   grant select (id, created_at, pass_code, first_name, last_name, email, phone, has_bvndle_tag, bvndle_tag, source,
+--                 checked_in_at, checked_in_by, cio_synced_at, cio_request_id) on public.free_passes to authenticated;
+--   revoke all on public.trivia_questions, public.trivia_serves, public.trivia_answers, public.coin_awards from anon;
+--   revoke all on public.trivia_serves from authenticated;

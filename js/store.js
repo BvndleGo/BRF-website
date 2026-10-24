@@ -65,12 +65,22 @@ window.PassStore = (() => {
           p_has_tag: !!tag, p_tag: tag || null, p_source: source(),
         });
         if (!r.existing) total += 1;
-        return { ok: true, isNew: !r.existing, pass: { code: r.pass_code, name: `${first} ${last}`.trim(), first, last, email, phone, tag: tag || "" } };
+        return { ok: true, isNew: !r.existing, pass: { code: r.pass_code, name: `${first} ${last}`.trim(), first, last, email, phone, tag: tag || "", token: r.token } };
       } catch (e) {
         return { ok: false, error: e.code || "network" };
       }
     },
+    /* 1 Million Questions, marked on the server. Each call resolves to { ok, data } or { ok: false, error }. */
+    trivia: {
+      status: (token) => call("trivia_status", { p_token: token }),
+      next: (token) => call("trivia_next", { p_token: token }),
+      answer: (token, id, choice) => call("trivia_answer", { p_token: token, p_question_id: id, p_choice: choice }),
+    },
   };
+
+  async function call(name, body) {
+    try { return { ok: true, data: await rpc(name, body) }; } catch (e) { return { ok: false, error: e.code || "network" }; }
+  }
 })();
 
 /* Nigerian phone numbers: accepts 080..., 8012..., +234..., 234... and returns +234XXXXXXXXXX or null. */
