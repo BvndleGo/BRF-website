@@ -71,4 +71,5 @@ Fonts come from Google Fonts (Anton, Doto, Inter Tight) and icons from Phosphor 
 - Form → `claim_free_pass` in Supabase. Each person gets a code like `BRF-1A2B3C4D`. Duplicate emails or phone numbers are blocked; claiming again with the same email and phone returns the same ticket.
 - `admin.html` → Supabase sign-in. Only users listed in `public.admins` can see sign-ups, check people in at the gate and export CSV.
 - Adding an admin: add their email to `public.admin_emails`, then create their login in Supabase → Authentication → Users → Add user. Approved emails become admins automatically.
-- Customer.io sync + confirmation email: `supabase/functions/sync-customerio` (not deployed yet).
+- Customer.io: every new ticket is sent from the database to Customer.io (workspace 220452) as the person (by email, BRF data in `brf_*` attributes) plus a `free_pass_claimed` event. A job every 5 minutes retries anything that didn't go through. See supabase/migrations/20261024010000_customerio_sync.sql.
+- Confirmation email: Customer.io automation "BRF 2026 — Free Ticket Confirmation" (triggered by `free_pass_claimed`).
