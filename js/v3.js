@@ -533,7 +533,7 @@
     claim: ["Claim your free day pass", "#ticket", "ph-ticket"],
     play: ["Play 1 Million Questions for draw entries", "#trivia", "ph-game-controller"],
     guess: ["Guess the headliners. Right guesses win", "#lineup", "ph-question"],
-    concert: ["Book the concert, night of 12th December", null, "ph-music-notes"],
+    concert: ["Book the concert, 12th December at 9pm", null, "ph-music-notes"],
   };
   function nudges(keys, title) {
     const d = doneSteps();

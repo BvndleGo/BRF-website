@@ -111,7 +111,7 @@ window.BRF_DATA = {
       ] },
       { label: "Day 2", date: "12th Dec", talks: [
         { time: "10:00am", until: "10:30am", title: "Recap and spoken word", topic: "Performance" },
-        { time: "10:35am", until: "11:25am", title: "What Loyalty When Value Is Unclear?", topic: "Talk" },
+        { time: "10:35am", until: "11:25am", title: "What Is Loyalty When Value Is Unclear?", topic: "Talk" },
         { time: "11:30am", until: "11:40am", title: "Award ceremony", topic: "Awards" },
         { time: "11:40am", until: "12:25pm", title: "The real currency for loyalty", topic: "Talk" },
         { time: "12:30pm", until: "1:00pm", title: "Real-time action", note: "Audience talent show", topic: "Showcase" },
