@@ -1173,8 +1173,10 @@
     let day = 0;
     $("#stageNote").textContent = ST.note || "";
     const row = (t) => `<li class="arow" style="--tc:${ST.topics[t.topic] || "#F3F0EB"}">
-      <span class="arow__time">${esc(t.time)}</span>
-      <div class="arow__main"><h4>${esc(t.title)}</h4><p><span class="arow__mic" aria-hidden="true"><i class="ph-bold ph-microphone-stage"></i></span><b>${esc(t.speaker)}</b><span>${esc(t.role)}</span></p></div>
+      <span class="arow__time">${esc(t.time)}${t.until ? `<small>to ${esc(t.until)}</small>` : ""}</span>
+      <div class="arow__main"><h4>${esc(t.title)}</h4>${t.speaker
+        ? `<p><span class="arow__mic" aria-hidden="true"><i class="ph-bold ph-microphone-stage"></i></span><b>${esc(t.speaker)}</b><span>${esc(t.role || "")}</span></p>`
+        : t.note ? `<p class="arow__note">${esc(t.note)}</p>` : ""}</div>
       <div class="arow__meta">${t.topic ? `<span class="arow__tag">${esc(t.topic)}</span>` : ""}${t.where ? `<span class="arow__where">${esc(t.where)}</span>` : ""}</div></li>`;
     // the cue shows only while there is more below; the frame is a keyboard-scrollable region when it overflows
     const syncHint = () => {

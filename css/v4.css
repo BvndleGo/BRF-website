@@ -1005,3 +1005,10 @@ html[data-theme="light"] .agenda__frame::-webkit-scrollbar-thumb { background: r
 .jpass__slot[role=button] { cursor: pointer; border-radius: 50%; }
 .jpass__slot[role=button]:hover .stamp, .jpass__slot[role=button]:focus-visible .stamp { transform: scale(1.08); }
 .jpass__slot[role=button]:focus-visible { outline: 3px solid #F3F0EB; outline-offset: 3px; }
+
+/* 26 Oct: main stage programme rows have an end time and a short note */
+.arow { grid-template-columns: 118px 1fr auto; }
+.arow__time { font-size: clamp(18px, 1.5vw, 22px); }
+.arow__time small { display: block; margin-top: 5px; font: 600 13px/1 var(--font-body); letter-spacing: 0; color: var(--cloud-dim); }
+.arow__note { margin: 4px 0 0; font-size: 14px; color: var(--cloud-dim); }
+@media (max-width: 700px) { .arow__time small { font-size: 12px; margin-top: 4px; } }

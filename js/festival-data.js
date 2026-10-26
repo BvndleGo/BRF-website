@@ -88,30 +88,39 @@ window.BRF_DATA = {
     ],
   },
 
-  /* ---- 5c. Main stage, 10am-1pm (client 23 Oct: "speakers of 2025, will send topics").
-     PLACEHOLDER: every topic, speaker and time below is dummy until the client sends the real list.
-     topic: the colour tag on the card (one colour per topic area). ---- */
+  /* ---- 5c. Main stage programme, both days (client 26 Oct). Rows: time + until, title, optional note (shown under the
+     title), type (the colour tag), optional where. Speakers and hosts not announced yet; add speaker: "Name" to a row
+     to show it with a mic icon. ---- */
   stage: {
-    note: "Topics and speakers are placeholders. The real line-up lands soon.",
-    topics: { Money: "#FFD23F", Brands: "#FF3E8E", Business: "#2e4bff", Creators: "#8B80F9", Lifestyle: "#FF5A2D", Panel: "#F3F0EB" },
-    // days: add or remove days freely; tabs appear when there is more than one. Each talk: time, title, speaker, role,
-    // topic (a key from topics above), and optional where (e.g. "Main stage", "Wealth zone") for other venues.
+    note: "Speakers and hosts are announced closer to the day.",
+    topics: { Welcome: "#F3F0EB", Performance: "#FF3E8E", Talk: "#FFD23F", "Fireside chat": "#FFD23F", Session: "#8B80F9", Zones: "#2e4bff", "Game show": "#FF5A2D", Podcast: "#8B80F9", Auction: "#FF5A2D", Showcase: "#FF3E8E", Comedy: "#FFD23F", Awards: "#FFD23F", Activation: "#2e4bff", Party: "#FF3E8E", Concert: "#5b4bd6" },
     days: [
       { label: "Day 1", date: "11th Dec", talks: [
-        { time: "10:00", title: "Loyalty that pays you back", speaker: "2025 speaker", role: "Name coming soon", topic: "Money" },
-        { time: "10:30", title: "Building a brand Lagos remembers", speaker: "2025 speaker", role: "Name coming soon", topic: "Brands" },
-        { time: "11:00", title: "From side hustle to scale", speaker: "2025 speaker", role: "Name coming soon", topic: "Business" },
-        { time: "11:30", title: "The creator economy, Naija edition", speaker: "2025 speaker", role: "Name coming soon", topic: "Creators" },
-        { time: "12:00", title: "Spend smart this December", speaker: "2025 speaker", role: "Name coming soon", topic: "Lifestyle" },
-        { time: "12:30", title: "What rewards really mean to you", speaker: "2025 speakers", role: "Panel, names coming soon", topic: "Panel" },
+        { time: "10:00am", until: "10:10am", title: "Introduction", topic: "Welcome" },
+        { time: "10:10am", until: "10:20am", title: "Opening act", note: "Theatre and dance troupe", topic: "Performance" },
+        { time: "10:35am", until: "11:25am", title: "The Jara Economics: who decides?", topic: "Talk" },
+        { time: "11:30am", until: "11:40am", title: "Performance", topic: "Performance" },
+        { time: "11:40am", until: "12:25pm", title: "Japa or Japada?", note: "Fireside chat", topic: "Fireside chat" },
+        { time: "12:30pm", until: "1:00pm", title: "PwC Report Hotline", topic: "Session" },
+        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All five zones open, all afternoon", topic: "Zones", where: "Festival floor" },
+        { time: "2:30pm", until: "3:00pm", title: "Who Wants to Be a Millionaire?", note: "Live game show: partner and sponsor trivia", topic: "Game show" },
+        { time: "3:30pm", until: "4:00pm", title: "Afropolitan", note: "Main stage podcast", topic: "Podcast" },
+        { time: "4:00pm", until: "5:00pm", title: "Konga Auction", topic: "Auction" },
+        { time: "6:00pm", until: "7:00pm", title: "Talent hunt", topic: "Showcase" },
+        { time: "7:00pm", until: "9:00pm", title: "Comedy Night: New School vs Old School", topic: "Comedy" },
       ] },
       { label: "Day 2", date: "12th Dec", talks: [
-        { time: "10:00", title: "Saving in a high-price year", speaker: "2025 speaker", role: "Name coming soon", topic: "Money" },
-        { time: "10:30", title: "Why customers come back", speaker: "2025 speaker", role: "Name coming soon", topic: "Brands" },
-        { time: "11:00", title: "Funding your first big move", speaker: "2025 speaker", role: "Name coming soon", topic: "Business" },
-        { time: "11:30", title: "Going viral without going broke", speaker: "2025 speaker", role: "Name coming soon", topic: "Creators" },
-        { time: "12:00", title: "December in Lagos, done right", speaker: "2025 speaker", role: "Name coming soon", topic: "Lifestyle" },
-        { time: "12:30", title: "The future of rewards in Nigeria", speaker: "2025 speakers", role: "Panel, names coming soon", topic: "Panel" },
+        { time: "10:00am", until: "10:30am", title: "Recap and spoken word", topic: "Performance" },
+        { time: "10:35am", until: "11:25am", title: "What Loyalty When Value Is Unclear?", topic: "Talk" },
+        { time: "11:30am", until: "11:40am", title: "Award ceremony", topic: "Awards" },
+        { time: "11:40am", until: "12:25pm", title: "The real currency for loyalty", topic: "Talk" },
+        { time: "12:30pm", until: "1:00pm", title: "Real-time action", note: "Audience talent show", topic: "Showcase" },
+        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All five zones open, all afternoon", topic: "Zones", where: "Festival floor" },
+        { time: "2:30pm", until: "3:00pm", title: "cr8torium", note: "Main stage podcast", topic: "Podcast" },
+        { time: "3:00pm", until: "3:30pm", title: "Dating game show: Auction a Friend", topic: "Game show" },
+        { time: "4:00pm", until: "5:00pm", title: "Konga Activation", topic: "Activation" },
+        { time: "6:00pm", title: "Vibe and shut down", topic: "Party" },
+        { time: "9:00pm", title: "The Bvndle Rewards Concert", note: "Separate paid ticket on TIX", topic: "Concert" },
       ] },
     ],
   },
