@@ -48,7 +48,7 @@ When you edit a CSS or JS file, bump its ?v= number in index.html (e.g. festival
 - Photos for Mavo, Fola and Zerry DL (lineup.past[].photo)
 - Testimonial videos, names and quotes (voices; set video to an .mp4 path and the play button shows up)
 - Real venue seating layout (the hall plan in the concert section is illustrative)
-- Premium Table guest count and benefits (vip.tiers, id "premiumtable")
+- Premium Table perks (vip.tiers, ids "premiumtable5" and "premiumtable10")
 
 ## The festival floor
 

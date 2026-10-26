@@ -5,7 +5,7 @@
    near = index of the "so close" answer (a believable miss), or -1 for none. */
 window.BRF_TRIVIA = {
   sample: true,
-  champion2025: "Carhoot",
+  champion2025: "Kahoot",
   drawDay: "12 December",
   questions: [
     { q: "How many zones are at Bvndle Rewards Festival 2026?", a: ["Three", "Five", "Seven", "Ten"], ok: 1, near: 2 },
@@ -13,7 +13,7 @@ window.BRF_TRIVIA = {
     { q: "What gets stamped at every zone?", a: ["Your hand", "Your festival passport", "Your ticket", "Your phone"], ok: 1, near: 2 },
     { q: "Concert night is on…", a: ["11 December", "12 December", "24 December", "31 December"], ok: 1, near: 0 },
     { q: "What does it cost to get on the festival floor?", a: ["Nothing: it's a free ticket", "₦5,000", "₦10,000", "A BvndleCoin"], ok: 0, near: 3 },
-    { q: "Who won 1 Million Questions at the 2025 festival?", a: ["Carhoot", "Bvndle", "Nobody", "The crowd"], ok: 0, near: 3 },
+    { q: "Who won 1 Million Questions at the 2025 festival?", a: ["Kahoot", "Bvndle", "Nobody", "The crowd"], ok: 0, near: 3 },
     { q: "Where do you find the silent disco?", a: ["Escape Zone", "Wealth Zone", "Connection Zone", "Adrenaline Zone"], ok: 0, near: 2 },
     { q: "In which zone do you spin the wheel?", a: ["Wealth Zone", "Creative / Alte Zone", "Escape Zone", "Adrenaline Zone"], ok: 0, near: 3 },
     { q: "Where are your BvndleCoins kept?", a: ["In the Bvndle app", "On a paper card", "At the bank", "Nowhere"], ok: 0, near: 1 },

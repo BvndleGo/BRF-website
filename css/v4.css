@@ -973,3 +973,29 @@ html[data-theme="light"] .agenda__frame::-webkit-scrollbar-thumb { background: r
 
 /* concert tickets (24 Oct): 7 tiers make the list taller than the plan, so centre the plan in its card */
 @media (min-width: 901px) { .vipsec .vmap { display: flex; flex-direction: column; justify-content: center; } }
+
+/* 26 Oct: Individual / Group ticket tabs */
+.vlist { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.vtabs { display: flex; gap: 6px; padding: 5px; border-radius: 999px; background: rgba(0,0,0,.08); border: 2px solid #111; align-self: flex-start; max-width: 100%; }
+.vtab { font: 700 14px/1 var(--font-body); padding: 11px 18px; border-radius: 999px; border: 0; background: transparent; color: #111; cursor: pointer; white-space: nowrap; }
+.vtab small { font-size: 12px; opacity: .6; margin-left: 4px; }
+.vtab.is-on { background: #111; color: #F3F0EB; }
+@media (min-width: 901px) { .vlist .vtiers { height: auto; grid-auto-rows: auto; } }
+
+/* 26 Oct: phone layout fixes */
+@media (max-width: 900px) {
+  .vipsec .vip__head, .vipsec .vip__grid { grid-template-columns: 1fr; }
+  .vipsec .vip__head { row-gap: 10px; }
+  .vipsec .vmap { max-width: 520px; width: 100%; margin: 0 auto; }
+  .vtabs { align-self: stretch; }
+  .vtab { flex: 1; text-align: center; padding: 12px 10px; }
+}
+@media (max-width: 560px) {
+  .vipsec .vtier { grid-template-columns: 56px 1fr; gap: 12px; padding: 12px; }
+  .vipsec .vtier img { width: 56px; height: 56px; }
+  .vipsec .vtier > .btn { grid-column: 1 / -1; justify-self: stretch; text-align: center; justify-content: center; }
+  .vipsec .vtier b { font-size: 16px; }
+  .vtier__price { flex-wrap: wrap; }
+  .acard__top { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .acard__price { font-size: 40px; line-height: 1; }
+}

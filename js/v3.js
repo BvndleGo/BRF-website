@@ -1190,7 +1190,17 @@
     $("#vipNote").textContent = V.note || "";
     const zoneOf = (t) => t.zone || t.id;
     const naira = (n) => "₦" + Number(n).toLocaleString("en-NG");
-    $("#vtiers").innerHTML = V.tiers.map((t) => `<li class="vtier" data-z="${zoneOf(t)}"><img src="${t.view}" alt=""><div><b>${esc(t.name)}</b><span>${esc(t.line)}</span><span class="vtier__price">${esc(t.price)}${t.status ? ` <em>${esc(t.status)}</em>` : ""}</span></div><a class="btn btn--sm" href="${esc(cfg.tixUrl)}" target="_blank" rel="noopener" aria-label="Buy ${esc(t.name)} on TIX">TIX <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></li>`).join("");
+    // tickets are split into Individual and Group tabs (V.groups); the hall plan still shows every zone
+    const groups = V.groups || [["all", "Tickets"]];
+    let vGroup = groups[0][0];
+    const tierHTML = (t) => `<li class="vtier" data-z="${zoneOf(t)}"><img src="${t.view}" alt="" loading="lazy"><div><b>${esc(t.name)}</b><span>${esc(t.line)}</span><span class="vtier__price">${esc(t.price)}${t.status ? ` <em>${esc(t.status)}</em>` : ""}</span></div><a class="btn btn--sm" href="${esc(cfg.tixUrl)}" target="_blank" rel="noopener" aria-label="Buy ${esc(t.name)} on TIX">TIX <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></li>`;
+    function showGroup(g) {
+      vGroup = g;
+      $("#vtabs").innerHTML = groups.map(([id, lab]) => `<button type="button" role="tab" class="vtab${id === g ? " is-on" : ""}" aria-selected="${id === g}" data-g="${id}">${esc(lab)} <small>${V.tiers.filter((t) => (t.group || "all") === id).length}</small></button>`).join("");
+      $("#vtiers").innerHTML = V.tiers.filter((t) => (t.group || "all") === g).map(tierHTML).join("");
+      $$(".vtier").forEach((t) => { t.addEventListener("pointerenter", () => hi(t.dataset.z)); t.addEventListener("pointerleave", () => hi(null)); });
+    }
+    $("#vtabs").addEventListener("click", (e) => { const b = e.target.closest("[data-g]"); if (b && b.dataset.g !== vGroup) showGroup(b.dataset.g); });
     // the hall: stage at the top, curved rows fanning out below it (Premium front row, VIP, then the concert floor),
     // round tables down both sides. No seats are shown as taken: sales happen on TIX, so the plan can't know.
     const vsvg = $("#vmapSvg"), CX = 300, CY = 44;
@@ -1206,6 +1216,7 @@
     const hi = (id) => { map.classList.toggle("is-focus", !!id); $$(".vzone", vsvg).forEach((z) => z.classList.toggle("is-on", z.dataset.z === id)); $$(".vtier").forEach((t) => t.classList.toggle("is-on", t.dataset.z === id)); };
     function showZone(z, px, py) {
       const zid = z.dataset.z, ts = V.tiers.filter((x) => zoneOf(x) === zid); if (!ts.length) return;
+      if (V.groups && !ts.some((x) => x.group === vGroup)) showGroup(ts[0].group);
       hi(zid);
       if (pop.dataset.z !== zid) {
         pop.dataset.z = zid;
@@ -1225,7 +1236,7 @@
       z.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showZone(z); } });
     });
     map.addEventListener("pointerleave", () => { pop.hidden = true; hi(null); });
-    $$(".vtier").forEach((t) => { t.addEventListener("pointerenter", () => hi(t.dataset.z)); t.addEventListener("pointerleave", () => hi(null)); });
+    showGroup(vGroup);
   }
 
   /* ===== 8b. 1 Million Questions. Ticket holders play the real questions, marked on the server (js/store.js ->

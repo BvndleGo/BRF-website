@@ -133,15 +133,17 @@ window.BRF_DATA = {
   vip: {
     note: "All concert tickets are sold on TIX. Seating plan is illustrative.",
     zones: { front: "Premium · front row", vip: "VIP", floor: "Concert floor", tables: "Tables" },
+    groups: [["individual", "Individual tickets"], ["group", "Group tables"]],
     tiers: [
-      { id: "eb1", zone: "floor", name: "Early Bird · Phase 1", line: "General concert access.", amount: 15000, price: "₦15,000", status: "50 tickets only", view: "assets/img/concert/c18.jpg" },
-      { id: "eb2", zone: "floor", name: "Early Bird · Phase 2", line: "General concert access. Opens when Phase 1 sells out.", amount: 20000, price: "₦20,000", status: "50 tickets only", view: "assets/img/concert/c13.jpg" },
-      { id: "regular", zone: "floor", name: "Regular", line: "General concert access, after the Early Bird phases.", amount: 25000, price: "₦25,000", status: "", view: "assets/img/concert/c24.jpg" },
-      { id: "vip", zone: "vip", name: "Individual VIP", line: "VIP access, a shisha pot, juice and a drink.", amount: 250000, price: "₦250,000", status: "", view: "assets/img/concert/c02.jpg" },
-      { id: "premium", zone: "front", name: "Individual Premium", line: "Front-row seat, finger food, juice, an activation drink and a picture with an artist.", amount: 500000, price: "₦500,000", status: "", view: "assets/img/concert/c01.jpg" },
-      { id: "viptable", zone: "tables", name: "VIP Table for 10", line: "A reserved VIP table for 10 guests, with VIP benefits for everyone at the table.", amount: 2000000, price: "₦2,000,000", status: "10 tables", view: "assets/img/concert/c10.jpg" },
-      // Allocation sheet: "confirm capacity and included benefits before publishing" -> no guest count or perks shown yet
-      { id: "premiumtable", zone: "tables", name: "Premium Table", line: "A reserved Premium table for your group.", amount: 2000000, price: "₦2,000,000", status: "1 table", view: "assets/img/concert/c14.jpg" },
+      { id: "eb1", group: "individual", zone: "floor", name: "Early Bird · Phase 1", line: "General concert access.", amount: 15000, price: "₦15,000", status: "50 tickets only", view: "assets/img/concert/c18.jpg" },
+      { id: "eb2", group: "individual", zone: "floor", name: "Early Bird · Phase 2", line: "General concert access. Opens when Phase 1 sells out.", amount: 20000, price: "₦20,000", status: "50 tickets only", view: "assets/img/concert/c13.jpg" },
+      { id: "regular", group: "individual", zone: "floor", name: "Regular", line: "General concert access, after the Early Bird phases.", amount: 25000, price: "₦25,000", status: "", view: "assets/img/concert/c24.jpg" },
+      { id: "vip", group: "individual", zone: "vip", name: "Individual VIP", line: "VIP access, a shisha pot, juice and a drink.", amount: 250000, price: "₦250,000", status: "", view: "assets/img/concert/c02.jpg" },
+      { id: "premium", group: "individual", zone: "front", name: "Individual Premium", line: "Front-row seat, finger food, juice, an activation drink and a picture with an artist.", amount: 500000, price: "₦500,000", status: "", view: "assets/img/concert/c01.jpg" },
+      { id: "viptable", group: "group", zone: "tables", name: "VIP Table for 10", line: "A reserved VIP table for 10 guests, with VIP benefits for everyone at the table.", amount: 2000000, price: "₦2,000,000", status: "10 tables", view: "assets/img/concert/c10.jpg" },
+      // 26 Oct: Premium tables come in two sizes. Perks for the table not yet confirmed, so none listed.
+      { id: "premiumtable5", group: "group", zone: "tables", name: "Premium Table for 5", line: "A reserved Premium table for a group of 5.", amount: 2000000, price: "₦2,000,000", status: "", view: "assets/img/concert/c14.jpg" },
+      { id: "premiumtable10", group: "group", zone: "tables", name: "Premium Table for 10", line: "A reserved Premium table for a group of 10.", amount: 4000000, price: "₦4,000,000", status: "", view: "assets/img/concert/c13.jpg" },
     ],
   },
 };
