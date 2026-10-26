@@ -999,3 +999,9 @@ html[data-theme="light"] .agenda__frame::-webkit-scrollbar-thumb { background: r
   .acard__top { flex-direction: column; align-items: flex-start; gap: 6px; }
   .acard__price { font-size: 40px; line-height: 1; }
 }
+
+/* 26 Oct: hero has two buttons (day pass + concert); passport zones are tappable during the walk */
+.burst__ghost { background: rgba(17,17,17,.55); color: #F3F0EB; border-color: #F3F0EB; backdrop-filter: blur(6px); }
+.jpass__slot[role=button] { cursor: pointer; border-radius: 50%; }
+.jpass__slot[role=button]:hover .stamp, .jpass__slot[role=button]:focus-visible .stamp { transform: scale(1.08); }
+.jpass__slot[role=button]:focus-visible { outline: 3px solid #F3F0EB; outline-offset: 3px; }

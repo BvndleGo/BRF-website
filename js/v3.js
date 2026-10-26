@@ -1094,6 +1094,21 @@
       jscroll.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
     });
     if (compact) setCompact(true);
+    // tapping a zone in the passport jumps the walk to that zone's first stand
+    $$(".jpass__slot", $("#jpass")).forEach((slot) => {
+      const zi = +slot.dataset.z;
+      slot.setAttribute("role", "button"); slot.tabIndex = 0;
+      slot.setAttribute("aria-label", `Go to the ${J[zi].name} zone`);
+      const go = () => {
+        if (compact) return focusZone(zi);
+        const k = stops.findIndex((st) => st.kind === "st" && st.st.zone === zi); if (k < 0) return;
+        const span = jscroll.offsetHeight - innerHeight, top = jscroll.getBoundingClientRect().top + scrollY;
+        const p = 0.06 + 0.94 * (k / (stops.length - 1));
+        window.scrollTo({ top: top + p * span + 2, behavior: reduce ? "auto" : "smooth" });
+      };
+      slot.addEventListener("click", go);
+      slot.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
     journeyStep = () => {
       if (compact) return;
       const r = jscroll.getBoundingClientRect(), span = jscroll.offsetHeight - innerHeight;
