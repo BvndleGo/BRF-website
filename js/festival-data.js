@@ -20,73 +20,62 @@ window.BRF_DATA = {
     revealLabel: "Reveal soon",                           // PLACEHOLDER: reveal date, e.g. "Revealed 7 December"
   },
 
-  /* ---- 5. The journey: five zones, one after another. Every zone runs the same four steps:
-     Meet (the vendors and brands in that zone), Interact (try, play, engage), Watch (their live showcase or demo),
-     Redeem (cash in that zone's coins at its own booth; its passport stamp lands).
-     PLACEHOLDER: the wording of each step and the coin values until the client confirms vendors per zone.
-     photos: assets/img/zones/<set>-<n>.jpg ---- */
-  journey: [
-    // prize: the amount to be won in that zone (client, 22 Oct). null shows "Prize to be announced".
-    { name: "Creative / Alte", color: "#FF3E8E", text: "#111", icon: "ph-palette", set: "music", prize: "₦2m",   // PLACEHOLDER prize (Paul, 23 Oct)
-      line: "Art, style and the alte crowd: fashion labels, artists and creative brands.",
-      steps: [
-        { t: "Meet the makers", d: "Fashion labels, artists and creative brands, each at their own stall.", coins: 30, img: 2 },
-        { t: "Get hands-on", d: "Paint the mural, try on the drops, get styled on the spot.", coins: 50, img: 5 },
-        { t: "Watch the showcase", d: "Runway moments and live art from the vendors on the zone stage.", coins: 40, img: 8 },
-        { t: "Cash in here", d: "Cash in your Creative coins for prints, merch and fashion drops.", redeem: true, img: 6 } ] },
-    { name: "Connection", color: "#2e4bff", text: "#fff", icon: "ph-handshake", set: "stage", prize: "₦50m",
-      line: "Brands, creators and new people: talks, meet-ups and real conversations.",
-      steps: [
-        { t: "Meet the brands", d: "The brands that reward you all year, in person and ready to talk.", coins: 30, img: 1 },
-        { t: "Get involved", d: "Speed-friending, Q&A and quick brand missions. Swap tags, earn coins.", coins: 50, img: 4 },
-        { t: "Watch the talks", d: "Founders and creators on stage: money, music and Lagos life.", coins: 40, img: 6 },
-        { t: "Cash in here", d: "Swap your Connection coins for vouchers and brand hampers.", redeem: true, img: 8 } ] },
-    { name: "Escape", color: "#8B80F9", text: "#111", icon: "ph-umbrella-simple", set: "funtime", prize: "₦60m",
-      line: "Slow down: lounges, food and drink vendors, games you can play lying down.",
-      steps: [
-        { t: "Meet the vendors", d: "Food, drinks and lifestyle brands set up around the lounge.", coins: 30, img: 1 },
-        { t: "Taste and play", d: "Tasting trails, silent disco and mini games at the stalls.", coins: 40, img: 6 },
-        { t: "Watch the show", d: "Live cook-offs and product demos from the vendors.", coins: 40, img: 3 },
-        { t: "Cash in here", d: "Cash in your Escape coins for treats, hampers and gift cards.", redeem: true, img: 7 } ] },
-    { name: "Wealth", color: "#FFD23F", text: "#111", icon: "ph-piggy-bank", set: "missions", prize: "₦40m",
-      line: "Banks, fintechs and money brands: games that teach you to stack.",
-      steps: [
-        { t: "Meet the money brands", d: "Banks, fintechs and investment apps, side by side.", coins: 30, img: 1 },
-        { t: "Play the money games", d: "Savings challenge, spin the wheel, sign-up missions.", coins: 60, img: 2 },
-        { t: "Watch the demos", d: "Live walkthroughs: send, save and invest in under a minute.", coins: 40, img: 3 },
-        { t: "Cash in here", d: "Swap your Wealth coins for gadgets and cash prizes at the zone booth.", redeem: true, img: 4 } ] },
-    { name: "Adrenaline", color: "#FF5A2D", text: "#111", icon: "ph-lightning", set: "games", prize: "₦1m",   // PLACEHOLDER prize (Paul, 23 Oct)
-      line: "Gaming and sports brands, live challenges and 1 Million Questions rounds.",
-      steps: [
-        { t: "Meet the game brands", d: "Gaming, sports and drinks brands with their challenges ready.", coins: 30, img: 1 },
-        { t: "Take the challenge", d: "Beat the clock, win the round, play 1 Million Questions for draw entries.", coins: 80, img: 2 },
-        { t: "Watch the battles", d: "Dance-offs and head-to-head finals on the zone floor.", coins: 40, img: 5 },
-        { t: "Cash in here", d: "Your last booth: cash in every coin for appliances, gadgets and cash.", redeem: true, img: 6 } ] },
+  /* ---- 5. The experience: three zones, each with its own plan (designer's zone-map pack, 27 Oct).
+     Art: assets/zones/<id>.svg (text-free; .p people, .trail route, .lock and .cf animate). Stations: number, name,
+     one line, and x / y as a % of the drawing. Rules from the pack: no brand names, Catharsis stays sealed (never say
+     what happens inside the chambers), plans are indicative.
+     reward: only the Wealth zone pays (2 BvndleCoins, once per ticket, for going through all its stations). ---- */
+  zones: [
+    { id: "market", name: "Wealth", hall: "Hall 1 · back centre", tag: "Learn it. Trade it. Ring the bell.",
+      color: "#F5B63E", art: "assets/zones/market.svg?v=1", view: "39 62 1251 596",
+      reward: { activity: "wealth_zone", coins: 2 },  // walk through all its stations on the site (client 27 Oct)
+      stations: [
+      { n: "01", name: "Passport Desk", desc: "Your way into the market. Don’t lose it.", x: 20.03, y: 23.05 },
+      { n: "02", name: "The Vault · west", desc: "Your first stamp of ownership.", x: 39.14, y: 41.29 },
+      { n: "03", name: "Licence Bar", desc: "Two minutes stand between you and a trading licence.", x: 38.66, y: 15.29 },
+      { n: "04", name: "Order Desk", desc: "Your first order. No pressure.", x: 23.37, y: 32.63 },
+      { n: "05", name: "Trading Floor and Bell Stage", desc: "Loud floor, live ticker, and one winner gets to ring the bell.", x: 52.51, y: 17.6 },
+      { n: "06", name: "OTC Desk", desc: "The deals that never make the board.", x: 31.81, y: 41.63 },
+      { n: "07", name: "Featured Stocks Wall", desc: "Today’s names to watch.", x: 56.97, y: 50.5 },
+      { n: "08", name: "The Vault · east", desc: "Watch your trade travel. Literally.", x: 46.46, y: 53.0 },
+      { n: "09", name: "Wealth Lounge", desc: "Where the smart money sits down.", x: 81.97, y: 48.41 },
+      { n: "10", name: "Global Gateway", desc: "The world market, one step away.", x: 88.5, y: 58.19 },
+      { n: "11", name: "Sentiment Pit", desc: "Bulls or bears? Pick a side and shout.", x: 74.8, y: 69.13 },
+      { n: "12", name: "Connections Wall", desc: "Sign out like a market legend.", x: 64.93, y: 59.58 },
+      ] },
+    { id: "connection", name: "Connection", hall: "Hall 1 · back left", tag: "Come together. Play loud. Treat someone.",
+      color: "#DD5796", art: "assets/zones/connection.svg?v=1", view: "58 22 1225 594",
+      reward: null,
+      stations: [
+      { n: "C", name: "Concierge", desc: "Your band is your currency. Wear it loud.", x: 31.31, y: 57.58 },
+      { n: "01", name: "Passion Board", desc: "Say it where everyone can read it.", x: 30.89, y: 20.12 },
+      { n: "02", name: "Trivia Counter", desc: "Think fast, win coins.", x: 49.35, y: 5.13 },
+      { n: "03", name: "App Desk", desc: "A few taps, a few coins.", x: 31.51, y: 40.51 },
+      { n: "04", name: "Dance Square", desc: "Bring a partner. The floor lights up and someone wins every hour.", x: 61.23, y: 35.98 },
+      { n: "05", name: "Bar Count", desc: "Hang on. Your friends are counting.", x: 43.81, y: 43.7 },
+      { n: "06", name: "Table Games", desc: "Friendships have ended over less.", x: 53.04, y: 58.57 },
+      { n: "07", name: "Pop-up Station", desc: "It changes. Come and see.", x: 15.11, y: 38.43 },
+      { n: "08", name: "Make-a-Scent", desc: "Make something they’ll remember you by.", x: 87.07, y: 46.65 },
+      { n: "09", name: "Ice Cream Cart", desc: "One cup. Two spoons. Choose wisely.", x: 70.87, y: 51.2 },
+      { n: "10", name: "Wish Tree", desc: "Tie a wish. Read someone else’s.", x: 64.11, y: 59.7 },
+      { n: "11", name: "Massage Chairs", desc: "Ten minutes where nobody can reach you.", x: 83.38, y: 57.32 },
+      ] },
+    { id: "escape", name: "Catharsis", hall: "Hall 1 · back right, through to Hall 2", tag: "Four rooms. Fifteen minutes. One way out.",
+      color: "#69E392", art: "assets/zones/escape.svg?v=1", view: "248 0 1050 418",
+      reward: null,
+      stations: [
+      { n: "01", name: "Booking Gate", desc: "The clock is already running. Grab your slot before another crew does.", x: 44.58, y: 70.5 },
+      { n: "02", name: "Briefing Booth", desc: "This is where you get the mission. That’s all we’re saying.", x: 14.68, y: 38.25 },
+      { n: "03", name: "Chamber 1 · Balogun", desc: "Every Lagosian thinks they know the market. Prove it.", x: 39.39, y: 18.44 },
+      { n: "04", name: "Chamber 2 · Oshodi", desc: "Miss this one and you’re walking.", x: 58.62, y: 39.07 },
+      { n: "05", name: "Chamber 3 · Third Mainland", desc: "NEPA has entered the chat.", x: 73.33, y: 46.89 },
+      { n: "06", name: "Chamber 4 · The Vault", desc: "It locks at 4. You have until then.", x: 82.29, y: 51.2 },
+      { n: "07", name: "Escape Landing", desc: "Make it out and be a legend.", x: 88.57, y: 77.03 },
+      { n: "08", name: "Public Lane", desc: "No slot? Watch the crews sweat through the glass.", x: 70.67, y: 69.38 },
+      { n: "09", name: "Market Street", desc: "Eat, shop and plan your rematch.", x: 33.74, y: 29.88 },
+      { n: "10", name: "Leaderboard Wall", desc: "Fifteen minutes. One name at the top. Could be yours.", x: 20.31, y: 22.22 },
+      ] },
   ],
-
-  /* ---- 5. The festival floor (client 23 Oct). The client's isometric floor plan, recoloured with the zone colours
-     from `journey` above. Visitors walk its dashed route station by station.
-     stations: n, name and x_pct / y_pct are the client's own list (position as % of the drawing).
-     zone: index into `journey` (decided by the colour of the area the station stands on).
-     PLACEHOLDER: does (what happens there), coins and img until the client sends the real station copy. ---- */
-  floor: {
-    art: "assets/floor/floor.svg?v=2",
-    view: [39, 62, 1251, 596],          // the drawing's own viewBox: x, y, width, height
-    stations: [
-      { n: "01", name: "Passport Desk", x_pct: 20.03, y_pct: 23.05, zone: 0, coins: 20, img: 2, does: "Pick up your festival passport. Every zone stamps it as you go." },
-      { n: "02", name: "The Vault \u00b7 west", x_pct: 39.14, y_pct: 41.29, zone: 3, coins: 50, img: 2, does: "Crack the vault challenge for a share of the zone's prize pot." },
-      { n: "03", name: "Licence Bar", x_pct: 38.66, y_pct: 15.29, zone: 0, coins: 30, img: 5, does: "Earn your trading licence with a two-minute money quiz." },
-      { n: "04", name: "Order Desk", x_pct: 23.37, y_pct: 32.63, zone: 0, coins: 30, img: 8, does: "Place your first order with the coins you have earned so far." },
-      { n: "05", name: "Trading Floor and Bell Stage", x_pct: 52.51, y_pct: 17.6, zone: 2, coins: 80, img: 3, does: "Trade live on the floor. The top traders ring the bell on stage." },
-      { n: "06", name: "OTC Desk", x_pct: 31.81, y_pct: 41.63, zone: 3, coins: 30, img: 1, does: "Swap coins and vouchers one-to-one with the brands." },
-      { n: "07", name: "Featured Stocks Wall", x_pct: 56.97, y_pct: 50.5, zone: 2, coins: 40, img: 6, does: "See which brands are trending today and back your pick." },
-      { n: "08", name: "The Vault \u00b7 east", x_pct: 46.46, y_pct: 53, zone: 3, coins: 60, img: 4, does: "The big vault: cash in your coins for gadgets and cash prizes." },
-      { n: "09", name: "Wealth Lounge", x_pct: 81.97, y_pct: 48.41, zone: 4, coins: 30, img: 1, does: "Sit down with the money brands: saving, investing and insurance." },
-      { n: "10", name: "Global Gateway", x_pct: 88.5, y_pct: 58.19, zone: 4, coins: 40, img: 2, does: "Send, spend and save across borders with the fintechs." },
-      { n: "11", name: "Sentiment Pit", x_pct: 74.8, y_pct: 69.13, zone: 4, coins: 60, img: 5, does: "Call the crowd's mood. Get it right and win coins on the spot." },
-      { n: "12", name: "Connections Wall", x_pct: 64.93, y_pct: 59.58, zone: 1, coins: 30, img: 4, does: "Swap Bvndle tags, meet people and add yourself to the wall." },
-    ],
-  },
 
   /* ---- 5c. Main stage programme, both days (client 26 Oct). Rows: time + until, title, optional note (shown under the
      title), type (the colour tag), optional where. Speakers and hosts not announced yet; add speaker: "Name" to a row
@@ -102,7 +91,7 @@ window.BRF_DATA = {
         { time: "11:30am", until: "11:40am", title: "Performance", topic: "Performance" },
         { time: "11:40am", until: "12:25pm", title: "Japa or Japada?", note: "Fireside chat", topic: "Fireside chat" },
         { time: "12:30pm", until: "1:00pm", title: "PwC Report Hotline", topic: "Session" },
-        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All five zones open, all afternoon", topic: "Zones", where: "Festival floor" },
+        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All three zones open, all afternoon", topic: "Zones", where: "Festival floor" },
         { time: "2:30pm", until: "3:00pm", title: "Who Wants to Be a Millionaire?", note: "Live game show: partner and sponsor trivia", topic: "Game show" },
         { time: "3:30pm", until: "4:00pm", title: "Afropolitan", note: "Main stage podcast", topic: "Podcast" },
         { time: "4:00pm", until: "5:00pm", title: "Konga Auction", topic: "Auction" },
@@ -115,7 +104,7 @@ window.BRF_DATA = {
         { time: "11:30am", until: "11:40am", title: "Award ceremony", topic: "Awards" },
         { time: "11:40am", until: "12:25pm", title: "The real currency for loyalty", topic: "Talk" },
         { time: "12:30pm", until: "1:00pm", title: "Real-time action", note: "Audience talent show", topic: "Showcase" },
-        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All five zones open, all afternoon", topic: "Zones", where: "Festival floor" },
+        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All three zones open, all afternoon", topic: "Zones", where: "Festival floor" },
         { time: "2:30pm", until: "3:00pm", title: "cr8torium", note: "Main stage podcast", topic: "Podcast" },
         { time: "3:00pm", until: "3:30pm", title: "Dating game show: Auction a Friend", topic: "Game show" },
         { time: "4:00pm", until: "5:00pm", title: "Konga Activation", topic: "Activation" },

@@ -487,7 +487,7 @@
   new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; syncCta(); }).observe(hero);
   new IntersectionObserver(([e]) => { formIn = e.isIntersecting; syncCta(); }, { threshold: 0.15 }).observe($("#ticket"));
   // the phone ticket bar steps aside while the floor walk fills the screen (it would cover the stand panel)
-  if ($("#jscroll")) new IntersectionObserver(([e]) => { walkIn = e.isIntersecting && e.intersectionRatio > 0; syncCta(); }, { rootMargin: "-40% 0px -40% 0px" }).observe($("#jscroll"));
+
 
   /* ===== 11. Free ticket coin: a CSS 3D Bvndle coin (two faces + a rim of thin slices). Drag to spin it; it settles
      back to a slow idle turn. Each new ticket mints the visitor's initials on the back face, flips the coin to show it
@@ -569,7 +569,7 @@
         <p class="gc__label">${isNew ? "You're in." : "Welcome back."} Show this at the gate.</p><span class="gc__tag">FREE TICKET &middot; DAY PASS</span>
         <p class="yourpass__name">${esc(pass.name)}</p>
         <div class="yourpass__meta"><span>${esc(cfg.datesLabel)}</span><span>${esc(cfg.venue)}</span>${pass.tag ? `<span>@${esc(pass.tag)}</span>` : ""}</div>
-        <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} in the draw</p>` : ""; })()}
+        <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} in the draw</p>` : ""; })()}<p class="yourpass__entries" id="passCoins"></p>
         <p class="gc__big gc__big--r" aria-hidden="true">2026</p>
       </div>
       ${nudges(["play", "guess", "concert"], "Your day pass is set. What's next?")}
@@ -644,8 +644,8 @@
      then "Get free ticket", then "My ticket" once you have one. First-timers are pulled into the story instead of
      jumping straight to the form. The hero keeps its own "Get free ticket" (client asked for that one button). ===== */
   function storyCta() {
-    const navB = $(".nav__cta"), barB = $("#mobileCta .btn"), js = $("#jscroll");
-    const mine = !!lsGet("brf-my-pass"), passed = lsGet("brf-floor-seen") === "1" || (js && js.getBoundingClientRect().bottom < innerHeight * 0.4);   // the walk's end has scrolled above mid-screen
+    const navB = $(".nav__cta"), barB = $("#mobileCta .btn"), js = $("#journey");
+    const mine = !!lsGet("brf-my-pass"), passed = js && js.getBoundingClientRect().bottom < innerHeight * 0.4;   // the zones have scrolled above mid-screen
     const state = mine ? "mine" : passed ? "ticket" : "explore";
     if (navB && navB.dataset.state === state) return;
     const L = { explore: ["See the experience", "#journey", "ph-map-trifold"], ticket: ["Get free ticket", "#ticket", "ph-arrow-right"], mine: ["My ticket", "#ticket", "ph-ticket"] }[state];
@@ -924,243 +924,160 @@
     box.addEventListener("click", (e) => { if (e.target === box) box.close(); });
   }
 
-  /* ===== 5. The journey: the festival floor (the client's isometric plan in zone colours), pinned while you scroll.
-     You start at the entrance arrow and walk the dashed route; each station lights up as the walker reaches it and
-     the card says what happens there. Stations are visited in route order (the route, not the numbers, sets it).
-     A zone's passport stamp lands once all its stations are behind you. Return visits open on the whole floor with
-     a zone dock (tap a zone to fly to its area). Data: BRF_DATA.floor + BRF_DATA.journey (zone names, colours). ===== */
-  const J = BD.journey || [], FL = BD.floor, jscroll = $("#jscroll");
-  let journeyStep = () => {};
-  if (jscroll && J.length && FL) fetch(FL.art).then((r) => r.text()).then((art) => {
-    const svg = $("#jmap"), NS = "http://www.w3.org/2000/svg", [VX, VY, VW, VH] = FL.view, navEl = $("#jnav");
-    svg.innerHTML = art.replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
-    // the drawing keeps its own view box and is rendered once, at about walking zoom (Z px per drawing unit); the
-    // camera then moves it with a CSS transform (GPU), so scrolling never forces the detailed drawing to redraw
-    svg.setAttribute("viewBox", `${VX} ${VY} ${VW} ${VH}`); svg.setAttribute("preserveAspectRatio", "none");
-    svg.classList.add("is-floor");
-    let Z = 1;
-    const sizeFloor = () => { const r = navEl.getBoundingClientRect(); Z = Math.max(1, r.width / (innerWidth <= 900 ? 400 : 560)); svg.style.width = `${VW * Z}px`; svg.style.height = `${VH * Z}px`; };
-    sizeFloor();
-    const trail = $(".trail", svg); if (!trail) return;
-    const len = trail.getTotalLength();
-    // the walked part of the route: a solid line drawn over the dashed one
-    const done = document.createElementNS(NS, "path");
-    done.setAttribute("d", trail.getAttribute("d")); done.setAttribute("class", "rt--walked");
-    done.style.strokeDasharray = `${len} ${len}`; done.style.strokeDashoffset = len;
-    trail.after(done);
-    // the walker sits on the floor layer, beneath the stands and people, with a flat "beat" rippling out on the floor
-    const walker = document.createElementNS(NS, "g"); walker.setAttribute("class", "jmark"); walker.id = "jmark";
-    walker.innerHTML = `<ellipse class="jmark__ring" rx="22" ry="11"/><ellipse class="jmark__ring jmark__ring--2" rx="22" ry="11"/><ellipse class="jmark__dot" rx="9" ry="4.6"/>`;
-    done.after(walker);
-    // stations in drawing units, then ordered by where the route passes them
-    const samples = []; for (let i = 0; i <= 400; i++) { const L = (len * i) / 400, q = trail.getPointAtLength(L); samples.push([L, q.x, q.y]); }
-    const stations = FL.stations.map((st) => {
-      const x = VX + (st.x_pct / 100) * VW, y = VY + (st.y_pct / 100) * VH;
-      let best = samples[0], bd = Infinity; samples.forEach((p) => { const dd = (p[1] - x) ** 2 + (p[2] - y) ** 2; if (dd < bd) { bd = dd; best = p; } });
-      return { ...st, x, y, L: best[0], z: J[st.zone] || J[0] };
-    }).sort((p, q) => p.L - q.L);
-    // stops: the entrance, every station in route order, then the exit
-    const stops = [{ kind: "in", L: 0 }, ...stations.map((st, i) => ({ kind: "st", st, i, L: st.L })), { kind: "out", L: len }];
-    jscroll.style.setProperty("--steps", stops.length);
-    const pins = document.createElementNS(NS, "g"); pins.setAttribute("class", "fpins");
-    stations.forEach((st, i) => (st.no = String(i + 1).padStart(2, "0")));   // numbered in walking order
-    pins.innerHTML = stations.map((st, i) => `<g class="fpin" data-i="${i}" data-z="${st.zone}" transform="translate(${st.x.toFixed(1)} ${st.y.toFixed(1)})" style="--zc:${st.z.color};--zt:${st.z.text}"><circle r="13"/><text y="4.5">${st.no}</text></g>`).join("")
-      // entrance and exit tags where the trail starts and ends (replacing the drawing's arrows)
-      + (() => { const a = trail.getPointAtLength(0), b = trail.getPointAtLength(len);
-        const tag = (p, label, icon, dx, dy) => `<g class="ftag" transform="translate(${(p.x + dx).toFixed(1)} ${(p.y + dy).toFixed(1)})"><rect x="-46" y="-13" width="92" height="26" rx="13"/><circle cx="-31" cy="0" r="5"/><text x="6" y="4.5">${label}</text></g>`;
-        return tag(a, "ENTRANCE", "", -58, 6) + tag(b, "EXIT", "", 0, 22); })();
-    svg.appendChild(pins);
-    const mark = $("#jmark", svg);
-    // the map talks: a callout beside the stand you are at (hidden while you walk to the next one)
-    const talk = document.createElement("div"); talk.className = "jtalk"; talk.setAttribute("aria-hidden", "true");
-    $("#jnav").appendChild(talk);
-    let talkFor = "", talkW = 0;
-    function placeTalk(stop, on) {
-      if (!on || compact) { talk.classList.remove("is-on"); return; }
-      const key = stop.kind === "st" ? stop.st.no : stop.kind;
-      if (key !== talkFor) {
-        talkFor = key; talkW = 0;
-        if (stop.kind === "st") { const st = stop.st, z = st.z; talk.style.setProperty("--zc", z.color);
-          talk.innerHTML = `<p class="jtalk__k"><b>${st.no}</b>${esc(z.name)}</p><p class="jtalk__t">${esc(st.name)}</p><p class="jtalk__d">${esc(st.does || "")}</p><p class="jtalk__c">+${st.coins || 0} coins</p>`; }
-        else { talk.style.setProperty("--zc", "#FF3E8E");
-          talk.innerHTML = stop.kind === "in" ? `<p class="jtalk__t">Start here</p><p class="jtalk__d">Follow the pink trail. Scroll to walk to the first stand.</p>` : `<p class="jtalk__t">That's the floor</p><p class="jtalk__d">Five zones, ${stations.length} stands. Zones open at 1pm on both days.</p>`; }
+  /* ===== 5. The experience: three zone plans (the designer's pack, 27 Oct). Tabs switch zones; each plan is the
+     zone's SVG inlined (so its people bob and its route marches), with numbered stations as live buttons over it and
+     the same stations listed beside it. Wealth is the one zone that pays: open all of its stations (tap them, or use
+     "Next station") and a ticket holder earns 2 BvndleCoins, once. Stations seen are kept in this browser; the coins
+     are granted on the server (claim_activity_reward), which also enforces once per ticket.
+     Data: BRF_DATA.zones. ===== */
+  const ZX = BD.zones || [], zxEl = $("#zxStage");
+  const journeyStep = () => {};
+  const myToken = () => { try { return (JSON.parse(localStorage.getItem("brf-my-pass") || "null") || {}).token || null; } catch (e) { return null; } };
+  const track = (...a) => (window.brfTrack || (() => {}))(...a);
+
+  /* the wallet: one place for every coin a visitor earns on the site (trivia, the Wealth walk, future games) */
+  const wallet = $("#wallet");
+  let walletData = null;
+  async function refreshWallet() {
+    const tok = myToken();
+    if (!tok || !window.PassStore.rewards) { if (wallet) wallet.hidden = true; return null; }
+    const r = await window.PassStore.rewards.mine(tok);
+    if (!r.ok) return null;
+    walletData = r.data; renderWallet(); return walletData;
+  }
+  function renderWallet() {
+    const w = walletData; if (!w) return;
+    const n = (x) => Number(x || 0).toLocaleString("en-NG");
+    const earned = {}; (w.by_source || []).forEach((s) => (earned[s.source] = s));
+    const label = { trivia: "1 Million Questions: first 10 right answers", wealth_zone: "Wealth zone: go through all 12 stations" };
+    const rows = (w.available || []).map((a) => {
+      const got = earned[a.activity];
+      return `<li class="${got ? "is-done" : ""}"><i class="ph-bold ${got ? "ph-check-circle" : "ph-circle"}" aria-hidden="true"></i><span>${esc(label[a.activity] || a.label)}</span><b>${got ? "+" : ""}${n(a.coins)}</b></li>`;
+    }).join("");
+    if (wallet) {
+      wallet.hidden = false;
+      wallet.innerHTML = `<div class="wallet__top"><p class="wallet__label">Your BvndleCoins</p><p class="wallet__total"><b>${n(w.earned)}</b> earned</p></div>
+        <ul class="wallet__list">${rows}</ul>
+        <p class="wallet__note">Each game pays once per ticket. Collect your coins at the reward desk at the festival with your ticket code${Number(w.collected) ? ` &middot; ${n(w.collected)} collected` : ""}.</p>`;
+    }
+    const pc = $("#passCoins"); if (pc) pc.textContent = Number(w.earned) ? `${n(w.earned)} BvndleCoins to collect at the festival` : "";
+  }
+  window.brfRefreshWallet = refreshWallet;
+  addEventListener("brf:claimed", () => setTimeout(refreshWallet, 300));
+  refreshWallet();
+
+  if (zxEl && ZX.length) {
+    const tabs = $("#zxTabs"), maps = $("#zxMaps"), hs = $("#zxHs"), list = $("#zxList"), quest = $("#zxQuest");
+    const SEEN = "brf-wealth-seen", DONE = "brf-wealth-coins";
+    let seen = new Set(); try { seen = new Set(JSON.parse(localStorage.getItem(SEEN) || "[]")); } catch (e) {}
+    let cur = null, active = null, claiming = false;
+    const art = {};                                           // zone id -> loaded svg markup
+    const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+    const payZone = ZX.find((z) => z.reward);
+
+    tabs.innerHTML = ZX.map((z) => `<button class="zx__tab" role="tab" type="button" data-z="${z.id}" style="--zc:${z.color}" aria-selected="false">${esc(z.name)}${z.reward ? ` <small>+${z.reward.coins} coins</small>` : ""}</button>`).join("");
+
+    function questHTML() {
+      if (!payZone || !cur || !cur.reward) return cur && cur.id === "escape" ? `<p class="zx__q zx__q--seal"><i class="ph-bold ph-lock-simple" aria-hidden="true"></i> Sealed until you play. No spoilers.</p>` : "";
+      const total = cur.stations.length, k = cur.stations.filter((s) => seen.has(s.n)).length;
+      const got = lsGet(DONE) === "1";
+      if (got) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked. +${cur.reward.coins} BvndleCoins earned</p>`;
+      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! <a href="#ticket" id="zxClaim">Get your free ticket</a> to collect ${cur.reward.coins} BvndleCoins</p>`;
+      return `<p class="zx__q"><span class="zx__qbar" style="--p:${k / total}"></span><span><b>${k}/${total}</b> stations seen &middot; see them all for ${cur.reward.coins} BvndleCoins</span></p>`;
+    }
+    function paint() { quest.innerHTML = questHTML(); }
+
+    async function claimWealth() {
+      if (claiming || lsGet(DONE) === "1" || !payZone) return;
+      const all = payZone.stations.every((s) => seen.has(s.n)), tok = myToken();
+      if (!all || !tok || !window.PassStore.rewards) return paint();
+      claiming = true;
+      const r = await window.PassStore.rewards.claim(tok, payZone.reward.activity, payZone.stations.map((s) => s.n));
+      claiming = false;
+      if (r.ok) {
+        lsSet(DONE, "1"); track("wealth_complete", null, r.data.awarded);
+        walletData = r.data.wallet; renderWallet(); paint();
+        if (r.data.awarded) { const q = $(".zx__q--done", quest); if (q) { q.classList.add("is-pop"); } }
+      } else paint();
+    }
+    addEventListener("brf:claimed", () => setTimeout(claimWealth, 400));
+
+    function tip(st) {
+      const t = document.createElement("div"); t.className = "zx__tip"; t.style.left = st.x + "%"; t.style.top = st.y + "%";
+      if (st.y < 45) t.classList.add("below");
+      if (st.x < 22) t.classList.add("left"); else if (st.x > 78) t.classList.add("right");
+      t.innerHTML = `<b>${esc(st.n)} &middot; ${esc(st.name)}</b><span>${esc(st.desc)}</span>`; return t;
+    }
+    function select(n, from) {
+      active = n;
+      $$(".zx__tip", hs).forEach((t) => t.remove());
+      $$(".zx__dot", hs).forEach((b) => b.classList.toggle("on", b.dataset.n === n));
+      $$(".zx__st", list).forEach((b) => b.classList.toggle("on", b.dataset.n === n));
+      const st = cur.stations.find((s) => s.n === n); if (!st) return;
+      hs.appendChild(tip(st));
+      if (cur.reward && !seen.has(n)) {
+        seen.add(n); lsSet(SEEN, JSON.stringify([...seen]));
+        $$(`[data-n="${n}"]`, zxEl.parentElement).forEach((b) => b.classList.add("seen"));
+        $(`.zx__st[data-n="${n}"]`, list)?.classList.add("seen");
+        paint();
+        if (cur.stations.every((s) => seen.has(s.n))) { track("wealth_walked"); claimWealth(); }
       }
-      // pin to the stand's spot on screen; flip to the left when there is no room on the right
-      const ctm = svg.getScreenCTM(), nav = $("#jnav").getBoundingClientRect(); if (!ctm) return;
-      const pt = stop.kind === "st" ? { x: stop.st.x, y: stop.st.y } : trail.getPointAtLength(stop.L);
-      const sx = pt.x * ctm.a + ctm.e - nav.left, sy = pt.y * ctm.d + ctm.f - nav.top;
-      if (!talkW) talkW = talk.offsetWidth;                              // measured once per stand, not every frame
-      const left = sx + 36 + talkW > nav.width - 12;
-      talk.classList.toggle("is-left", left);
-      talk.style.transform = `translate3d(${(left ? sx - 36 - talkW : sx + 36).toFixed(0)}px, ${(sy - 32).toFixed(0)}px, 0)`;
-      talk.classList.add("is-on");
+      if (from === "list" && innerWidth <= 900) zxEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
     }
-    const zoneStations = J.map((_, zi) => stations.filter((st) => st.zone === zi));
-    const zoneCoins = zoneStations.map((list) => list.reduce((t, st) => t + (st.coins || 0), 0));
-    $("#jbar").innerHTML = stations.map((st, i) => `<i data-k="${i + 1}" style="--zc:${st.z.color}"></i>`).join("");
-    $("#jpass").innerHTML = `<p class="jpass__label">Festival passport</p><div class="jpass__slots">` + J.map((z, zi) => `<span class="jpass__slot" data-z="${zi}"><span class="stamp" style="--ink:${z.color === "#FFD23F" ? "#8a6a00" : z.color};--rot:${(zi % 2 ? 1 : -1) * (5 + zi * 2)}deg"><i class="ph-bold ${z.icon}" aria-hidden="true"></i><b>${esc(z.name)}</b><small>Done</small></span></span>`).join("") + `</div><p class="jpass__total"><b id="jtotal">0</b> coins earned</p>`;
-    const card = $("#jcard2");
-    let cur = -1;
-    function show(k) {
-      if (k === cur) return; cur = k;
-      const s0 = stops[k];
-      $$(".fpin", svg).forEach((g) => { const i = +g.dataset.i + 1; g.classList.toggle("is-done", i < k); g.classList.toggle("is-here", i === k); });
-      $$("#jbar i").forEach((t) => t.classList.toggle("is-on", +t.dataset.k <= k));
-      // stamps: a zone is done once all of its stations are behind the walker; coins add up station by station
-      let total = 0;
-      stations.forEach((st, i) => { if (i + 1 <= k) total += st.coins || 0; });
-      J.forEach((z, zi) => { const list = zoneStations[zi], ok = list.length && list.every((st) => stations.indexOf(st) + 1 <= k); $(`.jpass__slot[data-z="${zi}"]`).classList.toggle("is-stamped", ok); });
-      $("#jtotal").textContent = total.toLocaleString("en-NG");
-      if (s0.kind === "in") {
-        card.style.setProperty("--zc", "#F3F0EB"); card.style.setProperty("--zt", "#111");
-        card.innerHTML = `<div class="jnav__zone"><i class="ph-bold ph-sign-in" aria-hidden="true"></i><span>Entrance</span><b>The festival floor</b></div>
-          <div class="jnav__body"><p class="jnav__step">${stations.length} stations &middot; ${J.length} zones</p><h4>Follow the trail.</h4>
-          <p class="jnav__d">Every station earns coins and every zone has its own prize. Scroll to walk the floor, station by station.</p></div>`;
-      } else if (s0.kind === "out") {
-        card.style.setProperty("--zc", "#F3F0EB"); card.style.setProperty("--zt", "#111");
-        card.innerHTML = `<div class="jnav__zone"><i class="ph-bold ph-sign-out" aria-hidden="true"></i><span>Exit</span><b>That's the floor</b></div>
-          <div class="jnav__body"><p class="jnav__step">${total.toLocaleString("en-NG")} coins on the way round</p><h4>Now come and do it for real.</h4>
-          <p class="jnav__d">Zones open at 1pm on both days. Your free day pass gets you onto the floor.</p>
-          <div class="jnav__next"><a class="btn btn--sm" href="#ticket">Lock in your free day pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><a class="btn btn--sm btn--ghost" href="#trivia">Play for entries</a></div></div>`;
-      } else {
-        const { st, i } = s0, z = st.z;
-        card.style.setProperty("--zc", z.color); card.style.setProperty("--zt", z.text);
-        card.innerHTML = `<div class="jnav__zone"><i class="ph-bold ${z.icon}" aria-hidden="true"></i><span>Zone</span><b>${esc(z.name)}</b></div>
-          <p class="jnav__prize"><i class="ph-bold ph-trophy" aria-hidden="true"></i>${z.prize ? `<b>${esc(z.prize)}</b> to be won in ${esc(z.name)}` : `${esc(z.name)} prize to be announced`}</p>
-          <img src="assets/img/zones/${z.set}-${st.img || 1}.jpg" alt="" loading="lazy">
-          <div class="jnav__body"><p class="jnav__step">Stand ${st.no} of ${stations.length}</p>
-          <h4>${esc(st.name)}</h4><p class="jnav__d">${esc(st.does || "")}</p>
-          <p class="jnav__coins">+${st.coins || 0} coins &middot; ${total.toLocaleString("en-NG")} so far</p></div>`;
+
+    async function loadArt(z) {
+      if (art[z.id]) return art[z.id];
+      try { art[z.id] = await (await fetch(z.art)).text(); } catch (e) { art[z.id] = ""; }
+      return art[z.id];
+    }
+    async function show(id, animate) {
+      const z = ZX.find((x) => x.id === id) || ZX[0]; cur = z; active = null;
+      $$(".zx__tab", tabs).forEach((t) => t.setAttribute("aria-selected", String(t.dataset.z === z.id)));
+      zxEl.style.setProperty("--zc", z.color);
+      $("#zxName").textContent = z.name; $("#zxTag").textContent = z.tag; $("#zxHall").textContent = z.hall;
+      hs.innerHTML = ""; list.innerHTML = "";
+      z.stations.forEach((st, i) => {
+        const was = z.reward && seen.has(st.n) ? " seen" : "";
+        const b = document.createElement("button");
+        b.className = "zx__dot" + was; b.type = "button"; b.dataset.n = st.n; b.textContent = st.n;
+        b.style.left = st.x + "%"; b.style.top = st.y + "%"; b.style.setProperty("--d", (i * 0.2) + "s");
+        b.setAttribute("aria-label", `${st.n} ${st.name}`);
+        b.addEventListener("click", () => select(st.n)); b.addEventListener("focus", () => select(st.n));
+        b.addEventListener("mouseenter", () => { if (matchMedia("(hover: hover)").matches) select(st.n); });
+        hs.appendChild(b);
+        const li = document.createElement("li");
+        li.innerHTML = `<button class="zx__st${was}" type="button" data-n="${esc(st.n)}"><span class="zx__num">${esc(st.n)}</span><span><b>${esc(st.name)}</b><span>${esc(st.desc)}</span></span></button>`;
+        li.firstChild.addEventListener("click", () => select(st.n, "list"));
+        list.appendChild(li);
+      });
+      paint();
+      const svg = await loadArt(z);
+      if (cur !== z) return;
+      maps.innerHTML = svg;
+      const el = $("svg", maps);
+      if (el) {
+        el.classList.add("art"); el.setAttribute("aria-hidden", "true"); el.removeAttribute("width"); el.removeAttribute("height");
+        $$(".p", el).forEach((p) => p.style.setProperty("--d", (Math.random() * 1.3).toFixed(2) + "s"));
+        if (animate && !reduce) { maps.classList.remove("enter"); void maps.offsetWidth; maps.classList.add("enter"); }
       }
-      card.classList.remove("is-in"); void card.offsetWidth; card.classList.add("is-in");
     }
-    // camera: the viewBox eases toward its target every frame
-    const cam = { x: VX, y: VY, w: VW, h: VH }, aspect = () => { const r = navEl.getBoundingClientRect(); return r.height / Math.max(1, r.width); };
-    // the camera window (cam, in drawing units) becomes a translate + scale of the floor layer
-    const setView = () => {
-      const nw = navEl.clientWidth, k = nw / (cam.w * Z);
-      svg.style.transform = `translate3d(${(-(cam.x - VX) * Z * k).toFixed(2)}px, ${(-(cam.y - VY) * Z * k).toFixed(2)}px, 0) scale(${k.toFixed(4)})`;
-    };
-    addEventListener("resize", () => { sizeFloor(); setView(); });
-    // the whole floor, fitted to the screen (wide screens: fit the height; tall ones: fit the width)
-    // desktop: the card covers the left third, so the floor sits in the right two thirds; phones: the top part
-    const whole = () => {
-      const a = aspect() || 0.6, narrow = innerWidth <= 900;
-      if (narrow) { const w = Math.max(VW, VH / 0.5 / a) * 1.04, h = w * a; return [VX + VW / 2 - w / 2, VY + VH / 2 - h * 0.32, w]; }
-      const w = Math.max(VW / 0.62, VH / 0.8 / a), h = w * a; return [VX + VW / 2 - w * 0.66, VY + VH / 2 - h / 2, w];
-    };
-    { const [x, y, w] = whole(); cam.x = x; cam.y = y; cam.w = w; cam.h = w * (aspect() || 0.6); setView(); }
-    show(0);
-    // the people in the drawing pop in (each on its own delay) the first time the floor comes into view
-    new IntersectionObserver(([e], ob) => { if (e.isIntersecting) { svg.classList.add("is-live"); ob.disconnect(); } }, { threshold: 0.2 }).observe(svg);
-    let jp = -1;
-    const SEEN = "brf-floor-seen", jsec = $("#journey");                // own key: finishing the old zone tour must not skip the floor
-    let compact = false; try { compact = localStorage.getItem(SEEN) === "1"; } catch (e) {}
-    // zone tiles: same three rows on every tile (icon, name, prize); TBA uses the same type as the amounts
-    $("#jseenZones").innerHTML = J.map((z, i) => `<li><button class="jtile" type="button" data-z="${i}" aria-pressed="false" style="--zc:${z.color};--zt:${z.text}"><i class="ph-bold ${z.icon}" aria-hidden="true"></i><b>${esc(z.name)}</b><strong>${z.prize ? esc(z.prize) : "TBA"}<small>${z.prize ? "to be won" : "prize soon"}</small></strong></button></li>`).join("");
-    // tap a zone: the camera glides to its stations (above the dock) and the other zones' pins fade; tap again for all
-    let flyQ = 0, focusZ = -1;
-    function flyTo(tx, ty, tw) {
-      const a = aspect() || 0.6, th = tw * a; cancelAnimationFrame(flyQ);
-      const step = () => {
-        const e = reduce ? 1 : 0.14;
-        cam.x += (tx - cam.x) * e; cam.y += (ty - cam.y) * e; cam.w += (tw - cam.w) * e; cam.h += (th - cam.h) * e; setView();
-        if (Math.abs(tx - cam.x) + Math.abs(ty - cam.y) + Math.abs(tw - cam.w) > 1) flyQ = requestAnimationFrame(step);
-      };
-      step();
-    }
-    function focusZone(i) {
-      focusZ = focusZ === i ? -1 : i;
-      $$(".jtile").forEach((t) => { const on = +t.dataset.z === focusZ; t.classList.toggle("is-on", on); t.setAttribute("aria-pressed", on); });
-      svg.classList.toggle("has-focus", focusZ >= 0);
-      $$(".fpin", svg).forEach((g) => g.classList.toggle("is-zone", +g.dataset.z === focusZ));
-      if (focusZ < 0) { const [x, y, w] = whole(); flyTo(x, y, w); return; }
-      const list = zoneStations[focusZ]; if (!list.length) return;
-      const xs = list.map((st) => st.x), ys = list.map((st) => st.y), a = aspect() || 0.6;
-      const x1 = Math.min(...xs) - 150, x2 = Math.max(...xs) + 150, y1 = Math.min(...ys) - 110, y2 = Math.max(...ys) + 110;
-      const tw = Math.max(x2 - x1, (y2 - y1) / 0.62 / a, 420);
-      flyTo((x1 + x2) / 2 - tw / 2, y1 - 40, tw);                       // a little above centre: the dock covers the bottom
-    }
-    $("#jseenZones").addEventListener("click", (e) => { const t = e.target.closest(".jtile"); if (t) focusZone(+t.dataset.z); });
-    function setCompact(on) {
-      compact = on; jsec.classList.toggle("is-compact", on); $("#jseen").hidden = !on; if (on) placeTalk(null, false);
-      if (on) { done.style.strokeDashoffset = 0; $$(".fpin", svg).forEach((g) => g.classList.add("is-done")); const [x, y, w] = whole(); cam.x = x; cam.y = y; cam.w = w; cam.h = w * (aspect() || 0.6); setView(); }
-    }
-    let walked = false; const seenStops = new Set();
-    $("#jreplay").addEventListener("click", () => {
-      seenStops.clear();
-      try { localStorage.removeItem(SEEN); } catch (e) {}
-      walked = false; if (focusZ >= 0) focusZone(focusZ); setCompact(false); jp = -1; cur = -1; show(0);
-      jscroll.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+    tabs.addEventListener("click", (e) => { const t = e.target.closest(".zx__tab"); if (t) { show(t.dataset.z, true); track("zone_tab", t.dataset.z); } });
+    tabs.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      const all = $$(".zx__tab", tabs), i = all.findIndex((t) => t.dataset.z === cur.id);
+      const n = all[(i + (e.key === "ArrowRight" ? 1 : all.length - 1)) % all.length]; show(n.dataset.z, true); n.focus();
     });
-    if (compact) setCompact(true);
-    // tapping a zone in the passport jumps the walk to that zone's first stand
-    $$(".jpass__slot", $("#jpass")).forEach((slot) => {
-      const zi = +slot.dataset.z;
-      slot.setAttribute("role", "button"); slot.tabIndex = 0;
-      slot.setAttribute("aria-label", `Go to the ${J[zi].name} zone`);
-      const go = () => {
-        if (compact) return focusZone(zi);
-        const k = stops.findIndex((st) => st.kind === "st" && st.st.zone === zi); if (k < 0) return;
-        const span = jscroll.offsetHeight - innerHeight, top = jscroll.getBoundingClientRect().top + scrollY;
-        const p = 0.06 + 0.94 * (k / (stops.length - 1));
-        window.scrollTo({ top: top + p * span + 2, behavior: reduce ? "auto" : "smooth" });
-      };
-      slot.addEventListener("click", go);
-      slot.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    $("#zxNext").addEventListener("click", () => {
+      const s = cur.stations, i = s.findIndex((x) => x.n === active);
+      const next = cur.reward ? (s.slice(i + 1).find((x) => !seen.has(x.n)) || s.find((x) => !seen.has(x.n)) || s[(i + 1) % s.length]) : s[(i + 1) % s.length];
+      select(next.n);
     });
-    journeyStep = () => {
-      if (compact) return;
-      const r = jscroll.getBoundingClientRect(), span = jscroll.offsetHeight - innerHeight;
-      // finished the walk and scrolled past it: collapse now, holding the next section still on screen
-      if (walked && r.bottom < 0) {
-        const ref = jsec.nextElementSibling || jsec, t0 = ref.getBoundingClientRect().top;
-        setCompact(true);
-        const t1 = ref.getBoundingClientRect().top;
-        if (Math.abs(t1 - t0) > 1) window.scrollBy({ top: t1 - t0, behavior: "instant" });
-        return;
-      }
-      if (r.bottom < 0 || r.top > innerHeight || span <= 0) return;
-      const p = Math.min(1, Math.max(0, -r.top / span));
-      // count stands from where the reader has actually scrolled (not from the camera's catch-up glide, which sweeps
-      // every stand when someone jumps past the section)
-      seenStops.add(Math.round(Math.max(0, (p - 0.06) / 0.94) * (stops.length - 1)));
-      jp = jp < 0 || reduce ? p : jp + (p - jp) * 0.14;
-      // walked = reached the end having actually passed through most stands (a reload that lands further down the
-      // page must not count as having walked it)
-      if (!walked && p > 0.97 && seenStops.size >= Math.ceil(stops.length * 0.6)) { walked = true; try { localStorage.setItem(SEEN, "1"); } catch (e) {} }
-      $("#jhint").classList.toggle("is-gone", jp > 0.02);
-      // first 6% of the scroll: zoom from the whole floor to walking level. Then every step is: hold at a stand (60% of
-      // its scroll, the callout talks), then walk to the next one (40%, eased, the callout hides)
-      const intro = Math.min(1, jp / 0.06), walk = Math.max(0, (jp - 0.06) / 0.94) * (stops.length - 1);
-      const i0 = Math.min(stops.length - 2, Math.floor(walk)), f = walk - i0, HOLD = 0.55;
-      const t = f < HOLD ? 0 : (f - HOLD) / (1 - HOLD), ease = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
-      const atEnd = walk >= stops.length - 1.001, A = stops[i0], B = stops[Math.min(stops.length - 1, i0 + 1)];
-      // the walker visits each stand itself: step off the trail to the stand, hold, step back on, walk the trail, step
-      // off to the next stand. Even stands that share a spot on the trail (e.g. 04 and 05) get a real walk between them.
-      const at = (stop) => (stop.kind === "st" ? { x: stop.st.x, y: stop.st.y } : trail.getPointAtLength(stop.L));
-      const mix = (p, q, u) => ({ x: p.x + (q.x - p.x) * u, y: p.y + (q.y - p.y) * u });
-      let q, L;
-      if (atEnd) { q = at(stops[stops.length - 1]); L = len; }
-      else if (t === 0) { q = at(A); L = A.L; }
-      else if (t < 0.22) { const u = ease(t / 0.22); q = mix(at(A), trail.getPointAtLength(A.L), u); L = A.L; }
-      else if (t < 0.78) { L = A.L + (B.L - A.L) * ease((t - 0.22) / 0.56); q = trail.getPointAtLength(L); }
-      else { const u = ease((t - 0.78) / 0.22); q = mix(trail.getPointAtLength(B.L), at(B), u); L = B.L; }
-      const k = atEnd ? stops.length - 1 : (t >= 0.9 ? i0 + 1 : i0);     // the card changes on arrival, not halfway
-      done.style.strokeDashoffset = len - L;
-      mark.setAttribute("transform", `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})`);
-      show(k);
-      const a = aspect() || 0.6, narrow = innerWidth <= 900, [wx, wy, ww] = whole();
-      const zw = narrow ? 400 : 560, tw = ww + (zw - ww) * intro, th = tw * a;      // close in on the stand, neighbours still in view
-      // keep the walker right of centre on desktop (the card sits on the left); higher on phones (card below)
-      const fx = narrow ? 0.5 : 0.64, fy = narrow ? 0.4 : 0.52;
-      const tx = wx + (q.x - fx * tw - wx) * intro, ty = wy + (q.y - fy * th - wy) * intro;
-      const e = reduce ? 1 : 0.18;
-      cam.x += (tx - cam.x) * e; cam.y += (ty - cam.y) * e; cam.w += (tw - cam.w) * e; cam.h += (th - cam.h) * e;
-      setView();
-      placeTalk(stops[k], intro > 0.9 && (atEnd || t === 0 || t >= 0.95) && Math.abs(tx - cam.x) < 40);   // talk once the camera has arrived
-    };
-  }).catch(() => {});
+    $("#zxMotion").addEventListener("click", (e) => { const p = zxEl.classList.toggle("paused"); e.currentTarget.textContent = p ? "Play motion" : "Pause motion"; });
+    // the old passport / plan links (e.g. the VIP hall plan) can ask for a zone: #journey?zone=escape style hooks
+    window.brfShowZone = (id) => { show(id, true); $("#journey").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); };
+    show(ZX[0].id, false);
+    if (lsGet(DONE) !== "1" && payZone && payZone.stations.every((s) => seen.has(s.n))) claimWealth();
+  }
 
   /* ===== 5c. Main stage talks: an agenda that grows. Day tabs appear when there is more than one day; each day is a
      list of rows (time, talk and speaker, topic). A long day scrolls inside its own frame (about six rows tall) with a
@@ -1258,7 +1175,7 @@
 
   /* ===== 8b. 1 Million Questions. Ticket holders play the real questions, marked on the server (js/store.js ->
      Supabase): one question at a time, options shuffled per person, 15 s each, every question answered once.
-     Every right answer is a draw entry; every 10 right answers earns 5 BvndleCoins (pending until an admin approves).
+     Every right answer is a draw entry; the first 10 right answers earn 5 BvndleCoins, once per ticket (collected at the festival).
      Anyone can play a practice round on the sample questions in js/trivia.js (no entries, no coins). ===== */
   const quiz = $("#quiz"), TV = window.BRF_TRIVIA;
   if (quiz && TV) {
@@ -1270,6 +1187,8 @@
     let timer = 0, answered = false, roundRight = 0, roundCoins = 0, roundN = 0, last = null;
 
     function stop() { clearInterval(timer); }
+    // trivia pays 5 coins once (first 10 right answers); after that, right answers are draw entries only
+    const coinLine = (st) => st.award_done || st.next_award_in == null ? "Your 5 trivia coins are in your wallet; keep playing for draw entries." : `${st.next_award_in} more right ${st.next_award_in === 1 ? "answer" : "answers"} to earn your 5 coins.`;
     // the ticket card and the "next step" nudges read the entry count from here
     const remember = (st) => { try { localStorage.setItem("brf-trivia-best", String(st.correct || 0)); } catch (e) {} };
     function bar(secs, onEnd) {
@@ -1293,7 +1212,7 @@
       if (!tok) {                                                       // no ticket yet: same choices for everyone
         quiz.innerHTML = `<div class="quiz__card quiz__card--start">
           <p class="quiz__big" aria-hidden="true">?</p>
-          <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every right answer is a draw entry, every 10 earn 5 BvndleCoins</p>
+          <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every right answer is a draw entry, your first 10 earn 5 BvndleCoins</p>
           <div class="quiz__ctas"><button class="btn" type="button" id="quizGo">Play for entries <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizPractice">Practice first <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>
           <p class="quiz__note">Practice is open to everyone and doesn't count.</p>${sampleNote}</div>`;
         $("#quizGo").addEventListener("click", needTicket);
@@ -1311,10 +1230,10 @@
       }
       quiz.innerHTML = `<div class="quiz__card quiz__card--start">
         <p class="quiz__big" aria-hidden="true">?</p>
-        <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every 10 right answers earns 5 BvndleCoins</p>
-        <p class="quiz__best">You have <b>${plural(st.correct, "entry", "entries")}</b> and <b>${plural(st.coins_earned, "coin", "coins")}</b>. ${st.next_award_in} more right ${st.next_award_in === 1 ? "answer" : "answers"} for your next 5 coins.</p>
+        <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every right answer is a draw entry</p>
+        <p class="quiz__best">You have <b>${plural(st.correct, "entry", "entries")}</b> and <b>${plural(st.coins_earned, "coin", "coins")}</b>. ${coinLine(st)}</p>
         <div class="quiz__ctas"><button class="btn" type="button" id="quizGo">Play ${ROUND} questions <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizPractice">Practice <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>
-        <p class="quiz__note">Each question can only be answered once, and the clock is checked on our side. Coins are added to your Bvndle account after the festival team approves them.</p></div>`;
+        <p class="quiz__note">Each question can only be answered once, and the clock is checked on our side. Coins are collected at the festival with your ticket code.</p></div>`;
       $("#quizGo").addEventListener("click", liveStart);
       $("#quizPractice").addEventListener("click", practiceStart);
     }
@@ -1363,6 +1282,7 @@
       const a = r.data; last = a.summary; roundN++; remember(a.summary);
       if (a.correct) roundRight++;
       roundCoins += a.coins_awarded || 0;
+      if (a.coins_awarded && window.brfRefreshWallet) window.brfRefreshWallet();
       $$(".quiz__opt", quiz).forEach((b, i) => { b.classList.toggle("is-ok", i === a.correct_choice); b.classList.toggle("is-no", i === k && !a.correct); });
       const say = $("#quizSay");
       say.textContent = a.correct ? (a.coins_awarded ? `Correct! +${a.coins_awarded} BvndleCoins` : "Correct!") : a.timed_out ? "Time's up." : "Not this time.";
@@ -1376,7 +1296,7 @@
       quiz.innerHTML = `<div class="quiz__card quiz__card--end">
         <div class="stubs" aria-hidden="true">${Array.from({ length: Math.max(roundN, 1) }, (_, i) => `<span class="rstub${i < roundRight ? " is-won" : ""}" style="--i:${i}">#${String(1000 + Math.floor(Math.random() * 9000))}</span>`).join("")}</div>
         <p class="quiz__big">${st.correct}<small> ${st.correct === 1 ? "entry" : "entries"}</small></p><h3>${line}</h3>
-        <p class="quiz__best">${roundCoins ? `You earned <b>${roundCoins} BvndleCoins</b> this round. ` : ""}Total: <b>${plural(st.coins_earned, "coin", "coins")}</b>, pending approval. ${outOfQuestions ? "" : `${st.next_award_in} more right ${st.next_award_in === 1 ? "answer" : "answers"} for your next 5 coins.`} Winners are announced live on ${esc(TV.drawDay || "the day")}.</p>
+        <p class="quiz__best">${roundCoins ? `You earned <b>${roundCoins} BvndleCoins</b> this round. ` : ""}${outOfQuestions ? "" : coinLine(st)} Winners are announced live on ${esc(TV.drawDay || "the day")}.</p>
         ${nudges(["guess", "concert"], "Next:")}
         <div class="quiz__ctas">${outOfQuestions ? "" : `<button class="btn" type="button" id="quizAgain">Play ${ROUND} more <i class="ph-bold ph-play" aria-hidden="true"></i></button>`}</div></div>`;
       if (!outOfQuestions) $("#quizAgain").addEventListener("click", liveStart);
