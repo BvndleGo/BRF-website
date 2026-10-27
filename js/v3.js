@@ -1225,7 +1225,7 @@
     // tickets are split into Individual and Group tabs (V.groups); the hall plan still shows every zone
     const groups = V.groups || [["all", "Tickets"]];
     let vGroup = groups[0][0];
-    const tierHTML = (t) => `<li class="vtier" data-z="${zoneOf(t)}"><img src="${t.view}" alt="" loading="lazy"><div><b>${esc(t.name)}</b><span>${esc(t.line)}</span><span class="vtier__price">${esc(t.price)}${t.status ? ` <em>${esc(t.status)}</em>` : ""}</span></div><a class="btn btn--sm" href="${esc(cfg.tixUrl)}" target="_blank" rel="noopener" aria-label="Get paid ticket: ${esc(t.name)}">Get paid ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></li>`;
+    const tierHTML = (t) => `<li class="vtier" data-z="${zoneOf(t)}"><img src="${t.view}" alt="" loading="lazy"><div><b>${esc(t.name)}</b><span>${esc(t.line)}</span><span class="vtier__price">${esc(t.price)}${t.status ? ` <em>${esc(t.status)}</em>` : ""}</span></div><a class="btn btn--sm" href="${esc(cfg.tixUrl)}" target="_blank" rel="noopener" aria-label="Buy ${esc(t.name)}">Buy <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></li>`;
     function showGroup(g) {
       vGroup = g;
       $("#vtabs").innerHTML = groups.map(([id, lab]) => `<button type="button" role="tab" class="vtab${id === g ? " is-on" : ""}" aria-selected="${id === g}" data-g="${id}">${esc(lab)} <small>${V.tiers.filter((t) => (t.group || "all") === id).length}</small></button>`).join("");

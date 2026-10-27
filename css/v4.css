@@ -1083,6 +1083,7 @@ html[data-theme="light"] .zx { --zx-surf: #fff; --zx-line: #1a1a1a; --zx-fg: #1a
 .zx__st.seen .zx__num { background: var(--zx-green); }
 .zx__st.on { border-color: var(--zx-pink); box-shadow: 4px 4px 0 var(--zx-pink); }
 .zx__fine { margin: 0; color: var(--zx-muted); font-size: var(--fs-caption); }
+.wallet[hidden] { display: none; }
 .wallet { border: 2px solid var(--zx-line); border-radius: 22px; background: var(--zx-surf); color: var(--zx-fg); padding: 18px 20px; display: grid; gap: 12px; max-width: 720px; }
 .wallet__top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .wallet__label { margin: 0; font: 700 13px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--zx-muted); }
