@@ -9,6 +9,7 @@ window.BRF = {
 
   tixUrl: "https://tix.africa/discover/bvndlerewardfestival2026",
   partnerUrl: "https://forms.gle/rPUGVDK9qsWDw4ij7?utm_source=web&utm_medium=landing+page&utm_campaign=BRF+2026",
+  countBase: 300,   // public "tickets claimed" counter starts here; each real claim adds 1 (client, 27 Oct)
   galleryUrl: "https://bvndleincorporated.pixieset.com/bvndlerewardsfestival/",
 };
 
@@ -53,7 +54,8 @@ window.PassStore = (() => {
   }
 
   return {
-    count: () => total,
+    // shown on the site: a starting figure plus every real claim (client, 27 Oct). Admin counts real tickets only.
+    count: () => (window.BRF.countBase || 0) + total,
     async refreshCount() {
       try { total = Number(await rpc("free_pass_count")) || 0; } catch (e) {}
       return total;
