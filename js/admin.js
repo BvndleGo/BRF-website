@@ -11,9 +11,10 @@
       <button type="button" data-tab="tickets" class="${on === "tickets" ? "is-on" : ""}">Tickets</button>
       <button type="button" data-tab="coins" class="${on === "coins" ? "is-on" : ""}">Rewards</button>
       <button type="button" data-tab="partners" class="${on === "partners" ? "is-on" : ""}">Partners</button>
+      <button type="button" data-tab="events" class="${on === "events" ? "is-on" : ""}">Events</button>
       <button type="button" data-tab="analytics" class="${on === "analytics" ? "is-on" : ""}">Analytics</button></nav>`;
   function bindTabs() {
-    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
+    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "events" ? renderEvents() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
   }
 
   function renderLogin(msg) {
@@ -509,6 +510,224 @@
     const blob = new Blob(["﻿" + rows.map((r) => r.map(csvCell).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `brf-partner-enquiries-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  /* ===================== Events: attendance, check-in and booklet rewards at events we run =====================
+     Create an event, register attendees (name, email, phone; Bvndle tag now or later), check them in, then key in the
+     total coins stamped in their booklet. Approve, export the approved sheet (Excel) for the Bvndle reward upload and
+     mark it paid. Rules live in the database (brf_event_attendees trigger): changing an amount needs approval again,
+     paid rewards are locked. */
+  let evList = [], evCur = null, evPeople = [];
+  const EV_STATUS = { none: "No reward", pending: "To approve", approved: "Approved", paid: "Paid" };
+  const evErr = (e) => ({ reward_already_paid: "This reward has already been paid, so it can't be changed.", approve_first: "Approve the reward before marking it paid.", nothing_to_approve: "Enter a reward amount first." }[e?.message] || e?.message || "Something went wrong.");
+
+  async function renderEvents() {
+    evCur = null;
+    root.innerHTML = `${tabs("events")}
+      <div class="admin-head">
+        <div><h1 class="display">Events</h1><p>Run attendance at an event: register and check people in, then key in the coins stamped in their booklet, approve and export for payout.</p></div>
+        <div class="admin-actions"><button class="btn btn--ghost" id="signOut" type="button">Sign out</button></div>
+      </div>
+      <form class="evnew" id="evNew" novalidate>
+        <h2>New event</h2>
+        <div class="evnew__row">
+          <label class="field"><span>Event name</span><input class="input" name="name" required maxlength="120" placeholder="e.g. Lagos Fintech Week"></label>
+          <label class="field"><span>Location</span><input class="input" name="location" maxlength="160" placeholder="Venue, city"></label>
+          <label class="field"><span>Date</span><input class="input" name="event_date" type="date"></label>
+          <button class="btn btn--pink" type="submit"><i class="ph-bold ph-plus" aria-hidden="true"></i> Create event</button>
+        </div>
+        <p class="evmsg" id="evNewMsg" role="status"></p>
+      </form>
+      <div id="evListWrap"><div class="empty"><p>Loading events...</p></div></div>`;
+    bindTabs();
+    document.getElementById("signOut").addEventListener("click", signOut);
+    document.getElementById("evNew").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target), name = String(f.get("name") || "").trim(), msg = document.getElementById("evNewMsg");
+      if (name.length < 2) { msg.textContent = "Give the event a name."; return; }
+      const row = { name, location: String(f.get("location") || "").trim() || null, event_date: f.get("event_date") || null };
+      const { data, error } = await sb.from("brf_events").insert(row).select().single();
+      if (error) { msg.textContent = "Couldn't create the event: " + error.message; return; }
+      openEvent(data.id);
+    });
+    await loadEvents();
+  }
+
+  async function loadEvents() {
+    const [{ data: evs, error }, { data: att }] = await Promise.all([
+      sb.from("brf_events").select("*").eq("archived", false).order("created_at", { ascending: false }),
+      sb.from("brf_event_attendees").select("event_id,checked_in_at,reward_coins,reward_status"),
+    ]);
+    const wrap = document.getElementById("evListWrap");
+    if (error) { wrap.innerHTML = `<div class="empty"><p>Couldn't load events: ${esc(error.message)}</p></div>`; return; }
+    evList = evs || [];
+    if (!evList.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-calendar-plus" aria-hidden="true"></i><h2 class="display">No events yet</h2><p>Create one above to start registering attendees.</p></div>`; return; }
+    const st = (id) => { const a = (att || []).filter((x) => x.event_id === id); return { n: a.length, in: a.filter((x) => x.checked_in_at).length, coins: a.reduce((s, x) => s + (x.reward_coins || 0), 0), todo: a.filter((x) => x.reward_status === "pending").length }; };
+    wrap.innerHTML = `<div class="evgrid">${evList.map((ev) => { const s = st(ev.id); return `<button class="evcard" type="button" data-ev="${ev.id}">
+      <b>${esc(ev.name)}</b><span class="muted">${esc([ev.location, ev.event_date ? new Date(ev.event_date + "T12:00:00").toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) : ""].filter(Boolean).join(" · ") || "No location or date")}</span>
+      <span class="evcard__stats"><span><b>${s.n}</b> attendees</span><span><b>${s.in}</b> checked in</span><span><b>${s.coins.toLocaleString("en-NG")}</b> coins</span></span>
+      ${s.todo ? `<span class="cstatus cstatus--pending">${s.todo} to approve</span>` : ""}</button>`; }).join("")}</div>`;
+    wrap.querySelectorAll("[data-ev]").forEach((b) => b.addEventListener("click", () => openEvent(b.dataset.ev)));
+  }
+
+  async function openEvent(id) {
+    const { data: ev, error } = await sb.from("brf_events").select("*").eq("id", id).single();
+    if (error) return alert("Couldn't open the event: " + error.message);
+    evCur = ev;
+    root.innerHTML = `${tabs("events")}
+      <div class="admin-head">
+        <div><button class="linkish" type="button" id="evBack"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i> All events</button>
+          <h1 class="display">${esc(ev.name)}</h1><p>${esc([ev.location, ev.event_date ? new Date(ev.event_date + "T12:00:00").toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""].filter(Boolean).join(" · "))}</p></div>
+        <div class="admin-actions">
+          <button class="btn btn--pink" id="evExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Approved rewards (Excel)</button>
+          <button class="btn btn--ghost" id="evPaid" type="button"><i class="ph-bold ph-check-circle" aria-hidden="true"></i> Mark approved as paid</button>
+          <button class="btn btn--ghost" id="evRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
+        </div>
+      </div>
+      <div class="admin-tiles admin-tiles--4">
+        <div class="atile atile--glare"><span>Attendees</span><b id="ev-n">0</b><small id="ev-in"></small></div>
+        <div class="atile"><span>Coins to approve</span><b id="ev-pend">0</b></div>
+        <div class="atile"><span>Coins approved, not paid</span><b id="ev-appr">0</b><small id="ev-notag"></small></div>
+        <div class="atile"><span>Coins paid</span><b id="ev-paid">0</b></div>
+      </div>
+      <form class="evnew" id="evAdd" novalidate>
+        <h2>Register an attendee</h2>
+        <div class="evnew__row evnew__row--5">
+          <label class="field"><span>Full name</span><input class="input" name="full_name" required maxlength="120" autocomplete="off"></label>
+          <label class="field"><span>Email</span><input class="input" name="email" type="email" required maxlength="160" autocomplete="off"></label>
+          <label class="field"><span>Phone</span><input class="input" name="phone" type="tel" required maxlength="20" placeholder="080..." autocomplete="off"></label>
+          <label class="field"><span>Bvndle tag <small>(optional)</small></span><div class="affix affix--at"><span>@</span><input class="input" name="bvndle_tag" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false"></div></label>
+          <div class="evadd__go"><label class="evcheck"><input type="checkbox" name="checkin" checked> Check in now</label><button class="btn btn--pink" type="submit"><i class="ph-bold ph-user-plus" aria-hidden="true"></i> Add</button></div>
+        </div>
+        <p class="evmsg" id="evAddMsg" role="status"></p>
+      </form>
+      <div class="admin-bar admin-bar--split">
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search attendees</span><input class="input" id="evSearch" type="search" placeholder="Search name, email, phone or tag"></label>
+        <select class="input" id="evFilter" aria-label="Filter attendees">
+          <option value="all">Everyone</option><option value="out">Not checked in</option><option value="pending">Reward to approve</option><option value="approved">Approved, not paid</option><option value="paid">Paid</option><option value="notag">No Bvndle tag</option>
+        </select>
+        <button class="btn btn--ghost" id="evApproveAll" type="button"><i class="ph-bold ph-checks" aria-hidden="true"></i> Approve all shown</button>
+      </div>
+      <div class="table-wrap" id="evWrap"><div class="empty"><p>Loading attendees...</p></div></div>`;
+    bindTabs();
+    const $i = (x) => document.getElementById(x);
+    $i("evBack").addEventListener("click", renderEvents);
+    $i("evRefresh").addEventListener("click", loadPeople);
+    $i("evSearch").addEventListener("input", renderPeople);
+    $i("evFilter").addEventListener("change", renderPeople);
+    $i("evExcel").addEventListener("click", exportEventExcel);
+    $i("evPaid").addEventListener("click", markEventPaid);
+    $i("evApproveAll").addEventListener("click", approveShown);
+    $i("evWrap").addEventListener("click", onPeopleClick);
+    $i("evWrap").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches("[data-coins]")) { e.preventDefault(); saveCoins(e.target.dataset.coins); } });
+    $i("evAdd").addEventListener("submit", addAttendee);
+    await loadPeople();
+  }
+
+  async function loadPeople() {
+    const { data, error } = await sb.from("brf_event_attendees").select("*").eq("event_id", evCur.id).order("created_at", { ascending: false });
+    if (error) { document.getElementById("evWrap").innerHTML = `<div class="empty"><p>Couldn't load attendees: ${esc(error.message)}</p></div>`; return; }
+    evPeople = data; renderPeople();
+  }
+  function shownPeople() {
+    const q = document.getElementById("evSearch").value.trim().toLowerCase().replace(/^@/, ""), f = document.getElementById("evFilter").value;
+    return evPeople.filter((p) => {
+      if (f === "out" && p.checked_in_at) return false;
+      if (["pending", "approved", "paid"].includes(f) && p.reward_status !== f) return false;
+      if (f === "notag" && p.bvndle_tag) return false;
+      return !q || [p.full_name, p.email, p.phone, p.bvndle_tag].join(" ").toLowerCase().includes(q);
+    });
+  }
+  function renderPeople() {
+    const sum = (st) => evPeople.filter((p) => p.reward_status === st).reduce((n, p) => n + p.reward_coins, 0), n = (x) => x.toLocaleString("en-NG");
+    const set = (i, v) => (document.getElementById(i).textContent = v);
+    set("ev-n", n(evPeople.length)); set("ev-in", `${n(evPeople.filter((p) => p.checked_in_at).length)} checked in`);
+    set("ev-pend", n(sum("pending"))); set("ev-appr", n(sum("approved"))); set("ev-paid", n(sum("paid")));
+    const noTag = evPeople.filter((p) => p.reward_status === "approved" && !p.bvndle_tag).length;
+    set("ev-notag", noTag ? `${noTag} without a Bvndle tag` : "");
+    document.getElementById("evExcel").disabled = document.getElementById("evPaid").disabled = !evPeople.some((p) => p.reward_status === "approved");
+    const rows = shownPeople(), wrap = document.getElementById("evWrap");
+    document.getElementById("evApproveAll").disabled = !rows.some((p) => p.reward_status === "pending");
+    if (!evPeople.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-users-three" aria-hidden="true"></i><h2 class="display">No attendees yet</h2><p>Register people above as they arrive.</p></div>`; return; }
+    wrap.innerHTML = `<table class="evtable"><thead><tr><th>Name</th><th>Contact</th><th>Bvndle tag</th><th>Check-in</th><th>Booklet coins</th><th>Reward</th></tr></thead><tbody>${rows.length ? rows.map((p) => `<tr data-row="${p.id}">
+      <td data-l="Name"><b>${esc(p.full_name)}</b></td>
+      <td data-l="Contact">${esc(p.email || "")}<br><span class="muted">${esc(p.phone ? window.formatNgPhone(p.phone) : "")}</span></td>
+      <td data-l="Bvndle tag">${p.bvndle_tag ? `@${esc(p.bvndle_tag)} <button class="linkish" type="button" data-tag="${p.id}">Edit</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-tag="${p.id}"><i class="ph-bold ph-plus" aria-hidden="true"></i> Add tag</button>`}</td>
+      <td data-l="Check-in">${p.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(p.checked_in_at))}</span> <button class="linkish" type="button" data-out="${p.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-in="${p.id}">Check in</button>`}</td>
+      <td data-l="Booklet coins"><div class="evcoins"><input class="input input--sm" type="number" min="0" step="1" inputmode="numeric" value="${p.reward_coins || ""}" placeholder="0" data-coins="${p.id}" aria-label="Coins for ${esc(p.full_name)}" ${p.reward_status === "paid" ? "disabled" : ""}><button class="btn btn--sm btn--ghost" type="button" data-save="${p.id}" ${p.reward_status === "paid" ? "hidden" : ""}>Save</button></div></td>
+      <td data-l="Reward"><span class="cstatus cstatus--${p.reward_status === "pending" ? "pending" : p.reward_status === "approved" ? "approved" : p.reward_status === "paid" ? "collected" : "none"}">${EV_STATUS[p.reward_status]}</span>
+        ${p.reward_status === "pending" ? `<button class="btn btn--sm btn--ghost" type="button" data-approve="${p.id}">Approve</button>` : p.reward_status === "approved" ? `<button class="linkish" type="button" data-unapprove="${p.id}">Undo</button>` : ""}</td>
+    </tr>`).join("") : `<tr><td colspan="6" class="muted" style="text-align:center;padding:36px">Nobody matches.</td></tr>`}</tbody></table>`;
+  }
+
+  const normPhone = (v) => window.normalizeNgPhone(v) || String(v || "").replace(/[^\d+]/g, "");
+  async function addAttendee(e) {
+    e.preventDefault();
+    const form = e.target, f = new FormData(form), msg = document.getElementById("evAddMsg");
+    const row = { event_id: evCur.id, full_name: String(f.get("full_name") || "").trim(), email: String(f.get("email") || "").trim().toLowerCase(), phone: normPhone(f.get("phone")), bvndle_tag: String(f.get("bvndle_tag") || "").trim().replace(/^@/, "") || null, checked_in_at: f.get("checkin") ? new Date().toISOString() : null };
+    if (row.full_name.length < 2) return (msg.textContent = "Add the attendee's name.");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(row.email)) return (msg.textContent = "Add a valid email address.");
+    if (row.phone.replace(/\D/g, "").length < 10) return (msg.textContent = "Add a valid phone number.");
+    const dup = evPeople.find((p) => (p.email && p.email === row.email) || (p.phone && p.phone === row.phone));
+    if (dup && !confirm(`${dup.full_name} is already registered with this email or phone. Add anyway?`)) return;
+    const { data, error } = await sb.from("brf_event_attendees").insert(row).select().single();
+    if (error) return (msg.textContent = "Couldn't add: " + evErr(error));
+    evPeople.unshift(data); form.reset(); form.querySelector("[name=checkin]").checked = true; form.querySelector("[name=full_name]").focus();
+    msg.textContent = `${data.full_name} added${data.checked_in_at ? " and checked in" : ""}.`;
+    renderPeople();
+  }
+  async function patchPerson(id, patch) {
+    const { data, error } = await sb.from("brf_event_attendees").update(patch).eq("id", id).select().single();
+    if (error) { alert(evErr(error)); return null; }
+    evPeople = evPeople.map((p) => (p.id === id ? data : p)); renderPeople(); return data;
+  }
+  async function saveCoins(id) {
+    const el = document.querySelector(`[data-coins="${id}"]`), v = Math.max(0, Math.floor(Number(el.value) || 0)), p = evPeople.find((x) => x.id === id);
+    if (p.reward_coins === v) return;
+    if (p.reward_status === "approved" && !confirm(`${p.full_name}'s reward is already approved. Changing it means it needs approval again. Continue?`)) { el.value = p.reward_coins || ""; return; }
+    await patchPerson(id, { reward_coins: v });
+  }
+  async function onPeopleClick(e) {
+    const b = e.target.closest("button"); if (!b) return;
+    const d = b.dataset;
+    if (d.in) patchPerson(d.in, { checked_in_at: new Date().toISOString() });
+    if (d.out) patchPerson(d.out, { checked_in_at: null });
+    if (d.save) saveCoins(d.save);
+    if (d.approve) patchPerson(d.approve, { reward_status: "approved" });
+    if (d.unapprove) patchPerson(d.unapprove, { reward_status: "pending" });
+    if (d.tag) {
+      const p = evPeople.find((x) => x.id === d.tag), v = prompt(`Bvndle tag for ${p.full_name}`, p.bvndle_tag || "");
+      if (v !== null) patchPerson(d.tag, { bvndle_tag: v.trim().replace(/^@/, "") || null });
+    }
+  }
+  async function approveShown() {
+    const ids = shownPeople().filter((p) => p.reward_status === "pending").map((p) => p.id);
+    if (!ids.length || !confirm(`Approve ${ids.length} reward${ids.length === 1 ? "" : "s"}?`)) return;
+    const { error } = await sb.from("brf_event_attendees").update({ reward_status: "approved" }).in("id", ids);
+    if (error) alert(evErr(error));
+    loadPeople();
+  }
+  async function markEventPaid() {
+    const list = evPeople.filter((p) => p.reward_status === "approved"), noTag = list.filter((p) => !p.bvndle_tag).length;
+    if (!list.length) return;
+    if (!confirm(`Mark ${list.length} approved reward${list.length === 1 ? "" : "s"} as paid? Do this after the Bvndle upload has gone through.${noTag ? `\n\n${noTag} of them have no Bvndle tag.` : ""}`)) return;
+    const { error } = await sb.from("brf_event_attendees").update({ reward_status: "paid" }).in("id", list.map((p) => p.id));
+    if (error) alert(evErr(error));
+    loadPeople();
+  }
+  async function exportEventExcel() {
+    const btn = document.getElementById("evExcel"); btn.disabled = true;
+    try {
+      if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+      const X = window.XLSX, list = evPeople.filter((p) => p.reward_status === "approved");
+      const rows = list.map((p) => ({ "Bvndle tag": p.bvndle_tag ? "@" + p.bvndle_tag : "", Coins: p.reward_coins, "Full name": p.full_name, Email: p.email || "", Phone: p.phone || "", "Tag present": p.bvndle_tag ? "Yes" : "No", "Naira value": p.reward_coins * NAIRA, "Checked in": p.checked_in_at ? new Date(p.checked_in_at) : "", "Approved at": p.reward_approved_at ? new Date(p.reward_approved_at) : "" }));
+      const ws = X.utils.json_to_sheet(rows, { cellDates: true });
+      ws["!cols"] = Object.keys(rows[0] || { a: 1 }).map((k) => ({ wch: Math.max(12, k.length + 4) }));
+      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Approved rewards");
+      const slug = evCur.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "event";
+      X.writeFile(wb, `${slug}-approved-rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (e) { alert("Couldn't build the Excel file. Check your connection and try again."); }
+    btn.disabled = false;
   }
 
   /* ===================== Analytics: visits, what people do, where they leave ===================== */

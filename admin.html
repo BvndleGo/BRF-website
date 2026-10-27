@@ -39,6 +39,24 @@
     .pnote { min-height: 64px; padding: 10px 12px; }
     .input--sm { min-height: 40px; padding: 0 10px; font-size: 14px; width: auto; }
     #pWrap a { color: inherit; }
+    .evnew { border: 1px solid rgba(243,240,235,.16); border-radius: 18px; padding: 18px 20px; margin: 0 0 22px; background: rgba(243,240,235,.03); }
+    .evnew h2 { margin: 0 0 12px; font-size: 17px; }
+    .evnew__row { display: grid; grid-template-columns: 2fr 2fr 1fr auto; gap: 12px; align-items: end; }
+    .evnew__row--5 { grid-template-columns: 1.4fr 1.6fr 1fr 1.1fr auto; }
+    .evnew .field { display: grid; gap: 6px; margin: 0; } .evnew .field > span { font-size: 13px; font-weight: 600; }
+    .evadd__go { display: flex; gap: 12px; align-items: center; }
+    .evcheck { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; white-space: nowrap; }
+    .evmsg { margin: 10px 0 0; min-height: 1.2em; font-size: 14px; }
+    .evgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .evcard { text-align: left; display: grid; gap: 6px; padding: 18px; border-radius: 18px; border: 1px solid rgba(243,240,235,.18); background: rgba(243,240,235,.04); color: inherit; font: inherit; cursor: pointer; }
+    .evcard:hover { border-color: #FF3E8E; } .evcard > b { font-size: 18px; }
+    .evcard__stats { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; } .evcard .cstatus { justify-self: start; }
+    .evcoins { display: flex; gap: 6px; align-items: center; } .evcoins .input { width: 96px; }
+    .cstatus--none { background: rgba(243,240,235,.08); color: #bdb7af; }
+    .evtable td { vertical-align: middle; }
+    @media (max-width: 1000px) { .evnew__row, .evnew__row--5 { grid-template-columns: 1fr 1fr; } .evadd__go { grid-column: 1 / -1; } }
+    @media (max-width: 560px) { .evnew__row, .evnew__row--5 { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { #evWrap table, #evWrap tbody, #evWrap tr, #evWrap td { display: block; width: auto; } #evWrap thead { display: none; } #evWrap tr { padding: 12px 14px; border-bottom: 1px solid rgba(243,240,235,.12); } #evWrap td { padding: 4px 0; border: 0; } #evWrap td::before { content: attr(data-l); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .6; } #evWrap td[data-l="Name"]::before { display: none; } #evWrap .linkish { display: inline; width: auto; margin: 0 0 0 10px; } }
     .an-small .atile b { font-size: 34px; }
     .an-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 8px 0 32px; }
     .an-card { padding: 22px 24px; border-radius: var(--r-card, 20px); background: var(--night-2, #1a1a1a); border: 1px solid rgba(243,240,235,.14); min-width: 0; }
@@ -73,6 +91,6 @@
 <main class="admin wrap" id="admin"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/store.js?v=9"></script>
-<script src="js/admin.js?v=7"></script>
+<script src="js/admin.js?v=8"></script>
 </body>
 </html>
