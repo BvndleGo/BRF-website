@@ -75,7 +75,7 @@
       <div class="admin-bar admin-bar--split">
         <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search sign-ups</span><input class="input" id="search" type="search" placeholder="Search name, email, phone, tag or ticket code"></label>
         <select class="input" id="filter" aria-label="Filter sign-ups">
-          <option value="all">Everyone</option><option value="out">Not checked in</option><option value="in">Checked in</option><option value="tag">Has a Bvndle tag</option>
+          <option value="all">Everyone</option><option value="out">Not checked in</option><option value="in">Checked in</option><option value="tag">Has a Bvndle tag</option><option value="rewards">Has rewards</option>
         </select>
       </div>
       <div class="table-wrap" id="tableWrap"><div class="empty"><p>Loading sign-ups...</p></div></div>`;
@@ -98,8 +98,29 @@
       if (data.length < page) break;
     }
     all = out;
+    await loadPassRewards();
     renderTable();
   }
+  // coins per ticket, shown beside each person so the gate team sees them at check-in
+  let passRewards = new Map();
+  async function loadPassRewards() {
+    const out = [], page = 1000;
+    for (let from = 0; ; from += page) {
+      const { data, error } = await sb.from("coin_awards").select("id,pass_id,source,coins,status").neq("status", "rejected").range(from, from + page - 1);
+      if (error) return;
+      out.push(...data);
+      if (data.length < page) break;
+    }
+    passRewards = new Map();
+    out.forEach((a) => { const r = passRewards.get(a.pass_id) || []; r.push(a); passRewards.set(a.pass_id, r); });
+  }
+  const rewardCell = (p) => {
+    const list = passRewards.get(p.id) || [];
+    if (!list.length) return '<span class="muted">None</span>';
+    const sum = (st) => list.filter((a) => a.status === st).reduce((n, a) => n + a.coins, 0);
+    const total = list.reduce((n, a) => n + a.coins, 0), w = sum("pending"), ap = sum("approved"), c = sum("collected");
+    return `<span class="rwd"><b>${total}</b> coins</span>${w ? `<span class="cstatus cstatus--pending">${w} waiting</span>` : ""}${ap ? `<span class="cstatus cstatus--approved">${ap} approved</span>` : ""}${c ? `<span class="cstatus cstatus--collected">${c} collected</span>` : ""}`;
+  };
 
   function visible() {
     const q = document.getElementById("search").value.trim().toLowerCase(), f = document.getElementById("filter").value;
@@ -107,6 +128,7 @@
       if (f === "in" && !p.checked_in_at) return false;
       if (f === "out" && p.checked_in_at) return false;
       if (f === "tag" && !p.has_bvndle_tag) return false;
+      if (f === "rewards" && !(passRewards.get(p.id) || []).length) return false;
       return !q || [p.first_name, p.last_name, `${p.first_name} ${p.last_name}`, p.email, p.phone, p.bvndle_tag, p.pass_code].join(" ").toLowerCase().includes(q);
     });
   }
@@ -126,19 +148,20 @@
       return;
     }
     const rows = visible();
-    wrap.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Bvndle tag</th><th>Ticket code</th><th>Claimed</th><th>At the gate</th></tr></thead><tbody>${
+    wrap.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Bvndle tag</th><th>Ticket code</th><th>Rewards</th><th>Claimed</th><th>At the gate</th></tr></thead><tbody>${
       rows.length ? rows.map((p) => `<tr>
         <td>${esc(p.first_name)} ${esc(p.last_name)}</td>
         <td>${esc(p.email)}</td>
         <td>${esc(window.formatNgPhone(p.phone))}</td>
         <td>${p.bvndle_tag ? "@" + esc(p.bvndle_tag) : '<span class="muted">None</span>'}</td>
         <td class="code">${esc(p.pass_code)}</td>
+        <td class="rwdcell">${rewardCell(p)}</td>
         <td class="muted">${fmt.format(new Date(p.created_at))}</td>
         <td>${p.checked_in_at
           ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(p.checked_in_at))}</span> <button class="linkish" type="button" data-undo="${p.id}">Undo</button>`
           : `<button class="btn btn--sm btn--ghost" type="button" data-in="${p.id}">Check in</button>`}</td>
       </tr>`).join("")
-      : `<tr><td colspan="7" class="muted" style="text-align:center;padding:36px">No sign-ups match.</td></tr>`}</tbody></table>`;
+      : `<tr><td colspan="8" class="muted" style="text-align:center;padding:36px">No sign-ups match.</td></tr>`}</tbody></table>`;
   }
 
   async function onTableClick(e) {
@@ -150,6 +173,15 @@
     const { data, error } = await sb.from("free_passes").update(patch).eq("id", id).select(COLS).single();
     if (error) { b.disabled = false; return alert("Couldn't update: " + error.message); }
     all = all.map((p) => (p.id === id ? data : p));
+    // checking someone in approves the coins they earned on the site (ready to hand over at the reward desk)
+    if (on) {
+      const pend = (passRewards.get(id) || []).filter((a) => a.status === "pending");
+      if (pend.length) {
+        const r = await sb.rpc("admin_review_coins", { p_ids: pend.map((a) => a.id), p_status: "approved" });
+        if (r.error) alert("Checked in, but their coins couldn't be approved: " + r.error.message + ". Approve them in the Rewards tab.");
+        else { pend.forEach((a) => (a.status = "approved")); awards = awards.map((a) => (pend.some((x) => x.id === a.id) ? { ...a, status: "approved" } : a)); }
+      }
+    }
     renderTable();
   }
 
@@ -186,7 +218,8 @@
       <div class="admin-head">
         <div><h1 class="display">Rewards</h1><p>Every BvndleCoin earned on the site. Each activity pays once per person. Approve coins here, then mark them collected at the festival reward desk (search the ticket code).</p></div>
         <div class="admin-actions">
-          <button class="btn btn--pink" id="coinExport" type="button"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Export per person</button>
+          <button class="btn btn--pink" id="coinExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Approved rewards (Excel)</button>
+          <button class="btn btn--ghost" id="coinExport" type="button"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Export per person</button>
           <button class="btn btn--ghost" id="coinExportAll" type="button"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Export all awards</button>
           <button class="btn btn--ghost" id="coinRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
           <button class="btn btn--ghost" id="signOut" type="button">Sign out</button>
@@ -215,6 +248,7 @@
     $id("coinRefresh").addEventListener("click", loadCoins);
     $id("coinExport").addEventListener("click", exportPeople);
     $id("coinExportAll").addEventListener("click", exportAwards);
+    $id("coinExcel").addEventListener("click", exportApprovedExcel);
     $id("coinSearch").addEventListener("input", renderCoinTable);
     $id("coinFilter").addEventListener("change", () => { picked = new Set(); renderCoinTable(); });
     $id("coinApprove").addEventListener("click", () => review(pickedAwards("pending"), "approved"));
@@ -266,6 +300,7 @@
     set("c-pending", n(sum("pending"))); set("c-approved", n(sum("approved"))); set("c-collected", n(sum("collected")));
     set("c-people", `${n(new Set(awards.filter((a) => a.status !== "rejected").map((a) => a.pass?.email)).size)} people earning`);
     document.getElementById("coinExport").disabled = document.getElementById("coinExportAll").disabled = !awards.length;
+    document.getElementById("coinExcel").disabled = !awards.some((a) => a.status === "approved");
     const wrap = document.getElementById("coinWrap");
     if (!awards.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-coins" aria-hidden="true"></i><h2 class="display">No rewards yet</h2><p>Coins appear here as people earn them on the site: 1 Million Questions and the Wealth zone walk.</p></div>`; syncPicked(); return; }
     const acts = Object.keys(ACT);
@@ -360,6 +395,27 @@
     download("brf-rewards-per-person", [["First name", "Last name", "Ticket code", "Email", "Phone", "Bvndle tag", ...acts.map((k) => ACT[k] + " coins"), "Total coins", "Naira value", "Waiting approval", "Approved, to collect", "Collected"]]
       .concat(people(awards).filter((r) => r.earned).map((r) => [r.pass?.first_name, r.pass?.last_name, r.pass?.pass_code, r.pass?.email, r.pass?.phone, r.pass?.bvndle_tag,
         ...acts.map((k) => r.acts[k] || 0), r.earned, r.earned * NAIRA, r.pending, r.approved, r.collected])));
+  }
+  // Excel of approved coins still to hand over: sheet 1 one row per person, sheet 2 every approved award
+  let xlsxLib = null;
+  async function exportApprovedExcel() {
+    const btn = document.getElementById("coinExcel"); btn.disabled = true;
+    try {
+      if (!xlsxLib) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+      xlsxLib = window.XLSX;
+      const approved = awards.filter((a) => a.status === "approved"), acts = Object.keys(ACT);
+      const per = people(approved).map((r) => ({ "First name": r.pass?.first_name, "Last name": r.pass?.last_name, "Ticket code": r.pass?.pass_code, Email: r.pass?.email, Phone: r.pass?.phone, "Bvndle tag": r.pass?.bvndle_tag || "",
+        ...Object.fromEntries(acts.map((k) => [ACT[k] + " coins", r.acts[k] || 0])), "Approved coins": r.approved, "Naira value": r.approved * NAIRA }));
+      const rows = approved.map((a) => ({ "First name": a.pass?.first_name, "Last name": a.pass?.last_name, "Ticket code": a.pass?.pass_code, Email: a.pass?.email, "Earned for": label(a), Coins: a.coins, "Naira value": a.coins * NAIRA, "Earned at": a.created_at ? new Date(a.created_at) : "", "Approved at": a.reviewed_at ? new Date(a.reviewed_at) : "" }));
+      const wb = xlsxLib.utils.book_new();
+      const s1 = xlsxLib.utils.json_to_sheet(per), s2 = xlsxLib.utils.json_to_sheet(rows, { cellDates: true });
+      s1["!cols"] = Object.keys(per[0] || {}).map((k) => ({ wch: Math.max(12, k.length + 2) }));
+      s2["!cols"] = Object.keys(rows[0] || {}).map((k) => ({ wch: Math.max(12, k.length + 2) }));
+      xlsxLib.utils.book_append_sheet(wb, s1, "Per person");
+      xlsxLib.utils.book_append_sheet(wb, s2, "All approved awards");
+      xlsxLib.writeFile(wb, `brf-approved-rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (e) { alert("Couldn't build the Excel file. Check your connection and try again."); }
+    btn.disabled = false;
   }
   function exportAwards() {
     download("brf-rewards-all-awards", [["First name", "Last name", "Ticket code", "Email", "Phone", "Bvndle tag", "Earned for", "Coins", "Naira value", "Status", "Earned at", "Approved at", "Collected at"]]
