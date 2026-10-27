@@ -20,7 +20,7 @@ window.BRF_DATA = {
     revealLabel: "Reveal soon",                           // PLACEHOLDER: reveal date, e.g. "Revealed 7 December"
   },
 
-  /* ---- 5. The experience: three zones, each with its own plan (designer's zone-map pack, 27 Oct).
+  /* ---- 5. The experience: five zones, each with its own plan (designer's zone-map pack, 27 Oct).
      Art: assets/zones/<id>.svg (text-free; .p people, .trail route, .lock and .cf animate). Stations: number, name,
      one line, and x / y as a % of the drawing. Rules from the pack: no brand names, Catharsis stays sealed (never say
      what happens inside the chambers), plans are indicative.
@@ -75,6 +75,31 @@ window.BRF_DATA = {
       { n: "09", name: "Market Street", desc: "Eat, shop and plan your rematch.", x: 33.74, y: 29.88 },
       { n: "10", name: "Leaderboard Wall", desc: "Fifteen minutes. One name at the top. Could be yours.", x: 20.31, y: 22.22 },
       ] },
+    // Alte and Adrenaline: "BRF 2026 Zone Designs Handoff" (27 Oct). Copy as supplied. No hall given yet.
+    { id: "alte", name: "Alte", hall: "", tag: "Food, fashion and fabric dyeing.", color: "#E987E6", art: "assets/zones/alte.svg?v=1", view: "58 22 1225 660",
+      reward: null,
+      stations: [
+      { n: "01", name: "Entry and exit", desc: "Check in with the Bvndle app and start earning coins.", x: 26.2, y: 68.3 },
+      { n: "02", name: "Main screen", desc: "Schedules, live moments and zone leaderboards.", x: 70.5, y: 15.3 },
+      { n: "03", name: "Food and drink merchants", desc: "Local food and drink vendors along the back of the zone.", x: 34.9, y: 15.1 },
+      { n: "04", name: "Merchant seating", desc: "Shaded tables beside the merchants to slow down and share.", x: 18.0, y: 37.0 },
+      { n: "05", name: "Runway", desc: "Emerging designers and street style on show through the day.", x: 49.7, y: 40.9 },
+      { n: "06", name: "Mini dye pits", desc: "Inspired by Kano's dye pits: dye your own fabric to take home.", x: 63.3, y: 63.9 },
+      { n: "07", name: "Drying line", desc: "Freshly dyed fabric hung to dry, and the zone's favourite photo spot.", x: 75.1, y: 49.3 },
+      { n: "08", name: "Masterclass pod", desc: "Small-group sessions with designers, makers and creatives.", x: 83.5, y: 43.5 },
+      ] },
+    { id: "adrenaline", name: "Adrenaline", hall: "", tag: "Gaming, esports and cosplay.", color: "#66E0E0", art: "assets/zones/adrenaline.svg?v=1", view: "58 22 1225 660",
+      reward: null,
+      stations: [
+      { n: "01", name: "Entry and exit", desc: "Check in with the Bvndle app and start earning coins.", x: 26.2, y: 68.3 },
+      { n: "02", name: "Gaming pods", desc: "Open play stations for casual matches and qualifiers.", x: 36.2, y: 21.5 },
+      { n: "03", name: "Competitor stage", desc: "Teams face off live in K0n10Dr championship matches.", x: 64.9, y: 30.6 },
+      { n: "04", name: "Main screen", desc: "Every match, broadcast big for the whole zone.", x: 71.0, y: 15.7 },
+      { n: "05", name: "Viewing centre", desc: "Tiered seating to watch the action with the crowd.", x: 46.4, y: 45.8 },
+      { n: "06", name: "Cosplay stage", desc: "Character showcases and cosplay contests.", x: 84.4, y: 38.3 },
+      { n: "07", name: "Costume rack", desc: "Borrow a piece and become a character for the day.", x: 72.6, y: 51.3 },
+      { n: "08", name: "Cosplay floor", desc: "Meet the cosplayers and grab your photos.", x: 61.4, y: 61.9 },
+      ] },
   ],
 
   /* ---- 5c. Main stage programme, both days (client 26 Oct). Rows: time + until, title, optional note (shown under the
@@ -91,7 +116,7 @@ window.BRF_DATA = {
         { time: "11:30am", until: "11:40am", title: "Performance", topic: "Performance" },
         { time: "11:40am", until: "12:25pm", title: "Japa or Japada?", note: "Fireside chat", topic: "Fireside chat" },
         { time: "12:30pm", until: "1:00pm", title: "PwC Report Hotline", topic: "Session" },
-        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All three zones open, all afternoon", topic: "Zones", where: "Festival floor" },
+        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All five zones open, all afternoon", topic: "Zones", where: "Festival floor" },
         { time: "2:30pm", until: "3:00pm", title: "Who Wants to Be a Millionaire?", note: "Live game show: partner and sponsor trivia", topic: "Game show" },
         { time: "3:30pm", until: "4:00pm", title: "Afropolitan", note: "Main stage podcast", topic: "Podcast" },
         { time: "4:00pm", until: "5:00pm", title: "Konga Auction", topic: "Auction" },
@@ -104,7 +129,7 @@ window.BRF_DATA = {
         { time: "11:30am", until: "11:40am", title: "Award ceremony", topic: "Awards" },
         { time: "11:40am", until: "12:25pm", title: "The real currency for loyalty", topic: "Talk" },
         { time: "12:30pm", until: "1:00pm", title: "Real-time action", note: "Audience talent show", topic: "Showcase" },
-        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All three zones open, all afternoon", topic: "Zones", where: "Festival floor" },
+        { time: "1:00pm", until: "7:00pm", title: "Zone activation", note: "All five zones open, all afternoon", topic: "Zones", where: "Festival floor" },
         { time: "2:30pm", until: "3:00pm", title: "cr8torium", note: "Main stage podcast", topic: "Podcast" },
         { time: "3:00pm", until: "3:30pm", title: "Dating game show: Auction a Friend", topic: "Game show" },
         { time: "4:00pm", until: "5:00pm", title: "Konga Activation", topic: "Activation" },
