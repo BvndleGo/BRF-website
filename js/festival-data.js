@@ -120,7 +120,7 @@ window.BRF_DATA = {
         { time: "3:00pm", until: "3:30pm", title: "Dating game show: Auction a Friend", topic: "Game show" },
         { time: "4:00pm", until: "5:00pm", title: "Konga Activation", topic: "Activation" },
         { time: "6:00pm", title: "Vibe and shut down", topic: "Party" },
-        { time: "9:00pm", title: "The Bvndle Rewards Concert", note: "Separate paid ticket on TIX", topic: "Concert" },
+        { time: "9:00pm", title: "The Bvndle Rewards Concert", note: "Separate paid ticket", topic: "Concert" },
       ] },
     ],
   },
@@ -140,7 +140,7 @@ window.BRF_DATA = {
      Each tier sits in a zone on the hall plan (zone). Several tiers can share a zone; the plan then shows "From <lowest>".
      The hall layout itself is illustrative until the venue plan is confirmed. ---- */
   vip: {
-    note: "All concert tickets are sold on TIX. Seating plan is illustrative.",
+    note: "Concert tickets are paid. Seating plan is illustrative.",
     zones: { front: "Premium · front row", vip: "VIP", floor: "Concert floor", tables: "Tables" },
     groups: [["individual", "Individual tickets"], ["group", "Group tables"]],
     tiers: [

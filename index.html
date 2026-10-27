@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <!-- every visit opens at the top (browsers otherwise restore the last scroll position, often the footer).
+       A shared link with a #section still opens at that section. -->
+  <script>try{history.scrollRestoration="manual"}catch(e){}if(!location.hash){scrollTo(0,0);addEventListener("load",function(){scrollTo(0,0)})}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Free Ticket | Bvndle Rewards Festival 2026, Lagos</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -176,8 +179,8 @@
         <h2 class="display concert__title">When the lights drop, the concert starts.</h2>
       </div>
       <div class="concert__copy">
-        <p class="concert__sub">The Bvndle Rewards Concert is a separate ticket. Line-up drops soon. Tickets are sold on TIX.</p>
-        <a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Concert tickets <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>
+        <p class="concert__sub">The Bvndle Rewards Concert is a separate ticket. Line-up drops soon.</p>
+        <a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Get paid ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>
       </div>
     </div>
     <div class="globe" id="globe" role="group" aria-label="The 2025 concert in photos. Drag to look around. Select a photo to open its zone.">
@@ -199,8 +202,8 @@
       <div class="mystery" id="mystery"></div>
       <!-- client 23 Oct: "Buy concert ticket below guess who is headlining" -->
       <div class="lineup__cta">
-        <p>The headliners play the concert on <b>12th December from 9pm</b>. It's a paid ticket, sold on TIX.</p>
-        <div class="lineup__btns"><a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Buy concert ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a><a class="btn btn--ghost" href="#vip">See ticket prices</a></div>
+        <p>The headliners play the concert on <b>12th December from 9pm</b>. It's a paid ticket.</p>
+        <div class="lineup__btns"><a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Get paid ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a><a class="btn btn--ghost" href="#vip">See ticket prices</a></div>
       </div>
       <div class="past">
         <p class="past__label">On the Bvndle stage in 2025</p>
@@ -266,7 +269,7 @@
         <li class="dstop" style="--c:#FF3E8E"><p class="dstop__time">1pm</p><h3>Zones open</h3><p>All five zones switch on. Meet the brands, play, watch, then redeem your coins.</p></li>
         <li class="dstop" style="--c:#8B80F9"><p class="dstop__time">Through the afternoon</p><h3>Games at intervals</h3><p>Game rounds run across the live zones, with 1 Million Questions draws along the way.</p></li>
         <li class="dstop" style="--c:#FF5A2D"><p class="dstop__time">Through the afternoon</p><h3>Group activities</h3><p>Team challenges on the main stage. Bring your crew.</p><span class="dstop__tag"><i class="ph-bold ph-trophy" aria-hidden="true"></i>Win prizes</span></li>
-        <li class="dstop dstop--night" style="--c:#5b4bd6"><p class="dstop__time">12 Dec &middot; 9pm</p><h3>The concert</h3><p>The Bvndle Rewards Concert. Paid ticket, sold on TIX.</p><a class="dstop__link" href="#vip">See ticket prices <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></li>
+        <li class="dstop dstop--night" style="--c:#5b4bd6"><p class="dstop__time">12 Dec &middot; 9pm</p><h3>The concert</h3><p>The Bvndle Rewards Concert. Paid ticket.</p><a class="dstop__link" href="#vip">See ticket prices <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></li>
       </ol>
     </div>
   </section>
@@ -294,10 +297,10 @@
           <ul class="acard__list">
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>The Bvndle Rewards Concert</li>
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>Regular from ₦15,000 (Early Bird), VIP ₦250,000, Premium ₦500,000, group tables from ₦2,000,000</li>
-            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Bought and checked in through TIX</li>
+            <li><i class="ph-bold ph-check" aria-hidden="true"></i>Bought online, checked in at the gate</li>
             <li class="is-no"><i class="ph-bold ph-x" aria-hidden="true"></i>Daytime zones need the free day pass</li>
           </ul>
-          <div class="acard__ctas"><a class="btn btn--white" href="#vip">See ticket prices <i class="ph-bold ph-arrow-up" aria-hidden="true"></i></a><a class="btn btn--ghost acard__ghost" href="#" data-tix target="_blank" rel="noopener">Buy on TIX <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+          <div class="acard__ctas"><a class="btn btn--white" href="#vip">See ticket prices <i class="ph-bold ph-arrow-up" aria-hidden="true"></i></a><a class="btn btn--ghost acard__ghost" href="#" data-tix target="_blank" rel="noopener">Get paid ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
         </article>
       </div>
     </div>
@@ -338,7 +341,7 @@
         <p class="eyebrow gate__eyebrow">Become a Bvndle citizen</p>
         <h2 class="display gate__title">Claim your free ticket.</h2>
         <p class="gate__sub">Free entry to two days of games, brands and rewards. It takes a minute.</p>
-        <p class="daypass"><i class="ph-bold ph-sun-horizon" aria-hidden="true"></i><span><b>This is your day pass.</b> Both days, 11th &ndash; 12th December, from 10am. The night concert is a separate paid ticket on TIX.</span></p>
+        <p class="daypass"><i class="ph-bold ph-sun-horizon" aria-hidden="true"></i><span><b>This is your day pass.</b> Both days, 11th &ndash; 12th December, from 10am. The night concert is a separate paid ticket.</span></p>
         <div id="passArea">
           <form class="form" id="passForm" novalidate>
             <div class="field-row">
@@ -354,7 +357,7 @@
             </fieldset>
             <div class="field" id="f-tag" hidden><label for="tag">Your Bvndle tag</label><div class="affix affix--at"><span>@</span><input class="input" id="tag" name="tag" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="yourtag" aria-describedby="tag-help tag-err"></div><p class="help" id="tag-help">Your username on the Bvndle app.</p><p class="err" id="tag-err">Type your tag, or choose "No, skip".</p></div>
             <button class="btn btn--block" type="submit" id="passSubmit">Claim free ticket <i class="ph-bold ph-ticket" aria-hidden="true"></i></button>
-            <p class="fine">Concert tickets are sold separately on TIX.</p>
+            <p class="fine">The concert is a separate paid ticket.</p>
           </form>
         </div>
       </div>
@@ -410,7 +413,7 @@
       </div>
       <div>
         <div class="faq__list" role="tabpanel" id="faq-people" aria-labelledby="tab-people">
-          <details><summary>Is it really free?<i class="ph-bold ph-plus"></i></summary><p>Yes. The festival ticket is free and covers the market, games, raffles and brand activities. The Bvndle Rewards Concert is a separate paid ticket on TIX.</p></details>
+          <details><summary>Is it really free?<i class="ph-bold ph-plus"></i></summary><p>Yes. The festival ticket is free and covers the market, games, raffles and brand activities. The Bvndle Rewards Concert is a separate paid ticket.</p></details>
           <details><summary>What is Bvndle Rewards Festival?<i class="ph-bold ph-plus"></i></summary><p>A two-day festival where brands reward their loyal customers with games, raffles, prizes, music and experiences.</p></details>
           <details><summary>When and where is it happening?<i class="ph-bold ph-plus"></i></summary><p><span data-brf="datesLabel">11th &ndash; 12th December 2026</span> at <span data-brf="venue">Landmark Event Centre, Lagos</span>.</p></details>
           <details><summary>What are the rewards, and how do I redeem them?<i class="ph-bold ph-plus"></i></summary><p>Prizes include appliances, gadgets, skincare, merch and cash. Redemption happens instantly at the redemption booths.</p></details>
@@ -446,7 +449,7 @@
     
     <div class="footer__grid">
       <div><img class="footer__logo logo--dark" src="assets/logo-footer-white.svg?v=2" alt="Bvndle Rewards Festival"><img class="footer__logo logo--light" src="assets/logo-footer.svg?v=2" alt="Bvndle Rewards Festival"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
-      <div><h3>Festival</h3><ul><li><a href="#ticket">Free ticket</a></li><li><a href="#journey">Experience</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">2025 gallery</a></li><li><a href="#" data-tix target="_blank" rel="noopener">Concert on TIX</a></li></ul></div>
+      <div><h3>Festival</h3><ul><li><a href="#ticket">Free ticket</a></li><li><a href="#journey">Experience</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">2025 gallery</a></li><li><a href="#" data-tix target="_blank" rel="noopener">Get paid ticket</a></li></ul></div>
       <div><h3>Bvndle</h3><ul><li><a href="https://bvndle.com" target="_blank" rel="noopener">About Bvndle</a></li><li><a href="#" data-partner target="_blank" rel="noopener">Become a Partner</a></li><li><a href="mailto:engage@bvndle.com">Contact us</a></li><li><a href="https://bvndle.com/terms" target="_blank" rel="noopener">Terms</a> and <a href="https://bvndle.com/privacy" target="_blank" rel="noopener">Privacy</a></li></ul></div>
       <div><h3>Follow</h3><ul class="socials"><li><a href="https://www.instagram.com/trybvndle" target="_blank" rel="noopener" aria-label="Instagram"><i class="ph-bold ph-instagram-logo"></i></a></li><li><a href="https://www.tiktok.com/@bvndlerewardsfest" target="_blank" rel="noopener" aria-label="TikTok"><i class="ph-bold ph-tiktok-logo"></i></a></li><li><a href="https://x.com/trybvndle" target="_blank" rel="noopener" aria-label="X"><i class="ph-bold ph-x-logo"></i></a></li><li><a href="https://www.youtube.com/@Bvndleapp" target="_blank" rel="noopener" aria-label="YouTube"><i class="ph-bold ph-youtube-logo"></i></a></li></ul></div>
     </div>
@@ -474,8 +477,8 @@
 
 <script src="js/store.js?v=6"></script>
 <script src="js/analytics.js?v=1"></script>
-<script src="js/festival-data.js?v=17"></script>
+<script src="js/festival-data.js?v=19"></script>
 <script src="js/trivia.js?v=4"></script>
-<script src="js/v3.js?v=224"></script>
+<script src="js/v3.js?v=226"></script>
 </body>
 </html>
