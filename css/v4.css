@@ -786,6 +786,12 @@ html[data-theme="light"] .nudge { border-color: rgba(17,17,17,.12); background: 
 .nudge .is-done a { background: transparent; color: inherit; border: 1px dashed rgba(127,127,127,.5); opacity: .7; }
 .nudge i { font-size: 18px; }
 .guess__next:empty { display: none; }
+/* in the headliner-guess box: no card behind the next steps, and only the steps still to do (client, 27 Oct) */
+.guess .nudge { margin-top: 14px; padding: 0; border: 0; background: none; }
+html[data-theme="light"] .guess .nudge { background: none; }
+.guess .nudge .is-done { display: none; }
+.guess .nudge:not(:has(li:not(.is-done))) { display: none; }
+html[data-theme="light"] .guess .btn--ghost { background: #111; color: #F3F0EB; border-color: #F3F0EB; }
 .jnav__next { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 /* hero readouts: vertical on every screen (Paul, 23 Oct), so they sit in the side lines without reaching into the picture */
 .burst__coord { writing-mode: vertical-rl; }
