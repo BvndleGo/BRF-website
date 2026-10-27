@@ -10,9 +10,10 @@
   const tabs = (on) => `<nav class="admin-tabs" aria-label="Admin sections">
       <button type="button" data-tab="tickets" class="${on === "tickets" ? "is-on" : ""}">Tickets</button>
       <button type="button" data-tab="coins" class="${on === "coins" ? "is-on" : ""}">Rewards</button>
+      <button type="button" data-tab="partners" class="${on === "partners" ? "is-on" : ""}">Partners</button>
       <button type="button" data-tab="analytics" class="${on === "analytics" ? "is-on" : ""}">Analytics</button></nav>`;
   function bindTabs() {
-    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
+    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
   }
 
   function renderLogin(msg) {
@@ -365,10 +366,99 @@
       .concat(awards.map((a) => [a.pass?.first_name, a.pass?.last_name, a.pass?.pass_code, a.pass?.email, a.pass?.phone, a.pass?.bvndle_tag, label(a), a.coins, a.coins * NAIRA, STATUS[a.status] || a.status, a.created_at, a.reviewed_at || "", a.collected_at || ""])));
   }
 
+  /* ===================== Partners: Become a Partner enquiries from the site ===================== */
+  let enquiries = [];
+  const P_STATUS = { new: "New", contacted: "Contacted", in_talks: "In talks", confirmed: "Confirmed", declined: "Declined" };
+  const P_COLS = "id,created_at,organisation,industry,contact_name,contact_role,email,phone,website,partnership_types,partnership_other,objectives,objectives_other,budget,contribution,source,status,admin_note,updated_at";
+
+  function renderPartners() {
+    root.innerHTML = `${tabs("partners")}
+      <div class="admin-head">
+        <div><h1 class="display">Partners</h1><p>Become a Partner enquiries from the site. Each new one is also emailed to temitope@bvndle.com and rewardsfestival@bvndle.com.</p></div>
+        <div class="admin-actions">
+          <button class="btn btn--pink" id="pExport" type="button"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Export CSV</button>
+          <button class="btn btn--ghost" id="pRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
+          <button class="btn btn--ghost" id="signOut" type="button">Sign out</button>
+        </div>
+      </div>
+      <div class="admin-tiles admin-tiles--4">
+        <div class="atile atile--glare"><span>Enquiries</span><b id="p-total">0</b></div>
+        <div class="atile"><span>New, not yet contacted</span><b id="p-new">0</b></div>
+        <div class="atile"><span>In talks</span><b id="p-talks">0</b></div>
+        <div class="atile"><span>Confirmed partners</span><b id="p-conf">0</b></div>
+      </div>
+      <div class="admin-bar admin-bar--split">
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search enquiries</span><input class="input" id="pSearch" type="search" placeholder="Search organisation, name, email or industry"></label>
+        <select class="input" id="pFilter" aria-label="Filter by status"><option value="all">All statuses</option>${Object.entries(P_STATUS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+      </div>
+      <div class="table-wrap" id="pWrap"><div class="empty"><p>Loading enquiries...</p></div></div>`;
+    bindTabs();
+    document.getElementById("signOut").addEventListener("click", signOut);
+    document.getElementById("pRefresh").addEventListener("click", loadPartners);
+    document.getElementById("pExport").addEventListener("click", exportPartners);
+    document.getElementById("pSearch").addEventListener("input", renderPartnerTable);
+    document.getElementById("pFilter").addEventListener("change", renderPartnerTable);
+    document.getElementById("pWrap").addEventListener("change", onPartnerChange);
+    document.getElementById("pWrap").addEventListener("click", (e) => { const b = e.target.closest("[data-pmore]"); if (b) { const row = document.getElementById("pm-" + b.dataset.pmore); row.hidden = !row.hidden; b.textContent = row.hidden ? "Details" : "Hide"; } });
+    loadPartners();
+  }
+  async function loadPartners() {
+    const { data, error } = await sb.from("partner_enquiries").select(P_COLS).order("created_at", { ascending: false }).limit(2000);
+    if (error) { document.getElementById("pWrap").innerHTML = `<div class="empty"><p>Couldn't load enquiries: ${esc(error.message)}</p></div>`; return; }
+    enquiries = data; renderPartnerTable();
+  }
+  const pTypes = (r) => (r.partnership_types || []).map((t) => (t === "Other" && r.partnership_other ? `Other: ${r.partnership_other}` : t));
+  const pObjs = (r) => (r.objectives || []).map((t) => (t === "Other" && r.objectives_other ? `Other: ${r.objectives_other}` : t));
+  function renderPartnerTable() {
+    const n = (st) => enquiries.filter((r) => r.status === st).length;
+    document.getElementById("p-total").textContent = enquiries.length;
+    document.getElementById("p-new").textContent = n("new");
+    document.getElementById("p-talks").textContent = n("in_talks") + n("contacted");
+    document.getElementById("p-conf").textContent = n("confirmed");
+    document.getElementById("pExport").disabled = !enquiries.length;
+    const q = document.getElementById("pSearch").value.trim().toLowerCase(), f = document.getElementById("pFilter").value;
+    const rows = enquiries.filter((r) => (f === "all" || r.status === f) && (!q || [r.organisation, r.contact_name, r.email, r.industry].join(" ").toLowerCase().includes(q)));
+    const wrap = document.getElementById("pWrap");
+    if (!enquiries.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-handshake" aria-hidden="true"></i><h2 class="display">No enquiries yet</h2><p>They appear here when brands send the Become a Partner form.</p></div>`; return; }
+    wrap.innerHTML = `<table><thead><tr><th>Organisation</th><th>Contact</th><th>Interested in</th><th>Budget</th><th>Received</th><th>Status</th><th></th></tr></thead><tbody>${
+      rows.length ? rows.map((r) => `<tr>
+        <td><b>${esc(r.organisation)}</b><br><span class="muted">${esc(r.industry)}</span></td>
+        <td>${esc(r.contact_name)}${r.contact_role ? `<br><span class="muted">${esc(r.contact_role)}</span>` : ""}<br><a href="mailto:${esc(r.email)}">${esc(r.email)}</a>${r.phone ? `<br><span class="muted">${esc(r.phone)}</span>` : ""}</td>
+        <td>${esc(pTypes(r).join(", "))}</td>
+        <td>${r.budget ? esc(r.budget) : '<span class="muted">Not given</span>'}</td>
+        <td class="muted">${fmt.format(new Date(r.created_at))}</td>
+        <td><select class="input input--sm" data-pstatus="${r.id}" aria-label="Status">${Object.entries(P_STATUS).map(([k, v]) => `<option value="${k}" ${r.status === k ? "selected" : ""}>${v}</option>`).join("")}</select></td>
+        <td><button class="linkish" type="button" data-pmore="${r.id}">Details</button></td></tr>
+        <tr id="pm-${r.id}" hidden class="pmore"><td colspan="7"><dl class="pdl">
+          <div><dt>Objectives</dt><dd>${esc(pObjs(r).join(", ")) || "–"}</dd></div>
+          <div><dt>What they'd bring</dt><dd>${esc(r.contribution || "–")}</dd></div>
+          <div><dt>Website</dt><dd>${r.website ? esc(r.website) : "–"}</dd></div>
+          <div><dt>Came from</dt><dd>${esc(r.source || "–")}</dd></div>
+          <div><dt>Team note</dt><dd><textarea class="input pnote" data-pnote="${r.id}" rows="2" placeholder="Add a note for the team">${esc(r.admin_note || "")}</textarea></dd></div>
+        </dl></td></tr>`).join("")
+      : `<tr><td colspan="7" class="muted" style="text-align:center;padding:36px">Nothing here.</td></tr>`}</tbody></table>`;
+  }
+  async function onPartnerChange(e) {
+    const id = e.target.dataset.pstatus || e.target.dataset.pnote; if (!id) return;
+    const patch = e.target.dataset.pstatus ? { status: e.target.value } : { admin_note: e.target.value.trim() || null };
+    patch.updated_at = new Date().toISOString();
+    const { error } = await sb.from("partner_enquiries").update(patch).eq("id", id);
+    if (error) return alert("Couldn't save: " + error.message);
+    enquiries = enquiries.map((r) => (r.id === id ? { ...r, ...patch } : r));
+    if (patch.status) renderPartnerTable();
+  }
+  function exportPartners() {
+    const rows = [["Received", "Organisation", "Industry", "Contact name", "Role", "Email", "Phone", "Website", "Partnership type", "Objectives", "Investment range", "What they'd bring", "Came from", "Status", "Team note"]]
+      .concat(enquiries.map((r) => [r.created_at, r.organisation, r.industry, r.contact_name, r.contact_role, r.email, r.phone, r.website, pTypes(r).join("; "), pObjs(r).join("; "), r.budget, r.contribution, r.source, P_STATUS[r.status] || r.status, r.admin_note]));
+    const blob = new Blob(["﻿" + rows.map((r) => r.map(csvCell).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `brf-partner-enquiries-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   /* ===================== Analytics: visits, what people do, where they leave ===================== */
   const SECTIONS = [["hero", "Top of page"], ["journey", "Experience"], ["trivia", "1 Million Questions"], ["talks", "Main stage talks"], ["partners", "Partners"], ["numbers", "Last year in numbers"], ["concert", "Concert"], ["lineup", "Headliners"], ["vip", "Concert tickets"], ["voices", "Testimonials"], ["day", "Your day"], ["access", "Two tickets"], ["ticket", "Free ticket form"], ["why", "Why loyalty matters"], ["brands", "Become a partner"], ["faq", "FAQs"]];
   const SEC = Object.fromEntries(SECTIONS); SEC.top = "Top of page"; SEC.nav = "Menu"; SEC.footer = "Footer"; SEC["phone-bar"] = "Phone ticket bar";
-  const ACTIONS = { ticket_claimed: "Claimed a free ticket", ticket_reopened: "Re-opened their ticket", ticket_error: "Ticket form error", quiz_play: "Started a trivia round (for entries)", quiz_practice: "Started a practice round", quiz_round_done: "Finished a trivia round", quiz_needs_ticket: "Tried to play without a ticket", zone_tab: "Opened a zone plan", wealth_walked: "Walked all Wealth stations", wealth_complete: "Earned the Wealth zone coins", headliner_guess: "Guessed a headliner" };
+  const ACTIONS = { ticket_claimed: "Claimed a free ticket", ticket_reopened: "Re-opened their ticket", ticket_error: "Ticket form error", quiz_play: "Started a trivia round (for entries)", quiz_practice: "Started a practice round", quiz_round_done: "Finished a trivia round", quiz_needs_ticket: "Tried to play without a ticket", zone_tab: "Opened a zone plan", wealth_walked: "Walked all Wealth stations", wealth_complete: "Earned the Wealth zone coins", partner_form_open: "Opened the Become a Partner form", partner_enquiry: "Sent a partner enquiry", headliner_guess: "Guessed a headliner" };
   const dur = (sec) => { sec = Math.round(sec || 0); if (sec < 60) return sec + "s"; const m = Math.floor(sec / 60), r = sec % 60; return m < 60 ? `${m}m ${String(r).padStart(2, "0")}s` : `${Math.floor(m / 60)}h ${m % 60}m`; };
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
   const bars = (rows, max) => rows.map(([lab, n, sub]) => `<div class="abar"><span class="abar__lab">${esc(lab)}</span><span class="abar__track"><i style="width:${max ? Math.max(2, (n / max) * 100) : 0}%"></i></span><span class="abar__n">${esc(sub ?? n.toLocaleString("en-NG"))}</span></div>`).join("");

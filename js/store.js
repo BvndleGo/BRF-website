@@ -76,6 +76,8 @@ window.PassStore = (() => {
       next: (token) => call("trivia_next", { p_token: token }),
       answer: (token, id, choice) => call("trivia_answer", { p_token: token, p_question_id: id, p_choice: choice }),
     },
+    /* Become a Partner enquiry (submit_partner_enquiry). */
+    partner: (fields) => call("submit_partner_enquiry", { p: fields }),
     /* Rewards across every game: my_rewards -> wallet totals; claim -> one-off activity reward (once per ticket). */
     rewards: {
       mine: (token) => call("my_rewards", { p_token: token }),

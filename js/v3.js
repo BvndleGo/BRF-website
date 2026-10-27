@@ -24,7 +24,57 @@
   /* config + links */
   $$("[data-brf]").forEach((el) => { if (cfg[el.dataset.brf]) el.textContent = cfg[el.dataset.brf]; });
   $$("[data-tix]").forEach((a) => (a.href = cfg.tixUrl));
-  $$("[data-partner]").forEach((a) => (a.href = cfg.partnerUrl));
+  /* Become a Partner: every [data-partner] link opens the enquiry form (#partnerBox). Saved through
+     PassStore.partner -> Supabase; the team is emailed from there. Opening the page at #partner opens it too. */
+  { const box = document.getElementById("partnerBox"), form = document.getElementById("partnerForm");
+    if (box && form) {
+      const say = document.getElementById("partnerSay"), go = document.getElementById("partnerGo");
+      const open = () => { (window.brfTrack || (() => {}))("partner_form_open"); if (!box.open) box.showModal(); setTimeout(() => form.querySelector("#pOrg").focus(), 50); };
+      document.addEventListener("click", (e) => { const a = e.target.closest("[data-partner]"); if (!a) return; e.preventDefault(); document.getElementById("menu")?.open && document.getElementById("menu").close(); open(); });
+      document.getElementById("partnerClose").addEventListener("click", () => box.close());
+      box.addEventListener("click", (e) => { if (e.target === box) box.close(); });
+      // "Other" ticked: show its text box
+      form.addEventListener("change", (e) => {
+        if (e.target.type === "checkbox" && e.target.value === "Other") { const t = e.target.closest("fieldset").querySelector(".pform__other"); t.hidden = !e.target.checked; if (e.target.checked) t.focus(); }
+        e.target.closest(".field")?.classList.remove("is-invalid");
+      });
+      form.addEventListener("input", (e) => { e.target.closest(".field")?.classList.remove("is-invalid"); if (!form.querySelector(".is-invalid")) say.textContent = ""; });
+      const ERR = { missing_organisation: "pf-org", missing_industry: "pf-ind", missing_name: "pf-name", invalid_email: "pf-email", missing_type: "pf-type", missing_objective: "pf-obj" };
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(form), v = (k) => String(fd.get(k) || "").trim();
+        const data = { organisation: v("organisation"), industry: v("industry"), contact_name: v("contact_name"), contact_role: v("contact_role"),
+          email: v("email"), phone: v("phone"), website: v("website"), website_url_hp: v("website_url_hp"),
+          partnership_types: fd.getAll("partnership_types"), partnership_other: v("partnership_other"),
+          objectives: fd.getAll("objectives"), objectives_other: v("objectives_other"), budget: v("budget"), contribution: v("contribution"),
+          source: (() => { const q = new URLSearchParams(location.search); return q.get("utm_source") || (document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch (err) { return ""; } })() : "direct"); })() };
+        const bad = [];
+        if (data.organisation.length < 2) bad.push("pf-org");
+        if (data.industry.length < 2) bad.push("pf-ind");
+        if (data.contact_name.length < 2) bad.push("pf-name");
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) bad.push("pf-email");
+        if (!data.partnership_types.length) bad.push("pf-type");
+        if (!data.objectives.length) bad.push("pf-obj");
+        form.querySelectorAll(".is-invalid").forEach((f) => f.classList.remove("is-invalid"));
+        if (bad.length) { bad.forEach((id) => document.getElementById(id).classList.add("is-invalid")); document.getElementById(bad[0]).scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); say.textContent = "Please fill in the highlighted questions."; return; }
+        go.disabled = true; say.textContent = "Sending...";
+        const r = await window.PassStore.partner(data);
+        go.disabled = false;
+        if (!r.ok) {
+          if (ERR[r.error]) { document.getElementById(ERR[r.error]).classList.add("is-invalid"); say.textContent = "Please check the highlighted question."; }
+          else say.textContent = r.error === "too_many" ? "We've already got your enquiry. The team will be in touch." : "We couldn't send that. Check your connection and try again, or email rewardsfestival@bvndle.com.";
+          return;
+        }
+        (window.brfTrack || (() => {}))("partner_enquiry");
+        form.innerHTML = `<button class="round pform__x" type="button" aria-label="Close"><i class="ph-bold ph-x"></i></button>
+          <p class="eyebrow">BRF 2026 &middot; Become a Partner</p><h2 class="display pform__title">Thank you, ${esc(data.contact_name.split(" ")[0])}.</h2>
+          <p class="pform__lede">Your enquiry for ${esc(data.organisation)} is with the BRF partnerships team. We'll reply to ${esc(data.email)} soon.</p>
+          <div class="pform__ctas"><button class="btn" type="button">Done</button></div>`;
+        form.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => box.close()));
+      });
+      if (location.hash === "#partner") open();
+    }
+  }
   $$("[data-gallery]").forEach((a) => (a.href = cfg.galleryUrl));
 
   /* countdown */

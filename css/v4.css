@@ -1102,3 +1102,41 @@ html[data-theme="light"] .zx { --zx-surf: #fff; --zx-line: #1a1a1a; --zx-fg: #1a
   .zx__q { border-radius: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .zx__maps *, .zx__dot::after, .zx__maps.enter svg.art { animation: none !important; } }
+
+/* ===== Become a Partner: enquiry form dialog ===== */
+.pform { width: min(760px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 2px solid var(--cloud); border-radius: 24px; background: var(--ink-2, #111); color: var(--cloud); overflow: auto; overscroll-behavior: contain; }
+.pform::backdrop { background: rgba(0, 0, 0, .72); backdrop-filter: blur(4px); }
+html[data-theme="light"] .pform { background: #fff; color: #111; border-color: #111; }
+.pform__form { position: relative; padding: clamp(22px, 4vw, 40px); }
+.pform__x { position: absolute; top: 14px; right: 14px; }
+.pform .eyebrow { margin-bottom: 10px; }
+.pform__title { font-size: clamp(36px, 5vw, 60px); margin: 0 0 10px; }
+.pform__lede { margin: 0 0 22px; color: var(--cloud-dim); max-width: 56ch; }
+html[data-theme="light"] .pform__lede, html[data-theme="light"] .pform__set legend small { color: #555; }
+.pform__set { border: 0; padding: 0; margin: 0 0 22px; min-width: 0; }
+.pform__set legend { font-weight: 700; font-size: 17px; margin-bottom: 12px; padding: 0; }
+.pform__set legend small { display: block; font-weight: 400; font-size: var(--fs-small); color: var(--cloud-dim); margin-top: 2px; }
+.pform__set.field { display: block; }
+.pform__row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.pform .field { margin-bottom: 14px; }
+.pchips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pchip { position: relative; cursor: pointer; }
+.pchip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.pchip span { display: inline-block; padding: 10px 14px; border-radius: 999px; border: 2px solid rgba(243, 240, 235, .35); font-size: 15px; line-height: 1.2; transition: background .15s, border-color .15s; }
+html[data-theme="light"] .pchip span { border-color: rgba(0, 0, 0, .3); }
+.pchip input:checked + span { background: var(--pink); border-color: var(--pink); color: #111; font-weight: 600; }
+.pchip input:focus-visible + span { outline: 3px solid var(--pink); outline-offset: 2px; }
+.pform__set.is-invalid .pchip span { border-color: var(--orange); }
+.pform__other { margin-top: 10px; }
+.pform__ta { min-height: 120px; padding: 14px 16px; resize: vertical; line-height: 1.45; }
+.pform__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.pform__say { min-height: 1.3em; margin: 0 0 12px; font-weight: 600; }
+.pform__ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+.pform__fine { margin: 16px 0 0; font-size: var(--fs-small); color: var(--cloud-dim); }
+.pform__fine a { color: inherit; }
+@media (max-width: 600px) {
+  .pform { width: 100vw; max-width: 100vw; max-height: 100dvh; height: 100dvh; border-radius: 0; border: 0; margin: 0; }
+  .pform__row { grid-template-columns: 1fr; }
+  .pform__ctas .btn { width: 100%; justify-content: center; }
+  .pchip span { font-size: 14px; padding: 9px 12px; }
+}

@@ -29,6 +29,13 @@
     .atile small { display: block; margin-top: 6px; font-size: 13px; opacity: .7; }
     #coinWrap td b { font-weight: 700; }
     #coinWrap td.code { white-space: nowrap; }
+    .pmore td { background: rgba(243,240,235,.04); }
+    .pdl { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 24px; margin: 0; }
+    .pdl dt { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; opacity: .65; margin-bottom: 4px; }
+    .pdl dd { margin: 0; white-space: pre-wrap; }
+    .pnote { min-height: 64px; padding: 10px 12px; }
+    .input--sm { min-height: 40px; padding: 0 10px; font-size: 14px; width: auto; }
+    #pWrap a { color: inherit; }
     .an-small .atile b { font-size: 34px; }
     .an-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 8px 0 32px; }
     .an-card { padding: 22px 24px; border-radius: var(--r-card, 20px); background: var(--night-2, #1a1a1a); border: 1px solid rgba(243,240,235,.14); min-width: 0; }
@@ -63,6 +70,6 @@
 <main class="admin wrap" id="admin"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/store.js?v=6"></script>
-<script src="js/admin.js?v=5"></script>
+<script src="js/admin.js?v=6"></script>
 </body>
 </html>

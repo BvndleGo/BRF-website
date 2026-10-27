@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="css/v32.css?v=40">
   <link rel="stylesheet" href="css/v34.css?v=110">
   <link rel="stylesheet" href="css/theme.css?v=20">
-  <link rel="stylesheet" href="css/v4.css?v=98">
+  <link rel="stylesheet" href="css/v4.css?v=99">
 </head>
 <body>
 
@@ -379,7 +379,7 @@
         <p class="eyebrow">For brands</p>
         <h2 class="display h2">Bring your brand to 5,000+ loyal shoppers.</h2>
         <p class="lede">Sponsors design the experience, provide the rewards and meet thousands of customers face to face.</p>
-        <a class="btn" href="#" data-partner target="_blank" rel="noopener">Become a Partner <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>
+        <a class="btn" href="#partner" data-partner>Become a Partner <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
       </div>
       <article class="stub" aria-label="Partner pass 2026">
         <div class="stub__top"><span>Partner pass</span><span>Bvndle Rewards Festival &middot; 2026</span></div>
@@ -389,7 +389,7 @@
           <li><span class="stub__n">03</span><div><h3>We handle the floor</h3><p>You bring the rewards. Bvndle handles distribution on the day.</p></div></li>
         </ol>
         <div class="stub__tear" aria-hidden="true"></div>
-        <div class="stub__foot"><b>23</b><span>brands showed up<br>in 2025</span><a class="stub__go" href="#" data-partner target="_blank" rel="noopener" aria-label="Become a Partner">Join them <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+        <div class="stub__foot"><b>23</b><span>brands showed up<br>in 2025</span><a class="stub__go" href="#partner" data-partner aria-label="Become a Partner">Join them <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
       </article>
     </div>
   </section>
@@ -434,7 +434,7 @@
     <div class="ride__copy wrap">
       <p class="ride__title" id="rideTitle" aria-label="See you in December.">See you in December.</p>
       <p class="ride__date"><span data-brf="datesLabel">11th &ndash; 12th December 2026</span> &middot; <span data-brf="venue">Landmark Event Centre, Lagos</span></p>
-      <div class="ride__ctas"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><a class="btn btn--ghost ride__ghost" href="#" data-partner target="_blank" rel="noopener">Become a Partner <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></div>
+      <div class="ride__ctas"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><a class="btn btn--ghost ride__ghost" href="#partner" data-partner>Become a Partner <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
     </div>
   </div>
   </div>
@@ -443,7 +443,7 @@
     <div class="footer__grid">
       <div><img class="footer__logo logo--dark" src="assets/logo-footer-white.svg?v=2" alt="Bvndle Rewards Festival"><img class="footer__logo logo--light" src="assets/logo-footer.svg?v=2" alt="Bvndle Rewards Festival"><a class="btn" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
       <div><h3>Festival</h3><ul><li><a href="#ticket">Free ticket</a></li><li><a href="#journey">Experience</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">2025 gallery</a></li><li><a href="#" data-tix target="_blank" rel="noopener">Get paid ticket</a></li></ul></div>
-      <div><h3>Bvndle</h3><ul><li><a href="https://bvndle.com" target="_blank" rel="noopener">About Bvndle</a></li><li><a href="#" data-partner target="_blank" rel="noopener">Become a Partner</a></li><li><a href="mailto:engage@bvndle.com">Contact us</a></li><li><a href="https://bvndle.com/terms" target="_blank" rel="noopener">Terms</a> and <a href="https://bvndle.com/privacy" target="_blank" rel="noopener">Privacy</a></li></ul></div>
+      <div><h3>Bvndle</h3><ul><li><a href="https://bvndle.com" target="_blank" rel="noopener">About Bvndle</a></li><li><a href="#partner" data-partner>Become a Partner</a></li><li><a href="mailto:engage@bvndle.com">Contact us</a></li><li><a href="https://bvndle.com/terms" target="_blank" rel="noopener">Terms</a> and <a href="https://bvndle.com/privacy" target="_blank" rel="noopener">Privacy</a></li></ul></div>
       <div><h3>Follow</h3><ul class="socials"><li><a href="https://www.instagram.com/trybvndle" target="_blank" rel="noopener" aria-label="Instagram"><i class="ph-bold ph-instagram-logo"></i></a></li><li><a href="https://www.tiktok.com/@bvndlerewardsfest" target="_blank" rel="noopener" aria-label="TikTok"><i class="ph-bold ph-tiktok-logo"></i></a></li><li><a href="https://x.com/trybvndle" target="_blank" rel="noopener" aria-label="X"><i class="ph-bold ph-x-logo"></i></a></li><li><a href="https://www.youtube.com/@Bvndleapp" target="_blank" rel="noopener" aria-label="YouTube"><i class="ph-bold ph-youtube-logo"></i></a></li></ul></div>
     </div>
     <div class="footer__bottom"><span>&copy; 2026 Bvndle</span></div>
@@ -459,6 +459,52 @@
 
 <div class="mobile-cta is-hidden" id="mobileCta"><a class="btn btn--block" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
 <!-- phone menu: a full-screen sheet with every section -->
+
+<!-- Become a Partner: enquiry form (questions from "BRF 2026 Become a Sponsor Questions", 27 Oct). Every [data-partner] link
+     opens it. Saved in Supabase (submit_partner_enquiry); the team gets an email alert; listed in admin > Partners. -->
+<dialog class="pform" id="partnerBox" aria-labelledby="pformTitle">
+  <form class="pform__form" id="partnerForm" novalidate>
+    <button class="round pform__x" type="button" id="partnerClose" aria-label="Close"><i class="ph-bold ph-x"></i></button>
+    <p class="eyebrow">BRF 2026 &middot; Become a Partner</p>
+    <h2 class="display pform__title" id="pformTitle">Partner with us.</h2>
+    <p class="pform__lede">Tell us about your organisation and what you'd like to do at the festival. The partnerships team will get back to you.</p>
+    <fieldset class="pform__set"><legend>1. Your organisation</legend>
+      <div class="pform__row">
+        <div class="field" id="pf-org"><label for="pOrg">Organisation name</label><input class="input" id="pOrg" name="organisation" autocomplete="organization" maxlength="160" required><p class="err">Add your organisation's name.</p></div>
+        <div class="field" id="pf-ind"><label for="pInd">Industry</label><input class="input" id="pInd" name="industry" maxlength="120" placeholder="e.g. Fintech, FMCG, Telco" required><p class="err">Add your industry.</p></div>
+      </div>
+      <div class="pform__row">
+        <div class="field" id="pf-name"><label for="pName">Your name</label><input class="input" id="pName" name="contact_name" autocomplete="name" maxlength="120" required><p class="err">Add your name.</p></div>
+        <div class="field"><label for="pRole">Role <small>(optional)</small></label><input class="input" id="pRole" name="contact_role" autocomplete="organization-title" maxlength="120"></div>
+      </div>
+      <div class="pform__row">
+        <div class="field" id="pf-email"><label for="pEmail">Work email</label><input class="input" id="pEmail" name="email" type="email" autocomplete="email" maxlength="160" required><p class="err">Add a valid email address.</p></div>
+        <div class="field"><label for="pPhone">Phone <small>(optional)</small></label><input class="input" id="pPhone" name="phone" type="tel" autocomplete="tel" maxlength="40"></div>
+      </div>
+      <div class="field"><label for="pWeb">Website or social page <small>(optional)</small></label><input class="input" id="pWeb" name="website" maxlength="200" placeholder="https://"></div>
+      <div class="pform__hp" aria-hidden="true"><label>Leave this empty<input name="website_url_hp" tabindex="-1" autocomplete="off"></label></div>
+    </fieldset>
+    <fieldset class="pform__set field" id="pf-type"><legend>2. What type of partnership or sponsorship are you interested in? <small>Tick all that apply</small></legend>
+      <div class="pchips"><label class="pchip"><input type="checkbox" name="partnership_types" value="Headline Sponsor"><span>Headline Sponsor</span></label><label class="pchip"><input type="checkbox" name="partnership_types" value="Gold Sponsor"><span>Gold Sponsor</span></label><label class="pchip"><input type="checkbox" name="partnership_types" value="Silver Sponsor"><span>Silver Sponsor</span></label><label class="pchip"><input type="checkbox" name="partnership_types" value="Brand Activation / Exhibition"><span>Brand Activation / Exhibition</span></label><label class="pchip"><input type="checkbox" name="partnership_types" value="Strategic or Ecosystem Partnership"><span>Strategic or Ecosystem Partnership</span></label><label class="pchip"><input type="checkbox" name="partnership_types" value="Media Partnership"><span>Media Partnership</span></label><label class="pchip"><input type="checkbox" name="partnership_types" value="Other"><span>Other</span></label></div>
+      <input class="input pform__other" name="partnership_other" maxlength="300" placeholder="Other: tell us more" hidden>
+      <p class="err">Pick at least one.</p>
+    </fieldset>
+    <fieldset class="pform__set field" id="pf-obj"><legend>3. What are your main objectives for partnering with BRF? <small>Tick all that apply</small></legend>
+      <div class="pchips"><label class="pchip"><input type="checkbox" name="objectives" value="Brand visibility and awareness"><span>Brand visibility and awareness</span></label><label class="pchip"><input type="checkbox" name="objectives" value="Customer acquisition and engagement"><span>Customer acquisition and engagement</span></label><label class="pchip"><input type="checkbox" name="objectives" value="Product sampling and brand activation"><span>Product sampling and brand activation</span></label><label class="pchip"><input type="checkbox" name="objectives" value="Sales and revenue generation"><span>Sales and revenue generation</span></label><label class="pchip"><input type="checkbox" name="objectives" value="Access to new markets and audiences"><span>Access to new markets and audiences</span></label><label class="pchip"><input type="checkbox" name="objectives" value="Corporate Social Responsibility (CSR)"><span>Corporate Social Responsibility (CSR)</span></label><label class="pchip"><input type="checkbox" name="objectives" value="Other"><span>Other</span></label></div>
+      <input class="input pform__other" name="objectives_other" maxlength="300" placeholder="Other: tell us more" hidden>
+      <p class="err">Pick at least one.</p>
+    </fieldset>
+    <fieldset class="pform__set"><legend>4. What sponsorship investment range would you consider for BRF 2026?</legend>
+      <div class="pchips"><label class="pchip"><input type="radio" name="budget" value="Below ₦5 million"><span>Below ₦5 million</span></label><label class="pchip"><input type="radio" name="budget" value="₦5 million – ₦10 million"><span>₦5 million – ₦10 million</span></label><label class="pchip"><input type="radio" name="budget" value="₦10 million – ₦25 million"><span>₦10 million – ₦25 million</span></label><label class="pchip"><input type="radio" name="budget" value="₦25 million – ₦50 million"><span>₦25 million – ₦50 million</span></label><label class="pchip"><input type="radio" name="budget" value="Above ₦50 million"><span>Above ₦50 million</span></label><label class="pchip"><input type="radio" name="budget" value="Open to reviewing BRF&#x27;s sponsorship packages"><span>Open to reviewing BRF&#x27;s sponsorship packages</span></label><label class="pchip"><input type="radio" name="budget" value="Prefer to discuss this with the partnerships team"><span>Prefer to discuss this with the partnerships team</span></label></div>
+    </fieldset>
+    <fieldset class="pform__set"><legend>5. What value, resources or support would you bring to BRF 2026?</legend>
+      <div class="field"><label for="pGive" class="sr-only">Your proposed contribution</label><textarea class="input pform__ta" id="pGive" name="contribution" maxlength="3000" rows="4" placeholder="Financial sponsorship, products, services, technology, media support or other resources"></textarea></div>
+    </fieldset>
+    <p class="pform__say" id="partnerSay" role="status" aria-live="polite"></p>
+    <div class="pform__ctas"><button class="btn" type="submit" id="partnerGo">Send enquiry <i class="ph-bold ph-paper-plane-tilt" aria-hidden="true"></i></button></div>
+    <p class="pform__fine">For partnership enquiries you can also email <a href="mailto:rewardsfestival@bvndle.com">rewardsfestival@bvndle.com</a>.</p>
+  </form>
+</dialog>
 <dialog class="menu" id="menu" aria-label="Menu">
   <div class="menu__top"><span class="menu__title">Menu</span><button class="nav__menu" type="button" id="menuClose" aria-label="Close menu"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div>
   <ul class="menu__links">
@@ -468,10 +514,10 @@
   <a class="btn btn--block" href="#ticket">Get free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
 </dialog>
 
-<script src="js/store.js?v=7"></script>
+<script src="js/store.js?v=8"></script>
 <script src="js/analytics.js?v=1"></script>
 <script src="js/festival-data.js?v=20"></script>
 <script src="js/trivia.js?v=4"></script>
-<script src="js/v3.js?v=227"></script>
+<script src="js/v3.js?v=228"></script>
 </body>
 </html>
