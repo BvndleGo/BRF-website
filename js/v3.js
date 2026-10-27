@@ -536,6 +536,7 @@
   const syncCta = () => mCta.classList.toggle("is-hidden", heroIn || formIn || walkIn);
   new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; syncCta(); }).observe(hero);
   new IntersectionObserver(([e]) => { formIn = e.isIntersecting; syncCta(); }, { threshold: 0.15 }).observe($("#ticket"));
+  if ($("#zxScroll")) new IntersectionObserver(([e]) => { walkIn = e.isIntersecting; syncCta(); }, { rootMargin: "-45% 0px -45% 0px" }).observe($("#zxScroll"));
   // the phone ticket bar steps aside while the floor walk fills the screen (it would cover the stand panel)
 
 
@@ -981,7 +982,7 @@
      are granted on the server (claim_activity_reward), which also enforces once per ticket.
      Data: BRF_DATA.zones. ===== */
   const ZX = BD.zones || [], zxEl = $("#zxStage");
-  const journeyStep = () => {};
+  let journeyStep = () => {};
   const myToken = () => { try { return (JSON.parse(localStorage.getItem("brf-my-pass") || "null") || {}).token || null; } catch (e) { return null; } };
   const track = (...a) => (window.brfTrack || (() => {}))(...a);
 
@@ -1016,74 +1017,90 @@
   addEventListener("brf:claimed", () => setTimeout(refreshWallet, 300));
   refreshWallet();
 
-  if (zxEl && ZX.length) {
+  /* The walk: #zxScroll is tall and its .zx__pin sticks to the screen. Scroll progress picks the step: step 0 is the
+     whole zone, then one step per station (in number order). The walker dot travels from one station to the next
+     and the camera follows it, zoomed in; the card beside the map says what happens there. Tapping a station or a
+     list row jumps the walk there. Wealth: every station you reach counts; all 12 earn 2 BvndleCoins (once). */
+  const zxScroll = $("#zxScroll");
+  if (zxEl && zxScroll && ZX.length) {
     const tabs = $("#zxTabs"), maps = $("#zxMaps"), hs = $("#zxHs"), list = $("#zxList"), quest = $("#zxQuest");
+    const art = $("#zxArt"), cam = $("#zxCam"), walker = $("#zxWalker"), card = $("#zxCard"), bar = $("#zxBar"), hint = $("#zxHint");
     const SEEN = "brf-wealth-seen", DONE = "brf-wealth-coins";
     let seen = new Set(); try { seen = new Set(JSON.parse(localStorage.getItem(SEEN) || "[]")); } catch (e) {}
-    let cur = null, active = null, claiming = false;
-    const art = {};                                           // zone id -> loaded svg markup
+    let cur = null, active = null, claiming = false, step = -1;
+    const svgs = {};
     const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
     const payZone = ZX.find((z) => z.reward);
+    const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+    const view = { x: 50, y: 50, s: 1 };                      // camera now (smoothed), in % of the map + zoom
 
     tabs.innerHTML = ZX.map((z) => `<button class="zx__tab" role="tab" type="button" data-z="${z.id}" style="--zc:${z.color}" aria-selected="false">${esc(z.name)}${z.reward ? ` <small>+${z.reward.coins} coins</small>` : ""}</button>`).join("");
 
     function questHTML() {
-      if (!payZone || !cur || !cur.reward) return cur && cur.id === "escape" ? `<p class="zx__q zx__q--seal"><i class="ph-bold ph-lock-simple" aria-hidden="true"></i> Sealed until you play. No spoilers.</p>` : "";
+      if (!cur) return "";
+      if (!cur.reward) return cur.id === "escape" ? `<p class="zx__q zx__q--seal"><i class="ph-bold ph-lock-simple" aria-hidden="true"></i> Sealed until you play. No spoilers.</p>` : `<p class="zx__q zx__q--plain">${cur.stations.length} stations</p>`;
       const total = cur.stations.length, k = cur.stations.filter((s) => seen.has(s.n)).length;
-      const got = lsGet(DONE) === "1";
-      if (got) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked. +${cur.reward.coins} BvndleCoins earned</p>`;
-      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! <a href="#ticket" id="zxClaim">Get your free ticket</a> to collect ${cur.reward.coins} BvndleCoins</p>`;
-      return `<p class="zx__q"><span class="zx__qbar" style="--p:${k / total}"></span><span><b>${k}/${total}</b> stations seen &middot; see them all for ${cur.reward.coins} BvndleCoins</span></p>`;
+      if (lsGet(DONE) === "1") return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked. +${cur.reward.coins} BvndleCoins earned</p>`;
+      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! <a href="#ticket">Get your free ticket</a> to collect ${cur.reward.coins} BvndleCoins</p>`;
+      return `<p class="zx__q"><span class="zx__qbar" style="--p:${k / total}"></span><span><b>${k}/${total}</b> stations &middot; walk them all for ${cur.reward.coins} BvndleCoins</span></p>`;
     }
-    function paint() { quest.innerHTML = questHTML(); }
+    const paint = () => { quest.innerHTML = questHTML(); };
 
     async function claimWealth() {
       if (claiming || lsGet(DONE) === "1" || !payZone) return;
-      const all = payZone.stations.every((s) => seen.has(s.n)), tok = myToken();
-      if (!all || !tok || !window.PassStore.rewards) return paint();
+      const tok = myToken();
+      if (!payZone.stations.every((s) => seen.has(s.n)) || !tok || !window.PassStore.rewards) return paint();
       claiming = true;
       const r = await window.PassStore.rewards.claim(tok, payZone.reward.activity, payZone.stations.map((s) => s.n));
       claiming = false;
-      if (r.ok) {
-        lsSet(DONE, "1"); track("wealth_complete", null, r.data.awarded);
-        walletData = r.data.wallet; renderWallet(); paint();
-        if (r.data.awarded) { const q = $(".zx__q--done", quest); if (q) { q.classList.add("is-pop"); } }
-      } else paint();
+      if (r.ok) { lsSet(DONE, "1"); track("wealth_complete", null, r.data.awarded); walletData = r.data.wallet; renderWallet(); }
+      paint();
+      if (r.ok && r.data.awarded) $(".zx__q--done", quest)?.classList.add("is-pop");
     }
     addEventListener("brf:claimed", () => setTimeout(claimWealth, 400));
 
-    function tip(st) {
-      const t = document.createElement("div"); t.className = "zx__tip"; t.style.left = st.x + "%"; t.style.top = st.y + "%";
-      if (st.y < 45) t.classList.add("below");
-      if (st.x < 22) t.classList.add("left"); else if (st.x > 78) t.classList.add("right");
-      t.innerHTML = `<b>${esc(st.n)} &middot; ${esc(st.name)}</b><span>${esc(st.desc)}</span>`; return t;
+    function markSeen(n) {
+      if (!cur.reward || seen.has(n)) return;
+      seen.add(n); lsSet(SEEN, JSON.stringify([...seen]));
+      $$(`[data-n="${n}"]`, zxEl.parentElement.parentElement).forEach((b) => b.classList.add("seen"));
+      paint();
+      if (cur.stations.every((s) => seen.has(s.n))) { track("wealth_walked"); claimWealth(); }
     }
-    function select(n, from) {
-      active = n;
-      $$(".zx__tip", hs).forEach((t) => t.remove());
-      $$(".zx__dot", hs).forEach((b) => b.classList.toggle("on", b.dataset.n === n));
-      $$(".zx__st", list).forEach((b) => b.classList.toggle("on", b.dataset.n === n));
-      const st = cur.stations.find((s) => s.n === n); if (!st) return;
-      hs.appendChild(tip(st));
-      if (cur.reward && !seen.has(n)) {
-        seen.add(n); lsSet(SEEN, JSON.stringify([...seen]));
-        $$(`[data-n="${n}"]`, zxEl.parentElement).forEach((b) => b.classList.add("seen"));
-        $(`.zx__st[data-n="${n}"]`, list)?.classList.add("seen");
-        paint();
-        if (cur.stations.every((s) => seen.has(s.n))) { track("wealth_walked"); claimWealth(); }
+    function showStation(i) {                                  // i: -1 = the whole zone, else a station index
+      const st = cur.stations[i];
+      active = st ? st.n : null;
+      $$(".zx__dot", hs).forEach((b) => b.classList.toggle("on", b.dataset.n === active));
+      $$(".zx__st", list).forEach((b) => b.classList.toggle("on", b.dataset.n === active));
+      if (!st) {
+        card.innerHTML = `<p class="zx__cnum">${cur.stations.length} stations</p><h4>${esc(cur.name)}</h4><p>${esc(cur.tag)} Scroll to walk it, or tap a number.</p>`;
+        return;
       }
-      if (from === "list" && innerWidth <= 900) zxEl.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+      card.innerHTML = `<p class="zx__cnum"><span>${esc(st.n)}</span> Station ${i + 1} of ${cur.stations.length}</p><h4>${esc(st.name)}</h4><p>${esc(st.desc)}</p>`;
+      markSeen(st.n);
+      const row = $(`.zx__st[data-n="${st.n}"]`, list);
+      if (row && list.scrollHeight > list.clientHeight) list.scrollTo({ top: list.scrollTop + row.getBoundingClientRect().top - list.getBoundingClientRect().top - list.clientHeight / 2 + row.offsetHeight / 2, behavior: reduce ? "auto" : "smooth" });
+    }
+
+    // scroll geometry
+    const steps = () => cur.stations.length + 1;
+    const span = () => Math.max(1, zxScroll.offsetHeight - innerHeight);
+    const topY = () => zxScroll.getBoundingClientRect().top + scrollY;
+    const progress = () => Math.min(1, Math.max(0, -zxScroll.getBoundingClientRect().top / span()));
+    function goTo(i) {                                         // jump the walk to station i (scrolls the page)
+      const p = (i + 1 + 0.1) / (cur.stations.length + 0.35);
+      scrollTo({ top: topY() + p * span(), behavior: reduce ? "auto" : "smooth" });
     }
 
     async function loadArt(z) {
-      if (art[z.id]) return art[z.id];
-      try { art[z.id] = await (await fetch(z.art)).text(); } catch (e) { art[z.id] = ""; }
-      return art[z.id];
+      if (svgs[z.id] != null) return svgs[z.id];
+      try { svgs[z.id] = await (await fetch(z.art)).text(); } catch (e) { svgs[z.id] = ""; }
+      return svgs[z.id];
     }
-    async function show(id, animate) {
-      const z = ZX.find((x) => x.id === id) || ZX[0]; cur = z; active = null;
+    async function show(id, fromTab) {
+      const z = ZX.find((x) => x.id === id) || ZX[0]; cur = z; active = null; step = -2;
       $$(".zx__tab", tabs).forEach((t) => t.setAttribute("aria-selected", String(t.dataset.z === z.id)));
       zxEl.style.setProperty("--zc", z.color);
+      zxScroll.style.setProperty("--steps", steps());
       $("#zxName").textContent = z.name; $("#zxTag").textContent = z.tag; $("#zxHall").textContent = z.hall;
       hs.innerHTML = ""; list.innerHTML = "";
       z.stations.forEach((st, i) => {
@@ -1092,15 +1109,16 @@
         b.className = "zx__dot" + was; b.type = "button"; b.dataset.n = st.n; b.textContent = st.n;
         b.style.left = st.x + "%"; b.style.top = st.y + "%"; b.style.setProperty("--d", (i * 0.2) + "s");
         b.setAttribute("aria-label", `${st.n} ${st.name}`);
-        b.addEventListener("click", () => select(st.n)); b.addEventListener("focus", () => select(st.n));
-        b.addEventListener("mouseenter", () => { if (matchMedia("(hover: hover)").matches) select(st.n); });
+        b.addEventListener("click", () => goTo(i));
         hs.appendChild(b);
         const li = document.createElement("li");
-        li.innerHTML = `<button class="zx__st${was}" type="button" data-n="${esc(st.n)}"><span class="zx__num">${esc(st.n)}</span><span><b>${esc(st.name)}</b><span>${esc(st.desc)}</span></span></button>`;
-        li.firstChild.addEventListener("click", () => select(st.n, "list"));
+        li.innerHTML = `<button class="zx__st${was}" type="button" data-n="${esc(st.n)}"><span class="zx__num">${esc(st.n)}</span><b>${esc(st.name)}</b></button>`;
+        li.firstChild.addEventListener("click", () => goTo(i));
         list.appendChild(li);
       });
       paint();
+      if (fromTab && zxScroll.getBoundingClientRect().top < 0) scrollTo({ top: topY() + 2, behavior: "auto" });   // a new zone starts its walk from the top
+      Object.assign(view, { x: 50, y: 50, s: 1 });
       const svg = await loadArt(z);
       if (cur !== z) return;
       maps.innerHTML = svg;
@@ -1108,7 +1126,7 @@
       if (el) {
         el.classList.add("art"); el.setAttribute("aria-hidden", "true"); el.removeAttribute("width"); el.removeAttribute("height");
         $$(".p", el).forEach((p) => p.style.setProperty("--d", (Math.random() * 1.3).toFixed(2) + "s"));
-        if (animate && !reduce) { maps.classList.remove("enter"); void maps.offsetWidth; maps.classList.add("enter"); }
+        if (fromTab && !reduce) { maps.classList.remove("enter"); void maps.offsetWidth; maps.classList.add("enter"); }
       }
     }
     tabs.addEventListener("click", (e) => { const t = e.target.closest(".zx__tab"); if (t) { show(t.dataset.z, true); track("zone_tab", t.dataset.z); } });
@@ -1117,15 +1135,45 @@
       const all = $$(".zx__tab", tabs), i = all.findIndex((t) => t.dataset.z === cur.id);
       const n = all[(i + (e.key === "ArrowRight" ? 1 : all.length - 1)) % all.length]; show(n.dataset.z, true); n.focus();
     });
-    $("#zxNext").addEventListener("click", () => {
-      const s = cur.stations, i = s.findIndex((x) => x.n === active);
-      const next = cur.reward ? (s.slice(i + 1).find((x) => !seen.has(x.n)) || s.find((x) => !seen.has(x.n)) || s[(i + 1) % s.length]) : s[(i + 1) % s.length];
-      select(next.n);
-    });
     $("#zxMotion").addEventListener("click", (e) => { const p = zxEl.classList.toggle("paused"); e.currentTarget.textContent = p ? "Play motion" : "Pause motion"; });
-    // the old passport / plan links (e.g. the VIP hall plan) can ask for a zone: #journey?zone=escape style hooks
-    window.brfShowZone = (id) => { show(id, true); $("#journey").scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); };
-    show(ZX[0].id, false);
+    window.brfShowZone = (id) => { show(id, true); zxScroll.scrollIntoView({ behavior: reduce ? "auto" : "smooth" }); };
+
+    // every frame: scroll -> where the walker is -> camera
+    journeyStep = () => {
+      if (!cur) return;
+      const r = zxScroll.getBoundingClientRect();
+      if (r.bottom < -50 || r.top > innerHeight + 50) return;
+      const n = cur.stations.length, t = progress() * (n + 0.35), i = Math.min(n, Math.floor(t)), f = Math.min(1, t - i);
+      // stops: 0 = whole zone, k = station k-1. Hold at each stop for the first 45% of its scroll, then walk on.
+      const at = (k) => (k <= 0 ? null : cur.stations[Math.min(n, k) - 1]);
+      const A = at(i), B = at(Math.min(n, i + 1)), u = i >= n ? 0 : ease(Math.max(0, (f - 0.45) / 0.55));
+      let wx, wy;
+      if (!A && B) { wx = B.x; wy = B.y; } else if (A && B) { wx = A.x + (B.x - A.x) * u; wy = A.y + (B.y - A.y) * u; } else if (A) { wx = A.x; wy = A.y; } else { wx = 50; wy = 50; }
+      // on phones the map box is taller than the drawing, so the whole-zone view is zoomed just enough to fill it
+      const W = art.clientWidth, H = art.clientHeight, mapH = maps.offsetHeight || H, s0 = Math.max(1, H / mapH);
+      const narrow = innerWidth <= 900, Z = Math.max(narrow ? 2 : 1.75, s0 * 1.5);
+      const zoom = i === 0 ? s0 + (Z - s0) * u : Z;               // zoom in on the way to the first station
+      const tx = i === 0 ? 50 + (wx - 50) * u : wx, ty = i === 0 ? 50 + (wy - 50) * u : wy;
+      const e = reduce ? 1 : 0.16;
+      view.x += (tx - view.x) * e; view.y += (ty - view.y) * e; view.s += (zoom - view.s) * e;
+      const s = view.s;
+      const px = Math.min(0, Math.max(W - W * s, W / 2 - (view.x / 100) * W * s));
+      const py = Math.min(0, Math.max(H - mapH * s, H / 2 - (view.y / 100) * mapH * s));
+      cam.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px) scale(${s.toFixed(3)})`;
+      cam.style.setProperty("--s", s.toFixed(3));
+      walker.style.left = wx + "%"; walker.style.top = wy + "%"; walker.style.opacity = i === 0 && u < 0.2 ? "0" : "1";
+      bar.style.transform = `scaleX(${progress()})`;
+      hint.classList.toggle("is-off", progress() > 0.04);
+      const k = i === 0 ? (u > 0.92 ? 0 : -1) : (u > 0.92 ? Math.min(n - 1, i) : i - 1);   // the card changes on arrival
+      if (k !== step) {
+        for (let j = Math.max(0, step + 1); j < k; j++) markSeen(cur.stations[j].n);   // a fast scroll still passes every station
+        step = k; showStation(k);
+      }
+    };
+    // the side panel is as tall as the map (its list scrolls inside)
+    const sizeSide = () => zxScroll.style.setProperty("--sh", zxEl.offsetHeight + "px");
+    addEventListener("resize", sizeSide);
+    show(ZX[0].id, false).then(() => { showStation(-1); sizeSide(); });
     if (lsGet(DONE) !== "1" && payZone && payZone.stations.every((s) => seen.has(s.n))) claimWealth();
   }
 

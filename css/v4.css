@@ -1146,3 +1146,61 @@ html[data-theme="light"] .pchip span { border-color: rgba(0, 0, 0, .3); }
   .pform__ctas .btn { width: 100%; justify-content: center; }
   .pchip span { font-size: 14px; padding: 9px 12px; }
 }
+
+/* ===== 5. The experience, scroll walk (27 Oct): the zone pins while you scroll; a walker goes station to station ===== */
+.zx__scroll { position: relative; height: calc(100svh + var(--steps, 13) * 38svh); margin-top: 8px; }
+.zx__pin { position: sticky; top: 72px; height: calc(100svh - 72px); display: flex; align-items: center; box-sizing: border-box; padding: 10px 0 14px; }
+.zx__pin .zx__body { gap: 14px; }
+.zx__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.zx__pin .zx__grid { align-items: start; }
+.zx__pin .zx__side { max-height: var(--sh, 480px); }
+.zx__stage { display: flex; flex-direction: column; }
+.zx__art { position: relative; overflow: hidden; }
+.zx__cam { position: relative; transform-origin: 0 0; }
+.zx__dot { transform: translate(-50%, -50%) scale(calc(1 / var(--s, 1))); }
+.zx__walker { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: #DD5796; border: 3px solid #fff; box-shadow: 0 0 0 3px #1a1a1a, 0 6px 14px rgba(0,0,0,.35); transform: translate(12px, -14px) scale(calc(1 / var(--s, 1))); z-index: 3; pointer-events: none; transition: opacity .3s; }
+.zx__walker::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid #DD5796; animation: zxping 1.6s ease-out infinite; }
+.zx__bar { height: 6px; background: rgba(26,26,26,.12); border-top: 2px solid #1a1a1a; }
+.zx__bar i { display: block; height: 100%; background: var(--zc, #F5B63E); transform-origin: left; transform: scaleX(0); }
+.zx__hint { position: absolute; left: 12px; bottom: 18px; margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: #1a1a1a; color: #fff; font: 700 13px/1 var(--font-body); transition: opacity .3s; pointer-events: none; }
+.zx__hint.is-off { opacity: 0; }
+.zx__motion { position: absolute; right: 12px; bottom: 18px; }
+.zx__side { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.zx__zone { margin: 0; color: var(--zx-muted); font-size: 14px; line-height: 1.4; }
+.zx__zone b { display: block; color: var(--zx-fg); font: 700 clamp(26px, 2.6vw, 38px)/1 var(--font-display); text-transform: uppercase; margin-bottom: 4px; }
+.zx__card { border: 2px solid var(--zx-line); border-radius: 18px; background: var(--zx-surf); color: var(--zx-fg); padding: 14px 16px; box-shadow: 5px 5px 0 var(--zc, #F5B63E); }
+.zx__card h4 { margin: 4px 0 4px; font: 800 20px/1.2 var(--font-body); }
+.zx__card p { margin: 0; color: var(--zx-muted); font-size: 15px; line-height: 1.4; }
+.zx__card .zx__cnum { display: flex; align-items: center; gap: 8px; font: 700 12px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; }
+.zx__cnum span { min-width: 28px; height: 26px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 999px; border: 2px solid #1a1a1a; background: var(--zx-yellow); color: #1a1a1a; font-size: 12px; }
+.zx__pin .zx__list { flex: 1; min-height: 0; max-height: none; overflow: auto; gap: 4px; }
+.zx__pin .zx__st { grid-template-columns: 30px 1fr; align-items: center; padding: 5px 10px; border-width: 1px; border-radius: 10px; font-size: 14px; }
+.zx__pin .zx__st b { font-size: 14px; font-weight: 600; }
+.zx__pin .zx__num { font-size: 11px; line-height: 20px; }
+.zx__pin .zx__st.on { box-shadow: none; border-color: var(--zx-pink); background: color-mix(in srgb, var(--zx-pink) 14%, var(--zx-surf)); }
+.zx__skip { align-self: flex-start; color: var(--zx-muted); font-size: 13px; font-weight: 700; text-underline-offset: 3px; }
+.zx__q--plain { background: transparent; }
+.zx__after { padding-top: 18px; display: flex; flex-direction: column; gap: 18px; }
+@media (max-width: 1240px) and (min-width: 901px) { .zx__pin .zx__st { padding: 4px 8px; } .zx__card p { font-size: 14px; } }
+@media (max-height: 760px) and (min-width: 901px) { .zx__pin .zx__list { display: none; } }
+@media (max-width: 900px) {
+  .zx__pin { top: 0; height: 100svh; padding: 8px 0; align-items: flex-start; }
+  .zx__pin .zx__side { max-height: none; }
+  .zx__art { height: min(46svh, 120vw); }
+  .zx__pin .zx__body { gap: 10px; }
+  .zx__pin .zx__list { display: none; }
+  .zx__zone b { font-size: 24px; display: inline; margin-right: 6px; }
+  .zx__zone .zx__hall { display: none; }
+  .zx__card { padding: 12px 14px; box-shadow: 4px 4px 0 var(--zc, #F5B63E); }
+  .zx__card h4 { font-size: 18px; }
+  .zx__card p { font-size: 14px; }
+  .zx__hint { bottom: 16px; font-size: 12px; padding: 7px 10px; }
+  .zx__motion { display: none; }
+  .zx__scroll { height: calc(100svh + var(--steps, 13) * 34svh); }
+}
+@media (max-width: 560px) {
+  .zx__top { gap: 8px; }
+  .zx__tab { padding: 8px 12px; font-size: 12px; box-shadow: 3px 3px 0 var(--zx-line); }
+  .zx__q { font-size: 12px; padding: 6px 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .zx__walker::after { animation: none; } }
