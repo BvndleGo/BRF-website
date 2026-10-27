@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="css/v32.css?v=40">
   <link rel="stylesheet" href="css/v34.css?v=110">
   <link rel="stylesheet" href="css/theme.css?v=20">
-  <link rel="stylesheet" href="css/v4.css?v=103">
+  <link rel="stylesheet" href="css/v4.css?v=104">
 </head>
 <body>
 
@@ -145,6 +145,12 @@
   <section class="section talks" id="talks">
     <div class="wrap">
       <div class="talks__head"><div><p class="eyebrow">Main stage &middot; both days, from 10am</p><h2 class="display h2">Ideas before the games.</h2></div><p class="stage__note" id="stageNote"></p></div>
+      <!-- Speakers by track (review, 27 Oct). Data: BRF_DATA.speakers; names go in when they are announced. -->
+      <div class="spk" id="speakers">
+        <div class="spk__intro"><h3 class="spk__title">Speakers</h3><p class="spk__lede" id="spkLede"></p></div>
+        <div class="spk__tabs" id="spkTabs" role="tablist" aria-label="Speaker tracks"></div>
+        <div class="spk__panel" id="spkPanel" role="tabpanel" aria-live="polite"></div>
+      </div>
       <div class="agenda__tabs" id="stageTabs" role="tablist" aria-label="Festival days" hidden></div>
       <div class="agenda__frame" id="stageFrame"><ol class="agenda" id="stageTalks"></ol></div>
       <p class="agenda__hint" id="stageHint" hidden><i class="ph-bold ph-arrow-down" aria-hidden="true"></i>Scroll for more</p>
@@ -191,7 +197,7 @@
         <h2 class="display concert__title">When the lights dim, the concert starts.</h2>
       </div>
       <div class="concert__copy">
-        <p class="concert__sub">The Bvndle Rewards Concert is a separate ticket. Line-up drops soon.</p>
+        <p class="concert__sub"><b>Don&rsquo;t miss out on the biggest rewards concert!</b></p>
         <a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Get concert ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>
       </div>
     </div>
@@ -214,7 +220,7 @@
       <div class="mystery" id="mystery"></div>
       <!-- client 23 Oct: "Buy concert ticket below guess who is headlining" -->
       <div class="lineup__cta">
-        <p>The headliners play the concert on <b>12th December from 9pm</b>. It's a paid ticket.</p>
+        <p>The fun doesn&rsquo;t stop, it gets better at night!</p>
         <div class="lineup__btns"><a class="btn btn--white" href="#" data-tix target="_blank" rel="noopener">Get concert ticket <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a><a class="btn btn--ghost" href="#vip">See ticket prices</a></div>
       </div>
       <div class="past">
@@ -273,7 +279,7 @@
   <section class="section day" id="day">
     <div class="wrap">
       <div class="day__head">
-        <div><p class="eyebrow">11th &amp; 12th December</p><h2 class="display h2">Your day.</h2></div>
+        <div><p class="eyebrow">Have fun, all day, and twice on Saturday</p><h2 class="display h2">Your day.</h2></div>
       </div>
       <ol class="day__rail">
         <li class="dstop" style="--c:#FFD23F"><p class="dstop__time">10am&ndash;1pm</p><h3>Main stage talks</h3><p>Thought leadership: founders, creators and brands on money, music and Lagos life.</p></li>
@@ -288,7 +294,7 @@
   <!-- 10b. Access: free day pass vs paid night concert, side by side (client 23 Oct: clarity on what each ticket gets you) -->
   <section class="section access" id="access" aria-labelledby="access-h">
     <div class="wrap">
-      <div class="access__head"><h2 class="display h2" id="access-h">Your day is free. The night is the concert.</h2></div>
+      <div class="access__head"><h2 class="display h2" id="access-h">Have fun at day, double the fun at night.</h2></div>
       <div class="access__grid">
         <article class="acard acard--day">
           <div class="acard__top"><span class="acard__kind">Free ticket &middot; Day pass</span><b class="acard__price">Free</b></div>
@@ -376,20 +382,6 @@
   </section>
 
   <!-- 3. Why loyalty matters: an editorial numbered list. Each row fills with its own flat colour on hover/focus and shows a photo -->
-  <section class="section why2" id="why">
-    <div class="wrap">
-      <div class="why2__head">
-        <div><p class="eyebrow">Why loyalty matters now</p><h2 class="display h2">Recognition builds the relationship.</h2></div>
-        <p class="lede">Bvndle Rewards Festival exists to turn every receipt into something you can feel.</p>
-      </div>
-      <ol class="why2__list">
-        <li class="wrow" tabindex="0" style="--c:#2e4bff;--t:#fff"><span class="wrow__n">01</span><h3 class="wrow__t">Turn transactions into recognition.</h3><p class="wrow__d">Every game and brand mission earns BvndleCoins. Loyalty you can see, not a receipt in the bin.</p><span class="wrow__tag">+150 coins</span><img class="wrow__img" src="assets/img/zones/games-6.jpg" alt="" loading="lazy"></li>
-        <li class="wrow" tabindex="0" style="--c:#FF3E8E;--t:#111"><span class="wrow__n">02</span><h3 class="wrow__t">Make rewards visible and instant.</h3><p class="wrow__d">Swap coins at the redemption booths for appliances, gadgets, skincare, merch and cash, handed over the same day.</p><span class="wrow__tag">Win on the spot</span><img class="wrow__img" src="assets/img/zones/redemption-3.jpg" alt="" loading="lazy"></li>
-        <li class="wrow" tabindex="0" style="--c:#FFD23F;--t:#111"><span class="wrow__n">03</span><h3 class="wrow__t">Create real experiences from loyalty.</h3><p class="wrow__d">Two days of music, games and brands. Free entry to the festival floor at Landmark Event Centre, Lagos.</p><span class="wrow__tag">11&ndash;12 Dec</span><img class="wrow__img" src="assets/img/concert/c13.jpg" alt="" loading="lazy"></li>
-      </ol>
-    </div>
-  </section>
-
   <!-- 10. For brands: the partner pass -->
   <section class="section brands" id="brands">
     <div class="wrap brands__grid">
@@ -409,6 +401,20 @@
         <div class="stub__tear" aria-hidden="true"></div>
         <div class="stub__foot"><b>23</b><span>brands showed up<br>in 2025</span><a class="stub__go" href="#partner" data-partner aria-label="Become a Partner">Join them <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
       </article>
+    </div>
+  </section>
+
+  <section class="section why2" id="why">
+    <div class="wrap">
+      <div class="why2__head">
+        <div><p class="eyebrow">Why loyalty matters now</p><h2 class="display h2">Recognition builds the relationship.</h2></div>
+        <p class="lede">Bvndle Rewards Festival exists to turn every transaction into something the customer feels and experiences.</p>
+      </div>
+      <ol class="why2__list">
+        <li class="wrow" tabindex="0" style="--c:#2e4bff;--t:#fff"><span class="wrow__n">01</span><h3 class="wrow__t">Turn transactions into recognition.</h3><p class="wrow__d">Every game played, every brand mission completed, the customer earns BvndleCoins. Loyalty that feels personal.</p><span class="wrow__tag">+150 coins</span><img class="wrow__img" src="assets/img/zones/games-6.jpg" alt="" loading="lazy"></li>
+        <li class="wrow" tabindex="0" style="--c:#FF3E8E;--t:#111"><span class="wrow__n">02</span><h3 class="wrow__t">Rewards are visible and instant.</h3><p class="wrow__d">Coins can be swapped at the redemption booths for appliances, gadgets, skincare, merch and cash, handed over the same day.</p><span class="wrow__tag">Win on the spot</span><img class="wrow__img" src="assets/img/zones/redemption-3.jpg" alt="" loading="lazy"></li>
+        <li class="wrow" tabindex="0" style="--c:#FFD23F;--t:#111"><span class="wrow__n">03</span><h3 class="wrow__t">Real experiences are created from loyalty.</h3><p class="wrow__d">Two days of music, games and brands. Free entry to the festival floor and all zones across the floor.</p><span class="wrow__tag">11&ndash;12 Dec</span><img class="wrow__img" src="assets/img/concert/c13.jpg" alt="" loading="lazy"></li>
+      </ol>
     </div>
   </section>
 
@@ -534,8 +540,8 @@
 
 <script src="js/store.js?v=9"></script>
 <script src="js/analytics.js?v=1"></script>
-<script src="js/festival-data.js?v=22"></script>
+<script src="js/festival-data.js?v=23"></script>
 <script src="js/trivia.js?v=4"></script>
-<script src="js/v3.js?v=232"></script>
+<script src="js/v3.js?v=233"></script>
 </body>
 </html>

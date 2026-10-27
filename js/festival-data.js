@@ -102,6 +102,20 @@ window.BRF_DATA = {
       ] },
   ],
 
+  /* ---- 5b. Speakers by track (website review, 27 Oct). Tapping a track shows its speakers. Add each speaker as
+     { name: "Full name", role: "Title, Company", photo: "assets/img/speakers/<file>.jpg" } (photo optional).
+     An empty list shows "Speakers announced soon". ---- */
+  speakers: {
+    intro: "While the fun never stops, there will be conversations that spark ideas, challenge perspectives, and get the room talking, led by some of the brightest minds on the continent across industries, interests, and everything in between.",
+    tracks: [
+      { name: "The Chronicles of <i>Japa</i>", speakers: [] },
+      { name: "Brands, Marketing & What's In Between", speakers: [] },
+      { name: "The Business Of Wealth", speakers: [] },
+      { name: "The <i>Jara</i> Economy", speakers: [] },
+      { name: "The Creative Economy", speakers: [] },
+    ],
+  },
+
   /* ---- 5c. Main stage programme, both days (client 26 Oct). Rows: time + until, title, optional note (shown under the
      title), type (the colour tag), optional where. Speakers and hosts not announced yet; add speaker: "Name" to a row
      to show it with a mic icon. ---- */

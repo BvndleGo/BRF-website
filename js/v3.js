@@ -1177,6 +1177,27 @@
     if (lsGet(DONE) !== "1" && payZone && payZone.stations.every((s) => seen.has(s.n))) claimWealth();
   }
 
+  /* ===== 5b. Speakers: an intro line and one button per track; the chosen track's speakers show below.
+     Track names may carry <i> for the italic words (data is ours, not user input). Data: BRF_DATA.speakers. ===== */
+  { const SP = BD.speakers, tabsEl = $("#spkTabs"), panel = $("#spkPanel");
+    if (SP && tabsEl && SP.tracks && SP.tracks.length) {
+      $("#spkLede").textContent = SP.intro || "";
+      let t = 0;
+      const initials = (n) => n.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+      const draw = () => {
+        $$(".spk__tab", tabsEl).forEach((b, k) => { b.setAttribute("aria-selected", k === t); b.tabIndex = k === t ? 0 : -1; });
+        const list = SP.tracks[t].speakers || [];
+        panel.innerHTML = list.length
+          ? `<ul class="spk__list">${list.map((p) => `<li class="spk__card">${p.photo ? `<img src="${esc(p.photo)}" alt="" loading="lazy">` : `<span class="spk__ph" aria-hidden="true">${esc(initials(p.name))}</span>`}<b>${esc(p.name)}</b>${p.role ? `<span>${esc(p.role)}</span>` : ""}</li>`).join("")}</ul>`
+          : `<p class="spk__soon"><i class="ph-bold ph-microphone-stage" aria-hidden="true"></i> Speakers for <b>${SP.tracks[t].name}</b> are announced soon.</p>`;
+      };
+      tabsEl.innerHTML = SP.tracks.map((x, k) => `<button class="spk__tab" role="tab" type="button" data-t="${k}">${x.name}</button>`).join("");
+      tabsEl.addEventListener("click", (e) => { const b = e.target.closest(".spk__tab"); if (b) { t = +b.dataset.t; draw(); (window.brfTrack || (() => {}))("speaker_track", b.textContent); } });
+      tabsEl.addEventListener("keydown", (e) => { if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; t = (t + (e.key === "ArrowRight" ? 1 : SP.tracks.length - 1)) % SP.tracks.length; draw(); $$(".spk__tab", tabsEl)[t].focus(); });
+      draw();
+    }
+  }
+
   /* ===== 5c. Main stage talks: an agenda that grows. Day tabs appear when there is more than one day; each day is a
      list of rows (time, talk and speaker, topic). A long day scrolls inside its own frame (about six rows tall) with a
      "scroll for more" cue, so the section never grows past the screen. Data: BRF_DATA.stage.days (an older flat

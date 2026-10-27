@@ -1205,3 +1205,29 @@ html[data-theme="light"] .pchip span { border-color: rgba(0, 0, 0, .3); }
   .zx__q { font-size: 12px; padding: 6px 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .zx__walker::after { animation: none; } }
+
+/* ===== 5b. Speakers by track ===== */
+.spk { margin: 0 0 clamp(28px, 4vw, 44px); display: grid; gap: 16px; }
+.spk__intro { display: grid; grid-template-columns: minmax(0, .5fr) minmax(0, 1fr); gap: 8px 40px; align-items: baseline; }
+.spk__title { margin: 0; font: 800 22px/1.2 var(--font-body); }
+.spk__lede { margin: 0; color: var(--cloud-dim); font-size: var(--fs-lead); line-height: 1.5; max-width: 62ch; }
+html[data-theme="light"] .spk__lede { color: #555; }
+.spk__tabs { display: flex; flex-wrap: wrap; gap: 10px; }
+.spk__tab { font: 700 15px/1.2 var(--font-body); padding: 11px 18px; border-radius: 999px; border: 2px solid rgba(243,240,235,.35); background: transparent; color: inherit; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+html[data-theme="light"] .spk__tab { border-color: rgba(17,17,17,.3); }
+.spk__tab:hover { border-color: var(--pink); }
+.spk__tab[aria-selected="true"] { background: var(--pink); border-color: var(--pink); color: #111; }
+.spk__tab:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+.spk__panel { min-height: 64px; }
+.spk__soon { margin: 0; padding: 18px 20px; border-radius: 18px; border: 1px dashed rgba(127,127,127,.5); color: var(--cloud-dim); line-height: 1.5; }
+html[data-theme="light"] .spk__soon { color: #555; }
+.spk__soon i { margin-right: 6px; vertical-align: -2px; }
+.spk__soon b { color: var(--cloud); font-weight: 700; }
+html[data-theme="light"] .spk__soon b { color: #111; }
+.spk__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.spk__card { display: grid; gap: 4px; }
+.spk__card img, .spk__ph { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 18px; margin-bottom: 8px; }
+.spk__ph { display: grid; place-items: center; background: #5b4bd6; color: #F3F0EB; font: 800 40px/1 var(--font-body); }
+.spk__card b { font-size: 17px; }
+.spk__card span { color: var(--cloud-dim); font-size: 14px; }
+@media (max-width: 760px) { .spk__intro { grid-template-columns: 1fr; } .spk__tab { font-size: 14px; padding: 9px 14px; } }
