@@ -614,6 +614,36 @@
     guide.classList.add("is-lit"); $("#guideKey").textContent = "You're in. She's glowing for you.";
     if (flare) { guide.classList.remove("is-flare"); void guide.offsetWidth; guide.classList.add("is-flare"); }
   }
+  /* Share the Day Pass: after claiming, invite friends with the phone's share sheet, WhatsApp, X or a copied link.
+     The link carries utm_source=friend and the sharer's pass code, so the admin's "source" column shows who brought whom. */
+  const shareLink = (pass) => `${location.origin}${location.pathname}?utm_source=friend&utm_medium=share&utm_campaign=${encodeURIComponent(pass.code || "")}#ticket`;
+  const shareText = "I just claimed my free Day Pass to the Bvndle Rewards Festival, " + (cfg.shortDates || "11th – 12th Dec") + " at " + cfg.venue + ". Games, brands, rewards and a concert night. Get yours:";
+  function shareHTML(isNew) {
+    return `<div class="share" id="share">
+      <p class="share__t">${isNew ? "You've claimed your Day Pass! " : ""}Share it with your people.</p>
+      <p class="share__d">The Day Pass is free. Send the link so your friends can claim theirs.</p>
+      <div class="share__btns">
+        <button class="btn btn--sm share__native" type="button" data-share="native" hidden><i class="ph-bold ph-share-network" aria-hidden="true"></i> Share</button>
+        <a class="btn btn--sm share__wa" data-share="wa" target="_blank" rel="noopener"><i class="ph-bold ph-whatsapp-logo" aria-hidden="true"></i> WhatsApp</a>
+        <a class="btn btn--sm btn--ghost" data-share="x" target="_blank" rel="noopener"><i class="ph-bold ph-x-logo" aria-hidden="true"></i> X</a>
+        <button class="btn btn--sm btn--ghost" type="button" data-share="copy"><i class="ph-bold ph-link" aria-hidden="true"></i> <span>Copy link</span></button>
+      </div></div>`;
+  }
+  function bindShare(pass) {
+    const box = $("#share"); if (!box) return;
+    const link = shareLink(pass), track = (how) => (window.brfTrack || (() => {}))("pass_share", how);
+    $("[data-share=wa]", box).href = "https://wa.me/?text=" + encodeURIComponent(shareText + " " + link);
+    $("[data-share=x]", box).href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText) + "&url=" + encodeURIComponent(link);
+    const nat = $("[data-share=native]", box);
+    if (navigator.share) { nat.hidden = false; nat.addEventListener("click", () => { track("native"); navigator.share({ title: "Bvndle Rewards Festival Day Pass", text: shareText, url: link }).catch(() => {}); }); }
+    $("[data-share=wa]", box).addEventListener("click", () => track("whatsapp"));
+    $("[data-share=x]", box).addEventListener("click", () => track("x"));
+    $("[data-share=copy]", box).addEventListener("click", async (e) => {
+      const lab = $("span", e.currentTarget); track("copy");
+      try { await navigator.clipboard.writeText(link); lab.textContent = "Link copied"; } catch (err) { prompt("Copy this link", link); }
+      setTimeout(() => (lab.textContent = "Copy link"), 2500);
+    });
+  }
   function showPass(pass, isNew) {
     area.innerHTML = `
       <div class="gc yourpass" role="status" tabindex="-1" id="passCard">
@@ -623,9 +653,11 @@
         <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} in the draw</p>` : ""; })()}<p class="yourpass__entries" id="passCoins"></p>
         <p class="gc__big gc__big--r" aria-hidden="true">2026</p>
       </div>
+      ${shareHTML(isNew)}
       ${nudges(["play", "guess", "concert"], "Your day pass is set. What's next?")}
-      <button class="linkish" type="button" id="another">Get a ticket for someone else</button>`;
+      <button class="linkish" type="button" id="another">Get a pass for someone else</button>`;
     $("#passCard").focus({ preventScroll: true });
+    bindShare(pass);
     $("#another").addEventListener("click", () => { area.innerHTML = formHTML; bindForm($("#passForm")); $("#first").focus(); });
   }
   // server-side problems reuse the field's error line with a more specific message, restored on the next edit
@@ -699,7 +731,7 @@
     const mine = !!lsGet("brf-my-pass"), passed = js && js.getBoundingClientRect().bottom < innerHeight * 0.4;   // the zones have scrolled above mid-screen
     const state = mine ? "mine" : passed ? "ticket" : "explore";
     if (navB && navB.dataset.state === state) return;
-    const L = { explore: ["See the experience", "#journey", "ph-map-trifold"], ticket: ["Get Day Pass", "#ticket", "ph-arrow-right"], mine: ["My ticket", "#ticket", "ph-ticket"] }[state];
+    const L = { explore: ["See the experience", "#journey", "ph-map-trifold"], ticket: ["Get Day Pass", "#ticket", "ph-arrow-right"], mine: ["My passes", "#ticket", "ph-ticket"] }[state];
     [navB, barB].forEach((b) => { if (!b) return; b.dataset.state = state; b.href = L[1];
       b.innerHTML = b === navB ? (state === "mine" ? `<i class="ph-bold ${L[2]}" aria-hidden="true"></i> ${L[0]}` : L[0]) : `${L[0]} <i class="ph-bold ${L[2]}" aria-hidden="true"></i>`;
       b.classList.remove("is-swap"); void b.offsetWidth; b.classList.add("is-swap"); });
@@ -1009,7 +1041,7 @@
       wallet.hidden = false;
       wallet.innerHTML = `<div class="wallet__top"><p class="wallet__label">Your BvndleCoins</p><p class="wallet__total"><b>${n(w.earned)}</b> earned</p></div>
         <ul class="wallet__list">${rows}</ul>
-        <p class="wallet__note">Each game pays once per ticket. Collect your coins at the reward desk at the festival with your ticket code${Number(w.collected) ? ` &middot; ${n(w.collected)} collected` : ""}.</p>`;
+        <p class="wallet__note">Each game pays once per ticket. Collect your coins at the reward desk at the festival with your pass code${Number(w.collected) ? ` &middot; ${n(w.collected)} collected` : ""}.</p>`;
     }
     const pc = $("#passCoins"); if (pc) pc.textContent = Number(w.earned) ? `${n(w.earned)} BvndleCoins to collect at the festival` : "";
   }
@@ -1352,7 +1384,7 @@
         <h3>Play for entries and coins</h3><p>${ROUND} questions &middot; ${SECS} seconds each &middot; every right answer is a draw entry</p>
         <p class="quiz__best">You have <b>${plural(st.correct, "entry", "entries")}</b> and <b>${plural(st.coins_earned, "coin", "coins")}</b>. ${coinLine(st)}</p>
         <div class="quiz__ctas"><button class="btn" type="button" id="quizGo">Play ${ROUND} questions <i class="ph-bold ph-play" aria-hidden="true"></i></button><button class="btn btn--ghost" type="button" id="quizPractice">Practice <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div>
-        <p class="quiz__note">Each question can only be answered once, and the clock is checked on our side. Coins are collected at the festival with your ticket code.</p></div>`;
+        <p class="quiz__note">Each question can only be answered once, and the clock is checked on our side. Coins are collected at the festival with your pass code.</p></div>`;
       $("#quizGo").addEventListener("click", liveStart);
       $("#quizPractice").addEventListener("click", practiceStart);
     }

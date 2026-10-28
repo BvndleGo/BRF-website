@@ -74,7 +74,7 @@
         <div class="atile"><span>Checked in</span><b id="t-in">0</b></div>
       </div>
       <div class="admin-bar admin-bar--split">
-        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search sign-ups</span><input class="input" id="search" type="search" placeholder="Search name, email, phone, tag or ticket code"></label>
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search sign-ups</span><input class="input" id="search" type="search" placeholder="Search name, email, phone, tag or pass code"></label>
         <select class="input" id="filter" aria-label="Filter sign-ups">
           <option value="all">Everyone</option><option value="out">Not checked in</option><option value="in">Checked in</option><option value="tag">Has a Bvndle tag</option><option value="rewards">Has rewards</option>
         </select>
@@ -205,7 +205,7 @@
 
   /* ===================== Rewards: every BvndleCoin earned on the site, per person and per award =====================
      One award per person per activity (trivia: first 10 right answers = 5; Wealth zone walk = 2). Coins are handed
-     over at the festival reward desk: approve them here, then mark them collected at the desk (search the ticket code). */
+     over at the festival reward desk: approve them here, then mark them collected at the desk (search the pass code). */
   let awards = [], picked = new Set(), view = "people";
   const AW_COLS = "id,source,ref,coins,status,created_at,reviewed_at,collected_at,note,pass:free_passes(id,first_name,last_name,email,phone,bvndle_tag,pass_code)";
   const ACT = { trivia: "1 Million Questions", wealth_zone: "Wealth zone walk" };
@@ -217,7 +217,7 @@
     picked = new Set();
     root.innerHTML = `${tabs("coins")}
       <div class="admin-head">
-        <div><h1 class="display">Rewards</h1><p>Every BvndleCoin earned on the site. Each activity pays once per person. Approve coins here, then mark them collected at the festival reward desk (search the ticket code).</p></div>
+        <div><h1 class="display">Rewards</h1><p>Every BvndleCoin earned on the site. Each activity pays once per person. Approve coins here, then mark them collected at the festival reward desk (search the pass code).</p></div>
         <div class="admin-actions">
           <button class="btn btn--pink" id="coinExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Approved rewards (Excel)</button>
           <button class="btn btn--ghost" id="coinExport" type="button"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Export per person</button>
@@ -234,7 +234,7 @@
       </div>
       <div class="admin-bar admin-bar--split">
         <div class="admin-tabs admin-tabs--sub" role="tablist"><button type="button" data-view="people" class="${view === "people" ? "is-on" : ""}">By person</button><button type="button" data-view="awards" class="${view === "awards" ? "is-on" : ""}">All awards</button></div>
-        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search rewards</span><input class="input" id="coinSearch" type="search" placeholder="Search name, email, phone, tag or ticket code"></label>
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search rewards</span><input class="input" id="coinSearch" type="search" placeholder="Search name, email, phone, tag or pass code"></label>
         <select class="input" id="coinFilter" aria-label="Filter by status">
           <option value="all">All statuses</option><option value="pending">Waiting for approval</option><option value="approved">Approved, not collected</option><option value="collected">Collected</option><option value="rejected">Rejected</option>
         </select>

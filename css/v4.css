@@ -1231,3 +1231,14 @@ html[data-theme="light"] .spk__soon b { color: #111; }
 .spk__card b { font-size: 17px; }
 .spk__card span { color: var(--cloud-dim); font-size: 14px; }
 @media (max-width: 760px) { .spk__intro { grid-template-columns: 1fr; } .spk__tab { font-size: 14px; padding: 9px 14px; } }
+
+/* ===== Share your Day Pass (after claiming) ===== */
+.share { margin-top: 16px; padding: 18px; border-radius: 18px; background: #5b4bd6; color: #F3F0EB; border: 2px solid #F3F0EB; }
+.share__t { margin: 0; font: 800 19px/1.25 var(--font-body); }
+.share__d { margin: 6px 0 14px; font-size: 15px; color: #e4e0fb; }
+.share__btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.share .btn { text-decoration: none; }
+.share__wa { background: #25D366; color: #111; border-color: #111; }
+.share .btn--ghost { color: #F3F0EB; border-color: #F3F0EB; }
+html[data-theme="light"] .share .btn--ghost { color: #F3F0EB; border-color: #F3F0EB; background: transparent; }
+@media (max-width: 560px) { .share__btns .btn { flex: 1 1 calc(50% - 10px); justify-content: center; } }
