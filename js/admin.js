@@ -631,7 +631,7 @@
   /* ---------- Passport and QR activities for an event (passport.html on the site) ---------- */
   let evActs = [], evDone = [];
   const KIND = { quiz: "Quiz question", puzzle: "Word puzzle", staff: "Staff code" };
-  const siteBase = () => location.origin + location.pathname.replace(/admin\.html$/, "");
+  const siteBase = () => location.origin + location.pathname.replace(/[^/]*$/, "");   // folder of the admin page, whether opened as /admin or /admin.html
   const ppUrl = () => `${siteBase()}passport.html?e=${evCur.passport_key}`;
   const actUrl = (a) => `${siteBase()}passport.html?a=${a.key}`;
   async function qrLib() {
