@@ -12,7 +12,7 @@ window.BRF_TRIVIA = {
     { q: "Where do you cash in your coins?", a: ["At the gate", "At each zone's redemption booth", "Online after the event", "At the concert"], ok: 1, near: 3 },
     { q: "What gets stamped at every zone?", a: ["Your hand", "Your festival passport", "Your ticket", "Your phone"], ok: 1, near: 2 },
     { q: "Concert night is on…", a: ["11 December", "12 December", "24 December", "31 December"], ok: 1, near: 0 },
-    { q: "What does it cost to get on the festival floor?", a: ["Nothing: it's a free ticket", "₦5,000", "₦10,000", "A BvndleCoin"], ok: 0, near: 3 },
+    { q: "What does it cost to get on the festival floor?", a: ["Nothing: the Day Pass is free", "₦5,000", "₦10,000", "A BvndleCoin"], ok: 0, near: 3 },
     { q: "Who won 1 Million Questions at the 2025 festival?", a: ["Kahoot", "Bvndle", "Nobody", "The crowd"], ok: 0, near: 3 },
     { q: "Where do you find the silent disco?", a: ["Escape Zone", "Wealth Zone", "Connection Zone", "Adrenaline Zone"], ok: 0, near: 2 },
     { q: "In which zone do you spin the wheel?", a: ["Wealth Zone", "Creative / Alte Zone", "Escape Zone", "Adrenaline Zone"], ok: 0, near: 3 },

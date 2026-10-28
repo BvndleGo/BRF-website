@@ -617,7 +617,7 @@
   function showPass(pass, isNew) {
     area.innerHTML = `
       <div class="gc yourpass" role="status" tabindex="-1" id="passCard">
-        <p class="gc__label">${isNew ? "You're in." : "Welcome back."} Show this at the gate.</p><span class="gc__tag">FREE TICKET &middot; DAY PASS</span>
+        <p class="gc__label">${isNew ? "You're in." : "Welcome back."} Show this at the gate.</p><span class="gc__tag">DAY PASS</span>
         <p class="yourpass__name">${esc(pass.name)}</p>
         <div class="yourpass__meta"><span>${esc(cfg.datesLabel)}</span><span>${esc(cfg.venue)}</span>${pass.tag ? `<span>@${esc(pass.tag)}</span>` : ""}</div>
         <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} in the draw</p>` : ""; })()}<p class="yourpass__entries" id="passCoins"></p>
@@ -699,7 +699,7 @@
     const mine = !!lsGet("brf-my-pass"), passed = js && js.getBoundingClientRect().bottom < innerHeight * 0.4;   // the zones have scrolled above mid-screen
     const state = mine ? "mine" : passed ? "ticket" : "explore";
     if (navB && navB.dataset.state === state) return;
-    const L = { explore: ["See the experience", "#journey", "ph-map-trifold"], ticket: ["Get free ticket", "#ticket", "ph-arrow-right"], mine: ["My ticket", "#ticket", "ph-ticket"] }[state];
+    const L = { explore: ["See the experience", "#journey", "ph-map-trifold"], ticket: ["Get Day Pass", "#ticket", "ph-arrow-right"], mine: ["My ticket", "#ticket", "ph-ticket"] }[state];
     [navB, barB].forEach((b) => { if (!b) return; b.dataset.state = state; b.href = L[1];
       b.innerHTML = b === navB ? (state === "mine" ? `<i class="ph-bold ${L[2]}" aria-hidden="true"></i> ${L[0]}` : L[0]) : `${L[0]} <i class="ph-bold ${L[2]}" aria-hidden="true"></i>`;
       b.classList.remove("is-swap"); void b.offsetWidth; b.classList.add("is-swap"); });
@@ -1041,7 +1041,7 @@
       if (!cur.reward) return cur.id === "escape" ? `<p class="zx__q zx__q--seal"><i class="ph-bold ph-lock-simple" aria-hidden="true"></i> Sealed until you play. No spoilers.</p>` : `<p class="zx__q zx__q--plain">${cur.stations.length} stations</p>`;
       const total = cur.stations.length, k = cur.stations.filter((s) => seen.has(s.n)).length;
       if (lsGet(DONE) === "1") return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked. +${cur.reward.coins} BvndleCoins earned</p>`;
-      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! <a href="#ticket">Get your free ticket</a> to collect ${cur.reward.coins} BvndleCoins</p>`;
+      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! <a href="#ticket">Get your Day Pass</a> to collect ${cur.reward.coins} BvndleCoins</p>`;
       return `<p class="zx__q"><span class="zx__qbar" style="--p:${k / total}"></span><span><b>${k}/${total}</b> stations &middot; walk them all for ${cur.reward.coins} BvndleCoins</span></p>`;
     }
     const paint = () => { quest.innerHTML = questHTML(); };
@@ -1363,8 +1363,8 @@
       wantsToPlay = true; (window.brfTrack || (() => {}))("quiz_needs_ticket");
       quiz.innerHTML = `<div class="quiz__card quiz__card--start">
         <p class="quiz__big" aria-hidden="true"><i class="ph-bold ph-ticket"></i></p>
-        <h3>Your entries need a free ticket</h3><p>It's free and takes a minute. Your entries, coins and draw prizes are tied to it.</p>
-        <div class="quiz__ctas"><a class="btn" href="#ticket" id="quizClaim">Get my free ticket <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><button class="btn btn--ghost" type="button" id="quizPractice">Practice instead <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div></div>`;
+        <h3>Your entries need a Day Pass</h3><p>It's free and takes a minute. Your entries, coins and draw prizes are tied to it.</p>
+        <div class="quiz__ctas"><a class="btn" href="#ticket" id="quizClaim">Get my Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><button class="btn btn--ghost" type="button" id="quizPractice">Practice instead <i class="ph-bold ph-barbell" aria-hidden="true"></i></button></div></div>`;
       $("#quizPractice").addEventListener("click", practiceStart);
     }
     addEventListener("brf:claimed", () => {
