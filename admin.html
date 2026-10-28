@@ -54,6 +54,23 @@
     .evcoins { display: flex; gap: 6px; align-items: center; } .evcoins .input { width: 96px; }
     .cstatus--none { background: rgba(243,240,235,.08); color: #bdb7af; }
     .evtable td { vertical-align: middle; }
+    .evacts { border: 1px solid rgba(243,240,235,.16); border-radius: 18px; padding: 18px 20px; margin: 0 0 22px; }
+    .evacts h2 { margin: 0 0 4px; font-size: 17px; } .evacts .muted { margin: 0; font-size: 14px; }
+    .evacts__head { display: flex; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 16px; }
+    .evacts__live { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .evacts__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 16px; margin-bottom: 16px; }
+    .evpp { display: flex; gap: 16px; align-items: flex-start; padding: 14px; border-radius: 14px; background: rgba(243,240,235,.04); }
+    .evpp__qr { flex: none; width: 150px; background: #fff; border-radius: 10px; padding: 4px; } .evpp__qr svg { display: block; width: 100%; height: auto; }
+    .evpp__btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .evact { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: rgba(243,240,235,.04); }
+    .evact .field { display: grid; gap: 6px; margin: 0; } .evact .field > span { font-size: 13px; font-weight: 600; }
+    .evact__row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+    .evact__opts { display: grid; gap: 8px; } .evopt { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; } .evopt input[type=radio] { width: 18px; height: 18px; accent-color: #FF3E8E; }
+    .evact button[type=submit] { justify-self: start; }
+    .evact [hidden] { display: none !important; }
+    @media (max-width: 1000px) { .evacts__grid { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .evpp { flex-direction: column; } }
+    @media (max-width: 760px) { #evActList table, #evActList tbody, #evActList tr, #evActList td { display: block; width: auto; } #evActList thead { display: none; } #evActList tr { padding: 12px 0; border-bottom: 1px solid rgba(243,240,235,.12); } #evActList td { padding: 3px 0; border: 0; } #evActList td[data-l]::before { content: attr(data-l) ": "; opacity: .6; font-size: 12px; } #evActList td[data-l="Activity"]::before { content: none; } }
     @media (max-width: 1000px) { .evnew__row, .evnew__row--5 { grid-template-columns: 1fr 1fr; } .evadd__go { grid-column: 1 / -1; } }
     @media (max-width: 560px) { .evnew__row, .evnew__row--5 { grid-template-columns: 1fr; } }
     @media (max-width: 760px) { #evWrap table, #evWrap tbody, #evWrap tr, #evWrap td { display: block; width: auto; } #evWrap thead { display: none; } #evWrap tr { padding: 12px 14px; border-bottom: 1px solid rgba(243,240,235,.12); } #evWrap td { padding: 4px 0; border: 0; } #evWrap td::before { content: attr(data-l); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; opacity: .6; } #evWrap td[data-l="Name"]::before { display: none; } #evWrap .linkish { display: inline; width: auto; margin: 0 0 0 10px; } }
@@ -91,6 +108,6 @@
 <main class="admin wrap" id="admin"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/store.js?v=9"></script>
-<script src="js/admin.js?v=8"></script>
+<script src="js/admin.js?v=9"></script>
 </body>
 </html>

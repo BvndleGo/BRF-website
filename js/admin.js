@@ -518,6 +518,8 @@
      mark it paid. Rules live in the database (brf_event_attendees trigger): changing an amount needs approval again,
      paid rewards are locked. */
   let evList = [], evCur = null, evPeople = [];
+  // explicit columns: the passport token is not readable by admins (column grants in the database)
+  const ATT_COLS = "id,event_id,full_name,email,phone,bvndle_tag,checked_in_at,reward_coins,reward_status,reward_updated_at,reward_approved_at,reward_approved_by,reward_paid_at,note,created_at,source";
   const EV_STATUS = { none: "No reward", pending: "To approve", approved: "Approved", paid: "Paid" };
   const evErr = (e) => ({ reward_already_paid: "This reward has already been paid, so it can't be changed.", approve_first: "Approve the reward before marking it paid.", nothing_to_approve: "Enter a reward amount first." }[e?.message] || e?.message || "Something went wrong.");
 
@@ -590,6 +592,7 @@
         <div class="atile"><span>Coins approved, not paid</span><b id="ev-appr">0</b><small id="ev-notag"></small></div>
         <div class="atile"><span>Coins paid</span><b id="ev-paid">0</b></div>
       </div>
+      ${actsShell()}
       <form class="evnew" id="evAdd" novalidate>
         <h2>Register an attendee</h2>
         <div class="evnew__row evnew__row--5">
@@ -621,11 +624,171 @@
     $i("evWrap").addEventListener("click", onPeopleClick);
     $i("evWrap").addEventListener("keydown", (e) => { if (e.key === "Enter" && e.target.matches("[data-coins]")) { e.preventDefault(); saveCoins(e.target.dataset.coins); } });
     $i("evAdd").addEventListener("submit", addAttendee);
+    bindActs();
     await loadPeople();
   }
 
+  /* ---------- Passport and QR activities for an event (passport.html on the site) ---------- */
+  let evActs = [], evDone = [];
+  const KIND = { quiz: "Quiz question", puzzle: "Word puzzle", staff: "Staff code" };
+  const siteBase = () => location.origin + location.pathname.replace(/admin\.html$/, "");
+  const ppUrl = () => `${siteBase()}passport.html?e=${evCur.passport_key}`;
+  const actUrl = (a) => `${siteBase()}passport.html?a=${a.key}`;
+  async function qrLib() {
+    if (window.qrcode) return window.qrcode;
+    await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+    return window.qrcode;
+  }
+  async function qrSvg(text, px = 168) {
+    const q = (await qrLib())(0, "M"); q.addData(text); q.make();
+    const cell = Math.max(2, Math.floor(px / (q.getModuleCount() + 8)));
+    return q.createSvgTag({ cellSize: cell, margin: cell * 4, scalable: true });
+  }
+  // a print-ready PNG: QR code, then the title and what it's worth underneath
+  async function qrPng(text, title, sub) {
+    const q = (await qrLib())(0, "M"); q.addData(text); q.make();
+    const m = q.getModuleCount(), cell = 20, quiet = 4, W = (m + quiet * 2) * cell, H = W + 230;
+    const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+    x.fillStyle = "#fff"; x.fillRect(0, 0, W, H); x.fillStyle = "#111";
+    for (let r = 0; r < m; r++) for (let k = 0; k < m; k++) if (q.isDark(r, k)) x.fillRect((k + quiet) * cell, (r + quiet) * cell, cell, cell);
+    x.textAlign = "center"; x.fillStyle = "#111";
+    x.font = "800 64px Inter Tight, Arial, sans-serif"; x.fillText(title.length > 30 ? title.slice(0, 29) + "…" : title, W / 2, W + 70);
+    x.font = "600 44px Inter Tight, Arial, sans-serif"; x.fillStyle = "#5b4bd6"; x.fillText(sub, W / 2, W + 140);
+    x.font = "500 30px Inter Tight, Arial, sans-serif"; x.fillStyle = "#666"; x.fillText("Scan with your phone camera", W / 2, W + 195);
+    return c.toDataURL("image/png");
+  }
+  const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "qr";
+  async function downloadQr(text, title, sub) {
+    const a = document.createElement("a"); a.href = await qrPng(text, title, sub); a.download = `qr-${slugify(title)}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function actsShell() {
+    return `<section class="evacts" id="evActs">
+      <div class="evacts__head"><div><h2>Passport and QR activities</h2><p class="muted">People scan the passport QR to get a digital passport, then scan activity QR codes to earn coins. Coins land in the attendee list below.</p></div>
+        <div class="evacts__live"><span id="evLiveState"></span><button class="btn btn--sm" type="button" id="evLive"></button></div></div>
+      <div class="evacts__grid">
+        <div class="evpp"><div class="evpp__qr" id="evPpQr"></div><div><b>Passport QR</b><p class="muted">Print this at the entrance.</p>
+          <div class="evpp__btns"><button class="btn btn--sm btn--ghost" type="button" id="evPpPng"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Download</button><button class="btn btn--sm btn--ghost" type="button" id="evPpCopy"><i class="ph-bold ph-link" aria-hidden="true"></i> Copy link</button><button class="btn btn--sm btn--ghost" type="button" id="evPrint"><i class="ph-bold ph-printer" aria-hidden="true"></i> Print all QR codes</button></div></div></div>
+        <form class="evact" id="evActForm" novalidate>
+          <b>New activity</b>
+          <div class="evact__row">
+            <label class="field"><span>Type</span><select class="input" name="kind"><option value="quiz">Quiz question</option><option value="puzzle">Word puzzle</option><option value="staff">Staff code</option></select></label>
+            <label class="field"><span>Coins</span><input class="input" name="coins" type="number" min="1" step="1" value="2" required></label>
+          </div>
+          <label class="field"><span>Title (on the QR and the passport)</span><input class="input" name="title" maxlength="80" required placeholder="e.g. Money trivia"></label>
+          <label class="field"><span data-k="prompt">Question</span><input class="input" name="prompt" maxlength="240"></label>
+          <div data-for="quiz" class="evact__opts">
+            ${[0, 1, 2, 3].map((i) => `<label class="evopt"><input type="radio" name="correct" value="${i}" ${i === 0 ? "checked" : ""} aria-label="Correct answer"><input class="input" name="opt${i}" maxlength="120" placeholder="Answer ${i + 1}${i > 1 ? " (optional)" : ""}"></label>`).join("")}
+            <p class="muted">Tick the correct answer. One attempt per person.</p>
+          </div>
+          <label class="field" data-for="puzzle" hidden><span>Word to spell (2 to 16 letters)</span><input class="input" name="word" maxlength="16" placeholder="BVNDLE" autocapitalize="characters"></label>
+          <label class="field" data-for="staff" hidden><span>Staff code (3 to 12 characters, give it to the booth staff)</span><input class="input" name="pin" maxlength="12" placeholder="e.g. 4821"></label>
+          <p class="evmsg" id="evActMsg" role="status"></p>
+          <button class="btn btn--pink btn--sm" type="submit"><i class="ph-bold ph-plus" aria-hidden="true"></i> Add activity</button>
+        </form>
+      </div>
+      <div class="table-wrap" id="evActList"></div>
+    </section>`;
+  }
+  function bindActs() {
+    const f = document.getElementById("evActForm");
+    const syncKind = () => {
+      const k = f.kind.value;
+      f.querySelectorAll("[data-for]").forEach((el) => (el.hidden = el.dataset.for !== k));
+      f.querySelector("[data-k=prompt]").textContent = k === "quiz" ? "Question" : k === "puzzle" ? "Hint (optional)" : "What to do (optional)";
+    };
+    f.kind.addEventListener("change", syncKind); syncKind();
+    f.addEventListener("submit", addActivity);
+    document.getElementById("evLive").addEventListener("click", toggleLive);
+    document.getElementById("evPpPng").addEventListener("click", () => downloadQr(ppUrl(), `${evCur.name}`, "Get your Bvndle passport"));
+    document.getElementById("evPpCopy").addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(ppUrl()); e.currentTarget.textContent = "Copied"; } catch (err) { prompt("Passport link", ppUrl()); } });
+    document.getElementById("evPrint").addEventListener("click", printSheet);
+    document.getElementById("evActList").addEventListener("click", onActClick);
+    paintLive();
+    qrSvg(ppUrl(), 150).then((svg) => (document.getElementById("evPpQr").innerHTML = svg)).catch(() => {});
+    loadActs();
+  }
+  function paintLive() {
+    document.getElementById("evLiveState").innerHTML = evCur.live ? `<span class="cstatus cstatus--approved">Live: activities accept scans</span>` : `<span class="cstatus cstatus--none">Not live: activities are closed</span>`;
+    const b = document.getElementById("evLive"); b.textContent = evCur.live ? "Close activities" : "Go live"; b.classList.toggle("btn--pink", !evCur.live); b.classList.toggle("btn--ghost", evCur.live);
+  }
+  async function toggleLive() {
+    if (evCur.live && !confirm("Close activities? Nobody will be able to earn coins until you go live again.")) return;
+    const { data, error } = await sb.from("brf_events").update({ live: !evCur.live }).eq("id", evCur.id).select().single();
+    if (error) return alert("Couldn't update: " + error.message);
+    evCur = data; paintLive();
+  }
+  async function loadActs() {
+    const { data, error } = await sb.from("brf_event_activities").select("*").eq("event_id", evCur.id).order("sort").order("created_at");
+    if (error) { document.getElementById("evActList").innerHTML = `<div class="empty"><p>Couldn't load activities: ${esc(error.message)}</p></div>`; return; }
+    evActs = data;
+    const ids = evActs.map((a) => a.id);
+    evDone = ids.length ? ((await sb.from("brf_activity_done").select("activity_id,correct,coins").in("activity_id", ids)).data || []) : [];
+    renderActs();
+  }
+  function renderActs() {
+    const wrap = document.getElementById("evActList");
+    if (!evActs.length) { wrap.innerHTML = `<div class="empty"><p>No activities yet. Add one above; each gets its own QR code.</p></div>`; return; }
+    wrap.innerHTML = `<table><thead><tr><th>Activity</th><th>Type</th><th>Coins</th><th>Answer</th><th>Done</th><th>Status</th><th></th></tr></thead><tbody>${evActs.map((a) => {
+      const d = evDone.filter((x) => x.activity_id === a.id), won = d.filter((x) => x.correct).length;
+      const ans = a.kind === "quiz" ? esc((a.options || [])[a.correct] || "") : a.kind === "puzzle" ? esc(a.word) : `PIN ${esc(a.pin)}`;
+      return `<tr><td data-l="Activity"><b>${esc(a.title)}</b>${a.prompt ? `<br><span class="muted">${esc(a.prompt)}</span>` : ""}</td><td data-l="Type">${KIND[a.kind]}</td><td data-l="Coins" class="code">${a.coins}</td><td data-l="Answer">${ans}</td>
+        <td data-l="Done">${d.length}${a.kind === "quiz" ? ` <span class="muted">(${won} right)</span>` : ""}</td>
+        <td data-l="Status"><button class="linkish" type="button" data-act-toggle="${a.id}">${a.active ? "Open" : "Closed"}</button></td>
+        <td><button class="btn btn--sm btn--ghost" type="button" data-act-qr="${a.id}"><i class="ph-bold ph-qr-code" aria-hidden="true"></i> QR</button> <button class="linkish" type="button" data-act-del="${a.id}">Delete</button></td></tr>`;
+    }).join("")}</tbody></table>`;
+  }
+  async function addActivity(e) {
+    e.preventDefault();
+    const f = e.target, msg = document.getElementById("evActMsg"), kind = f.kind.value;
+    const row = { event_id: evCur.id, kind, title: f.title.value.trim(), prompt: f.prompt.value.trim() || null, coins: Math.floor(Number(f.coins.value)), sort: evActs.length };
+    if (row.title.length < 2) return (msg.textContent = "Give the activity a title.");
+    if (!(row.coins > 0)) return (msg.textContent = "Coins must be 1 or more.");
+    if (kind === "quiz") {
+      if (!row.prompt) return (msg.textContent = "Add the question.");
+      const opts = [0, 1, 2, 3].map((i) => f["opt" + i].value.trim()), c = +f.querySelector("[name=correct]:checked").value;
+      if (!opts[c]) return (msg.textContent = "The ticked correct answer is empty.");
+      const kept = opts.map((o, i) => ({ o, i })).filter((x) => x.o);
+      if (kept.length < 2) return (msg.textContent = "Add at least two answers.");
+      row.options = kept.map((x) => x.o); row.correct = kept.findIndex((x) => x.i === c);
+    }
+    if (kind === "puzzle") { row.word = f.word.value.replace(/\s/g, "").toUpperCase(); if (row.word.length < 2 || row.word.length > 16) return (msg.textContent = "The word needs 2 to 16 letters."); }
+    if (kind === "staff") { row.pin = f.pin.value.trim(); if (row.pin.length < 3) return (msg.textContent = "The staff code needs at least 3 characters."); }
+    const { data, error } = await sb.from("brf_event_activities").insert(row).select().single();
+    if (error) return (msg.textContent = "Couldn't add: " + error.message);
+    evActs.push(data); renderActs();
+    msg.textContent = `"${data.title}" added. Download its QR code from the list.`;
+    const k = f.kind.value; f.reset(); f.kind.value = k; f.coins.value = row.coins; f.dispatchEvent(new Event("change")); f.kind.dispatchEvent(new Event("change"));
+  }
+  async function onActClick(e) {
+    const b = e.target.closest("button"); if (!b) return;
+    const a = evActs.find((x) => x.id === (b.dataset.actQr || b.dataset.actToggle || b.dataset.actDel)); if (!a) return;
+    if (b.dataset.actQr) downloadQr(actUrl(a), a.title, `Earn ${a.coins} Bvndle coins`);
+    if (b.dataset.actToggle) {
+      const { data, error } = await sb.from("brf_event_activities").update({ active: !a.active }).eq("id", a.id).select().single();
+      if (error) return alert("Couldn't update: " + error.message);
+      evActs = evActs.map((x) => (x.id === a.id ? data : x)); renderActs();
+    }
+    if (b.dataset.actDel) {
+      const used = evDone.some((x) => x.activity_id === a.id);
+      if (!confirm(used ? `People have already done "${a.title}". Deleting it removes it from their passports, but coins they earned stay. Close it instead?\n\nOK deletes, Cancel keeps it.` : `Delete "${a.title}"? Its printed QR code will stop working.`)) return;
+      const { error } = await sb.from("brf_event_activities").delete().eq("id", a.id);
+      if (error) return alert("Couldn't delete: " + error.message);
+      evActs = evActs.filter((x) => x.id !== a.id); renderActs();
+    }
+  }
+  // one printable page: the passport QR and every open activity, two per row
+  async function printSheet() {
+    const items = [{ t: evCur.name, s: "Get your Bvndle passport", u: ppUrl() }].concat(evActs.filter((a) => a.active).map((a) => ({ t: a.title, s: `Earn ${a.coins} Bvndle coins`, u: actUrl(a) })));
+    const imgs = await Promise.all(items.map((it) => qrPng(it.u, it.t, it.s)));
+    const w = open("", "_blank"); if (!w) return alert("Allow pop-ups to print the QR sheet.");
+    w.document.write(`<!doctype html><title>QR codes: ${esc(evCur.name)}</title><style>body{margin:0;font-family:Arial,sans-serif}.g{display:grid;grid-template-columns:1fr 1fr;gap:10mm;padding:10mm}.g img{width:100%;border:1px solid #ddd;break-inside:avoid}@media print{.p{display:none}}</style><p class="p" style="padding:10px 10mm">Print this page (Ctrl/Cmd + P). Each code opens on the person's phone.</p><div class="g">${imgs.map((src) => `<img src="${src}" alt="">`).join("")}</div>`);
+    w.document.close();
+  }
+
   async function loadPeople() {
-    const { data, error } = await sb.from("brf_event_attendees").select("*").eq("event_id", evCur.id).order("created_at", { ascending: false });
+    const { data, error } = await sb.from("brf_event_attendees").select(ATT_COLS).eq("event_id", evCur.id).order("created_at", { ascending: false });
     if (error) { document.getElementById("evWrap").innerHTML = `<div class="empty"><p>Couldn't load attendees: ${esc(error.message)}</p></div>`; return; }
     evPeople = data; renderPeople();
   }
@@ -650,7 +813,7 @@
     document.getElementById("evApproveAll").disabled = !rows.some((p) => p.reward_status === "pending");
     if (!evPeople.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-users-three" aria-hidden="true"></i><h2 class="display">No attendees yet</h2><p>Register people above as they arrive.</p></div>`; return; }
     wrap.innerHTML = `<table class="evtable"><thead><tr><th>Name</th><th>Contact</th><th>Bvndle tag</th><th>Check-in</th><th>Booklet coins</th><th>Reward</th></tr></thead><tbody>${rows.length ? rows.map((p) => `<tr data-row="${p.id}">
-      <td data-l="Name"><b>${esc(p.full_name)}</b></td>
+      <td data-l="Name"><b>${esc(p.full_name)}</b>${p.source === "passport" ? ` <span class="cstatus cstatus--none" title="Signed up with the passport QR">Passport</span>` : ""}</td>
       <td data-l="Contact">${esc(p.email || "")}<br><span class="muted">${esc(p.phone ? window.formatNgPhone(p.phone) : "")}</span></td>
       <td data-l="Bvndle tag">${p.bvndle_tag ? `@${esc(p.bvndle_tag)} <button class="linkish" type="button" data-tag="${p.id}">Edit</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-tag="${p.id}"><i class="ph-bold ph-plus" aria-hidden="true"></i> Add tag</button>`}</td>
       <td data-l="Check-in">${p.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(p.checked_in_at))}</span> <button class="linkish" type="button" data-out="${p.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-in="${p.id}">Check in</button>`}</td>
@@ -670,14 +833,14 @@
     if (row.phone.replace(/\D/g, "").length < 10) return (msg.textContent = "Add a valid phone number.");
     const dup = evPeople.find((p) => (p.email && p.email === row.email) || (p.phone && p.phone === row.phone));
     if (dup && !confirm(`${dup.full_name} is already registered with this email or phone. Add anyway?`)) return;
-    const { data, error } = await sb.from("brf_event_attendees").insert(row).select().single();
+    const { data, error } = await sb.from("brf_event_attendees").insert(row).select(ATT_COLS).single();
     if (error) return (msg.textContent = "Couldn't add: " + evErr(error));
     evPeople.unshift(data); form.reset(); form.querySelector("[name=checkin]").checked = true; form.querySelector("[name=full_name]").focus();
     msg.textContent = `${data.full_name} added${data.checked_in_at ? " and checked in" : ""}.`;
     renderPeople();
   }
   async function patchPerson(id, patch) {
-    const { data, error } = await sb.from("brf_event_attendees").update(patch).eq("id", id).select().single();
+    const { data, error } = await sb.from("brf_event_attendees").update(patch).eq("id", id).select(ATT_COLS).single();
     if (error) { alert(evErr(error)); return null; }
     evPeople = evPeople.map((p) => (p.id === id ? data : p)); renderPeople(); return data;
   }
