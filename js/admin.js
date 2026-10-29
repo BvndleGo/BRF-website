@@ -12,9 +12,10 @@
       <button type="button" data-tab="coins" class="${on === "coins" ? "is-on" : ""}">Rewards</button>
       <button type="button" data-tab="partners" class="${on === "partners" ? "is-on" : ""}">Partners</button>
       <button type="button" data-tab="events" class="${on === "events" ? "is-on" : ""}">Events</button>
+      <button type="button" data-tab="ptickets" class="${on === "ptickets" ? "is-on" : ""}">Partner tickets</button>
       <button type="button" data-tab="analytics" class="${on === "analytics" ? "is-on" : ""}">Analytics</button></nav>`;
   function bindTabs() {
-    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "events" ? renderEvents() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
+    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "events" ? renderEvents() : b.dataset.tab === "ptickets" ? renderPartnerTickets() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
   }
 
   function renderLogin(msg) {
@@ -891,6 +892,137 @@
       X.writeFile(wb, `${slug}-approved-rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (e) { alert("Couldn't build the Excel file. Check your connection and try again."); }
     btn.disabled = false;
+  }
+
+  /* ===================== Partner tickets: numbered ticket blocks issued to partners (e.g. Vbank, BRFV-20025 …) =====================
+     Create a partner with its code start (BRF + letter + dash), then allocate a block of serial numbers and a ticket type.
+     Serials are unique across all partners (the database refuses overlaps). Check codes in at the gate; export per partner. */
+  let tpPartners = [], tpTickets = [];
+  const TP_TYPES = ["Day Pass", "Concert · Early Bird", "Concert · Regular", "Concert · Individual VIP", "Concert · Individual Premium", "Concert · VIP Table for 10", "Concert · Premium Table for 5", "Concert · Premium Table for 10"];
+  const tpErr = (e) => { const m = e?.message || ""; if (m.startsWith("serials_taken:")) return m.slice(14) + ". Pick a different range."; return ({ bad_range: "The end number must be the same as or higher than the start.", range_too_big: "Allocate at most 5,000 tickets at a time.", missing_type: "Choose a ticket type." }[m]) || (/duplicate key.*prefix/.test(m) ? "Another partner already uses that code start." : m || "Something went wrong."); };
+  async function renderPartnerTickets() {
+    root.innerHTML = `${tabs("ptickets")}
+      <div class="admin-head">
+        <div><h1 class="display">Partner tickets</h1><p>Issue numbered tickets to partners. Each partner has its own code start (e.g. <b>BRFV-</b> for Vbank) and gets a block of ticket numbers. No number can be given to two partners.</p></div>
+        <div class="admin-actions"><button class="btn btn--ghost" id="tpRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button><button class="btn btn--ghost" id="signOut" type="button">Sign out</button></div>
+      </div>
+      <div class="admin-tiles admin-tiles--4">
+        <div class="atile atile--glare"><span>Tickets issued</span><b id="tp-n">0</b></div>
+        <div class="atile"><span>Partners</span><b id="tp-p">0</b></div>
+        <div class="atile"><span>Checked in</span><b id="tp-in">0</b></div>
+        <div class="atile"><span>Next free number</span><b id="tp-next">–</b></div>
+      </div>
+      <div class="tpforms">
+        <form class="evnew" id="tpNew" novalidate><h2>New partner</h2>
+          <div class="evnew__row evnew__row--tp">
+            <label class="field"><span>Partner name</span><input class="input" name="name" maxlength="80" required placeholder="e.g. Vbank"></label>
+            <label class="field"><span>Code start</span><input class="input" name="prefix" maxlength="13" required placeholder="BRFV-" autocapitalize="characters"></label>
+            <label class="field"><span>Contact <small>(optional)</small></span><input class="input" name="contact" maxlength="120" placeholder="Name, email or phone"></label>
+            <button class="btn btn--pink" type="submit"><i class="ph-bold ph-plus" aria-hidden="true"></i> Add partner</button>
+          </div><p class="evmsg" id="tpNewMsg" role="status"></p></form>
+        <form class="evnew" id="tpAlloc" novalidate><h2>Allocate tickets</h2>
+          <div class="evnew__row evnew__row--tp2">
+            <label class="field"><span>Partner</span><select class="input" name="partner" required></select></label>
+            <label class="field"><span>Ticket type</span><select class="input" name="type">${TP_TYPES.map((t) => `<option>${esc(t)}</option>`).join("")}</select></label>
+            <label class="field"><span>From number</span><input class="input" name="from" type="number" min="1" step="1" required></label>
+            <label class="field"><span>To number</span><input class="input" name="to" type="number" min="1" step="1" required></label>
+            <button class="btn btn--pink" type="submit"><i class="ph-bold ph-ticket" aria-hidden="true"></i> Allocate</button>
+          </div><p class="evmsg" id="tpAllocMsg" role="status"></p></form>
+      </div>
+      <div id="tpList"><div class="empty"><p>Loading...</p></div></div>
+      <div class="admin-bar admin-bar--split">
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search ticket codes</span><input class="input" id="tpSearch" type="search" placeholder="Search a ticket code (e.g. BRFV-20031), partner or name"></label>
+        <select class="input" id="tpFilter" aria-label="Filter"><option value="">All partners</option></select>
+      </div>
+      <div class="table-wrap" id="tpWrap"></div>`;
+    bindTabs();
+    const $i = (x) => document.getElementById(x);
+    $i("signOut").addEventListener("click", signOut);
+    $i("tpRefresh").addEventListener("click", loadPT);
+    $i("tpSearch").addEventListener("input", renderTP);
+    $i("tpFilter").addEventListener("change", renderTP);
+    $i("tpWrap").addEventListener("click", onTPClick);
+    $i("tpList").addEventListener("click", (e) => { const b = e.target.closest("[data-tp-export]"); if (b) exportPartnerTickets(b.dataset.tpExport); });
+    const nf = $i("tpNew");
+    nf.name.addEventListener("input", () => { if (!nf.prefix.dataset.touched) nf.prefix.value = nf.name.value.trim() ? "BRF" + nf.name.value.trim()[0].toUpperCase() + "-" : ""; });
+    nf.prefix.addEventListener("input", () => (nf.prefix.dataset.touched = "1"));
+    nf.addEventListener("submit", async (e) => {
+      e.preventDefault(); const msg = $i("tpNewMsg");
+      let prefix = nf.prefix.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, ""); if (prefix && !prefix.endsWith("-")) prefix += "-";
+      if (nf.name.value.trim().length < 2) return (msg.textContent = "Add the partner's name.");
+      if (!/^[A-Z0-9]{2,12}-$/.test(prefix)) return (msg.textContent = "Code start must be 2 to 12 letters or numbers followed by a dash, e.g. BRFV-.");
+      const { error } = await sb.from("brf_ticket_partners").insert({ name: nf.name.value.trim(), prefix, contact: nf.contact.value.trim() || null });
+      if (error) return (msg.textContent = "Couldn't add: " + tpErr(error));
+      msg.textContent = `${nf.name.value.trim()} added with code start ${prefix}`; nf.reset(); delete nf.prefix.dataset.touched; loadPT();
+    });
+    const af = $i("tpAlloc");
+    const syncCount = () => { const a = +af.from.value, b = +af.to.value, p = tpPartners.find((x) => x.id === af.partner.value); $i("tpAllocMsg").textContent = a && b && b >= a && p ? `${(b - a + 1).toLocaleString("en-NG")} tickets: ${p.prefix}${a} to ${p.prefix}${b}` : ""; };
+    ["input", "change"].forEach((ev) => af.addEventListener(ev, syncCount));
+    af.addEventListener("submit", async (e) => {
+      e.preventDefault(); const msg = $i("tpAllocMsg"), a = Math.floor(+af.from.value), b = Math.floor(+af.to.value);
+      if (!af.partner.value) return (msg.textContent = "Add a partner first.");
+      if (!a || !b) return (msg.textContent = "Enter the first and last ticket numbers.");
+      const p = tpPartners.find((x) => x.id === af.partner.value);
+      if (!confirm(`Give ${p.name} ${b - a + 1} ${af.type.value} tickets, ${p.prefix}${a} to ${p.prefix}${b}?`)) return;
+      const { data, error } = await sb.rpc("admin_allocate_partner_tickets", { p_partner: p.id, p_from: a, p_to: b, p_type: af.type.value });
+      if (error) return (msg.textContent = tpErr(error));
+      msg.textContent = `Done: ${data.allocated} tickets, ${data.from} to ${data.to}.`; af.from.value = ""; af.to.value = ""; loadPT();
+    });
+    loadPT();
+  }
+  async function loadPT() {
+    const [{ data: ps, error }, tk] = await Promise.all([sb.from("brf_ticket_partners").select("*").order("created_at"), (async () => { const out = []; for (let f = 0; ; f += 1000) { const { data, error } = await sb.from("brf_partner_tickets").select("*").order("serial").range(f, f + 999); if (error || !data) break; out.push(...data); if (data.length < 1000) break; } return out; })()]);
+    if (error) { document.getElementById("tpList").innerHTML = `<div class="empty"><p>Couldn't load partners: ${esc(error.message)}</p></div>`; return; }
+    tpPartners = ps; tpTickets = tk;
+    const af = document.getElementById("tpAlloc"), keep = af.partner.value;
+    af.partner.innerHTML = tpPartners.length ? tpPartners.map((p) => `<option value="${p.id}">${esc(p.name)} (${esc(p.prefix)})</option>`).join("") : `<option value="">Add a partner first</option>`;
+    if (keep) af.partner.value = keep;
+    const fl = document.getElementById("tpFilter"), fk = fl.value;
+    fl.innerHTML = `<option value="">All partners</option>` + tpPartners.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join(""); fl.value = fk;
+    renderTP();
+  }
+  // contiguous blocks of serials, e.g. 20025–20045, for the partner cards
+  const tpRanges = (list) => { const r = []; list.forEach((t) => { const l = r[r.length - 1]; if (l && t.serial === l.to + 1 && t.ticket_type === l.type) l.to = t.serial; else r.push({ from: t.serial, to: t.serial, type: t.ticket_type }); }); return r; };
+  function renderTP() {
+    const n = (x) => x.toLocaleString("en-NG"), set = (i, v) => (document.getElementById(i).textContent = v);
+    set("tp-n", n(tpTickets.length)); set("tp-p", n(tpPartners.length)); set("tp-in", n(tpTickets.filter((t) => t.checked_in_at).length));
+    set("tp-next", tpTickets.length ? String(Math.max(...tpTickets.map((t) => t.serial)) + 1) : "–");
+    document.getElementById("tpList").innerHTML = tpPartners.length ? `<div class="evgrid">${tpPartners.map((p) => {
+      const mine = tpTickets.filter((t) => t.partner_id === p.id), rs = tpRanges(mine);
+      return `<div class="evcard tpcard"><b>${esc(p.name)} <span class="tag">${esc(p.prefix)}</span></b>${p.contact ? `<span class="muted">${esc(p.contact)}</span>` : ""}
+        <span class="evcard__stats"><span><b>${n(mine.length)}</b> tickets</span><span><b>${n(mine.filter((t) => t.checked_in_at).length)}</b> checked in</span></span>
+        ${rs.length ? `<ul class="tpranges">${rs.map((r) => `<li><span class="code">${esc(p.prefix)}${r.from}${r.to !== r.from ? ` – ${esc(p.prefix)}${r.to}` : ""}</span> <span class="muted">${n(r.to - r.from + 1)} · ${esc(r.type)}</span></li>`).join("")}</ul>` : `<span class="muted">No tickets allocated yet.</span>`}
+        ${mine.length ? `<button class="btn btn--sm btn--ghost" type="button" data-tp-export="${p.id}"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Ticket list (Excel)</button>` : ""}</div>`;
+    }).join("")}</div>` : `<div class="empty"><i class="ph-duotone ph-handshake" aria-hidden="true"></i><h2 class="display">No partners yet</h2><p>Add a partner above, then allocate their ticket numbers.</p></div>`;
+    const q = document.getElementById("tpSearch").value.trim().toUpperCase(), f = document.getElementById("tpFilter").value, wrap = document.getElementById("tpWrap");
+    if (!q && !f) { wrap.innerHTML = tpTickets.length ? `<div class="empty"><p>Search a ticket code or pick a partner to see and check in tickets.</p></div>` : ""; return; }
+    const pn = (id) => tpPartners.find((p) => p.id === id) || {};
+    const rows = tpTickets.filter((t) => (!f || t.partner_id === f) && (!q || t.code.includes(q) || String(t.serial).includes(q) || (pn(t.partner_id).name || "").toUpperCase().includes(q) || (t.issued_to || "").toUpperCase().includes(q))).slice(0, 300);
+    wrap.innerHTML = `<table><thead><tr><th>Ticket code</th><th>Partner</th><th>Type</th><th>Issued to</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
+      <td class="code">${esc(t.code)}</td><td>${esc(pn(t.partner_id).name || "")}</td><td>${esc(t.ticket_type)}</td>
+      <td>${t.issued_to ? esc(t.issued_to) + " " : ""}<button class="linkish" type="button" data-tp-name="${t.id}">${t.issued_to ? "Edit" : "Add name"}</button></td>
+      <td>${t.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(t.checked_in_at))}</span> <button class="linkish" type="button" data-tp-out="${t.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-tp-in="${t.id}">Check in</button>`}</td></tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>${rows.length === 300 ? `<p class="muted">Showing the first 300. Search to narrow down.</p>` : ""}`;
+  }
+  async function onTPClick(e) {
+    const b = e.target.closest("button"); if (!b) return;
+    const id = b.dataset.tpIn || b.dataset.tpOut || b.dataset.tpName; if (!id) return;
+    let patch;
+    if (b.dataset.tpIn) patch = { checked_in_at: new Date().toISOString(), checked_in_by: me.id };
+    if (b.dataset.tpOut) patch = { checked_in_at: null, checked_in_by: null };
+    if (b.dataset.tpName) { const t = tpTickets.find((x) => x.id === id), v = prompt(`Who is ${t.code} for?`, t.issued_to || ""); if (v === null) return; patch = { issued_to: v.trim() || null }; }
+    const { data, error } = await sb.from("brf_partner_tickets").update(patch).eq("id", id).select().single();
+    if (error) return alert("Couldn't update: " + error.message);
+    tpTickets = tpTickets.map((t) => (t.id === id ? data : t)); renderTP();
+  }
+  async function exportPartnerTickets(pid) {
+    const p = tpPartners.find((x) => x.id === pid), list = tpTickets.filter((t) => t.partner_id === pid);
+    try {
+      if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+      const X = window.XLSX, rows = list.map((t) => ({ "Ticket code": t.code, "Ticket number": t.serial, Type: t.ticket_type, "Issued to": t.issued_to || "", "Checked in": t.checked_in_at ? new Date(t.checked_in_at) : "" }));
+      const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 16 }, { wch: 14 }, { wch: 28 }, { wch: 28 }, { wch: 20 }];
+      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Tickets");
+      X.writeFile(wb, `${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brf-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) { alert("Couldn't build the Excel file. Check your connection and try again."); }
   }
 
   /* ===================== Analytics: visits, what people do, where they leave ===================== */

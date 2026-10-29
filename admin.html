@@ -18,7 +18,7 @@
   <style>:root { --night: #111; } body { background: #111; } .nav__logo img { filter: none; }
     .admin-tiles--4 { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
     .admin-bar--split { display: flex; gap: 12px; flex-wrap: wrap; } .admin-bar--split .affix { flex: 1 1 320px; } .admin-bar--split select { flex: 0 0 auto; width: auto; }
-    .admin-tabs { display: flex; gap: 8px; margin: 0 0 24px; }
+    .admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; }
     .admin-tabs button { font: 600 15px/1 var(--font-body, inherit); padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(243,240,235,.25); background: transparent; color: inherit; cursor: pointer; }
     .admin-tabs button.is-on { background: #F3F0EB; color: #111; border-color: #F3F0EB; }
     .cstatus { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
@@ -68,6 +68,12 @@
     .evact__opts { display: grid; gap: 8px; } .evopt { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; } .evopt input[type=radio] { width: 18px; height: 18px; accent-color: #FF3E8E; }
     .evact button[type=submit] { justify-self: start; }
     .evact [hidden] { display: none !important; }
+    .evnew__row--tp { grid-template-columns: 1.4fr 1fr 1.6fr auto; } .evnew__row--tp2 { grid-template-columns: 1.4fr 1.6fr 1fr 1fr auto; }
+    .tpforms { display: grid; grid-template-columns: 1fr; gap: 0; }
+    .tpcard { cursor: default; } .tpcard .tag { font: 500 12px/1.3 ui-monospace, Menlo, monospace; padding: 2px 6px; border-radius: 6px; background: rgba(243,240,235,.1); margin-left: 6px; }
+    .tpranges { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; } .tpcard .btn { justify-self: start; }
+    #tpList { margin-bottom: 22px; }
+    @media (max-width: 1000px) { .evnew__row--tp, .evnew__row--tp2 { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 1000px) { .evacts__grid { grid-template-columns: 1fr; } }
     @media (max-width: 560px) { .evpp { flex-direction: column; } }
     @media (max-width: 760px) { #evActList table, #evActList tbody, #evActList tr, #evActList td { display: block; width: auto; } #evActList thead { display: none; } #evActList tr { padding: 12px 0; border-bottom: 1px solid rgba(243,240,235,.12); } #evActList td { padding: 3px 0; border: 0; } #evActList td[data-l]::before { content: attr(data-l) ": "; opacity: .6; font-size: 12px; } #evActList td[data-l="Activity"]::before { content: none; } }
@@ -108,6 +114,6 @@
 <main class="admin wrap" id="admin"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/store.js?v=9"></script>
-<script src="js/admin.js?v=10"></script>
+<script src="js/admin.js?v=11"></script>
 </body>
 </html>

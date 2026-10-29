@@ -157,12 +157,13 @@ window.BRF_DATA = {
      The hall layout itself is illustrative until the venue plan is confirmed. ---- */
   vip: {
     note: "Concert tickets are paid. Seating plan is illustrative.",
+    coinNaira: 10,   // 1 BvndleCoin (BC) = ₦10; each price also shows its BC equivalent (client, 29 Oct)
     zones: { front: "Premium · front row", vip: "VIP", floor: "Concert floor", tables: "Tables" },
     groups: [["individual", "Individual tickets"], ["group", "Group tables"]],
     tiers: [
-      { id: "eb1", group: "individual", zone: "floor", name: "Early Bird · Phase 1", line: "General concert access.", amount: 15000, price: "₦15,000", status: "50 tickets only", view: "assets/img/concert/c18.jpg" },
-      { id: "eb2", group: "individual", zone: "floor", name: "Early Bird · Phase 2", line: "General concert access. Opens when Phase 1 sells out.", amount: 20000, price: "₦20,000", status: "50 tickets only", view: "assets/img/concert/c13.jpg" },
-      { id: "regular", group: "individual", zone: "floor", name: "Regular", line: "General concert access, after the Early Bird phases.", amount: 25000, price: "₦25,000", status: "", view: "assets/img/concert/c24.jpg" },
+      // buy: where this tier's Buy button goes (defaults to TIX). Early Bird sells on the Bvndle marketplace (client, 29 Oct).
+      { id: "eb1", group: "individual", zone: "floor", name: "Early Bird", line: "General concert access.", amount: 15000, price: "₦15,000", status: "", view: "assets/img/concert/c18.jpg", buy: "https://bvndle.com/marketplace/partner/d4e86380-7f39-4d8a-bb5c-57109e674d21" },
+      { id: "regular", group: "individual", zone: "floor", name: "Regular", line: "General concert access, after Early Bird.", amount: 25000, price: "₦25,000", status: "", view: "assets/img/concert/c24.jpg" },
       { id: "vip", group: "individual", zone: "vip", name: "Individual VIP", line: "VIP access, a shisha pot, juice and a drink.", amount: 250000, price: "₦250,000", status: "", view: "assets/img/concert/c02.jpg" },
       { id: "premium", group: "individual", zone: "front", name: "Individual Premium", line: "Front-row seat, finger food, juice, an activation drink and a picture with an artist.", amount: 500000, price: "₦500,000", status: "", view: "assets/img/concert/c01.jpg" },
       { id: "viptable", group: "group", zone: "tables", name: "VIP Table for 10", line: "A reserved VIP table for 10 guests, with VIP benefits for everyone at the table.", amount: 2000000, price: "₦2,000,000", status: "10 tables", view: "assets/img/concert/c10.jpg" },
