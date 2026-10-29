@@ -1244,6 +1244,7 @@ html[data-theme="light"] .share .btn--ghost { color: #F3F0EB; border-color: #F3F
 @media (max-width: 560px) { .share__btns .btn { flex: 1 1 calc(50% - 10px); justify-content: center; } }
 
 /* ===== Ticket prices: BvndleCoin (BC) equivalent ===== */
-.bc { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; padding: 3px 9px 3px 7px; border-radius: 999px; background: #111; color: #FFD23F; font: 800 12px/1.4 var(--font-body); white-space: nowrap; vertical-align: middle; }
-.vtier .bc, .vtier .vtier__price .bc { color: #FFD23F; }
-.bc__coin { width: 14px; height: 13px; display: inline-block; font-size: 0; background: url("../assets/bc-coin.svg") center / contain no-repeat; }
+.bc { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; padding: 4px 9px 4px 4px; border-radius: 999px; background: #111; color: #FFD23F; font: 800 12px/1 var(--font-body); white-space: nowrap; vertical-align: middle; }
+.vtier .bc, .vtier .vtier__price .bc, .vipsec .vtier .vtier__price .bc { display: inline-flex; color: #FFD23F; opacity: 1; font-size: 12px; line-height: 1; }
+.bc__coin, .vtier .bc__coin, .vipsec .vtier .bc__coin { width: 16px; height: 16px; flex: none; display: block; object-fit: contain; border-radius: 0; }
+.vtier__price .bc { margin-left: 0; }
