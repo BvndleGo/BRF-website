@@ -1244,6 +1244,6 @@ html[data-theme="light"] .share .btn--ghost { color: #F3F0EB; border-color: #F3F
 @media (max-width: 560px) { .share__btns .btn { flex: 1 1 calc(50% - 10px); justify-content: center; } }
 
 /* ===== Ticket prices: BvndleCoin (BC) equivalent ===== */
-.bc { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; padding: 2px 8px 2px 3px; border-radius: 999px; background: #111; color: #FFD23F; font: 800 12px/1.4 var(--font-body); white-space: nowrap; vertical-align: middle; }
+.bc { display: inline-flex; align-items: center; gap: 5px; margin-left: 6px; padding: 3px 9px 3px 7px; border-radius: 999px; background: #111; color: #FFD23F; font: 800 12px/1.4 var(--font-body); white-space: nowrap; vertical-align: middle; }
 .vtier .bc, .vtier .vtier__price .bc { color: #FFD23F; }
-.bc__coin { width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; font: 900 9px/1 var(--font-body); font-style: normal; color: #6b4a00; background: radial-gradient(circle at 35% 30%, #fff3b0, #FFD23F 45%, #c99400); box-shadow: inset 0 0 0 1.5px #a87800; }
+.bc__coin { width: 14px; height: 13px; display: inline-block; font-size: 0; background: url("../assets/bc-coin.svg") center / contain no-repeat; }
