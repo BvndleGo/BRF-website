@@ -899,11 +899,11 @@
      Serials are unique across all partners (the database refuses overlaps). Check codes in at the gate; export per partner. */
   let tpPartners = [], tpTickets = [];
   const TP_TYPES = ["Day Pass", "Concert · Early Bird", "Concert · Regular", "Concert · Individual VIP", "Concert · Individual Premium", "Concert · VIP Table for 10", "Concert · Premium Table for 5", "Concert · Premium Table for 10"];
-  const tpErr = (e) => { const m = e?.message || ""; if (m.startsWith("serials_taken:")) return m.slice(14) + ". Pick a different range."; return ({ bad_range: "The end number must be the same as or higher than the start.", range_too_big: "Allocate at most 5,000 tickets at a time.", missing_type: "Choose a ticket type." }[m]) || (/duplicate key.*prefix/.test(m) ? "Another partner already uses that code start." : m || "Something went wrong."); };
+  const tpErr = (e) => { const m = e?.message || ""; if (m.startsWith("serials_taken:")) return m.slice(14) + ". Pick a different range."; return ({ bad_range: "The end number must be the same as or higher than the start.", range_too_big: "Generate at most 5,000 tickets at a time.", bad_count: "Enter how many tickets to generate.", missing_type: "Choose a ticket type." }[m]) || (/duplicate key.*prefix/.test(m) ? "Another partner already uses that code start." : m || "Something went wrong."); };
   async function renderPartnerTickets() {
     root.innerHTML = `${tabs("ptickets")}
       <div class="admin-head">
-        <div><h1 class="display">Partner tickets</h1><p>Issue numbered tickets to partners. Each partner has its own code start (e.g. <b>BRFV-</b> for Vbank) and gets a block of ticket numbers. No number can be given to two partners.</p></div>
+        <div><h1 class="display">Partner tickets</h1><p>Issue tickets to partners. Each partner has its own code start (e.g. <b>BRFV-</b> for Vbank). Enter how many tickets they get and the codes are made for you: the next free numbers, each with a random ending (e.g. BRFV-20061-K7QXM) so codes can't be guessed.</p></div>
         <div class="admin-actions"><button class="btn btn--ghost" id="tpRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button><button class="btn btn--ghost" id="signOut" type="button">Sign out</button></div>
       </div>
       <div class="admin-tiles admin-tiles--4">
@@ -924,9 +924,8 @@
           <div class="evnew__row evnew__row--tp2">
             <label class="field"><span>Partner</span><select class="input" name="partner" required></select></label>
             <label class="field"><span>Ticket type</span><select class="input" name="type">${TP_TYPES.map((t) => `<option>${esc(t)}</option>`).join("")}</select></label>
-            <label class="field"><span>From number</span><input class="input" name="from" type="number" min="1" step="1" required></label>
-            <label class="field"><span>To number</span><input class="input" name="to" type="number" min="1" step="1" required></label>
-            <button class="btn btn--pink" type="submit"><i class="ph-bold ph-ticket" aria-hidden="true"></i> Allocate</button>
+            <label class="field"><span>How many tickets</span><input class="input" name="count" type="number" min="1" max="5000" step="1" required placeholder="e.g. 20"></label>
+            <button class="btn btn--pink" type="submit"><i class="ph-bold ph-ticket" aria-hidden="true"></i> Generate codes</button>
           </div><p class="evmsg" id="tpAllocMsg" role="status"></p></form>
       </div>
       <div id="tpList"><div class="empty"><p>Loading...</p></div></div>
@@ -956,17 +955,18 @@
       msg.textContent = `${nf.name.value.trim()} added with code start ${prefix}`; nf.reset(); delete nf.prefix.dataset.touched; loadPT();
     });
     const af = $i("tpAlloc");
-    const syncCount = () => { const a = +af.from.value, b = +af.to.value, p = tpPartners.find((x) => x.id === af.partner.value); $i("tpAllocMsg").textContent = a && b && b >= a && p ? `${(b - a + 1).toLocaleString("en-NG")} tickets: ${p.prefix}${a} to ${p.prefix}${b}` : ""; };
+    const tpNext = () => (tpTickets.length ? Math.max(...tpTickets.map((t) => t.serial)) + 1 : 1);
+    const syncCount = () => { const k = Math.floor(+af.count.value), a = tpNext(), p = tpPartners.find((x) => x.id === af.partner.value); $i("tpAllocMsg").textContent = k > 0 && p ? `${k.toLocaleString("en-NG")} tickets: ${p.prefix}${a} to ${p.prefix}${a + k - 1}` : ""; };
     ["input", "change"].forEach((ev) => af.addEventListener(ev, syncCount));
     af.addEventListener("submit", async (e) => {
-      e.preventDefault(); const msg = $i("tpAllocMsg"), a = Math.floor(+af.from.value), b = Math.floor(+af.to.value);
+      e.preventDefault(); const msg = $i("tpAllocMsg"), k = Math.floor(+af.count.value);
       if (!af.partner.value) return (msg.textContent = "Add a partner first.");
-      if (!a || !b) return (msg.textContent = "Enter the first and last ticket numbers.");
+      if (!(k > 0)) return (msg.textContent = "Enter how many tickets to generate.");
       const p = tpPartners.find((x) => x.id === af.partner.value);
-      if (!confirm(`Give ${p.name} ${b - a + 1} ${af.type.value} tickets, ${p.prefix}${a} to ${p.prefix}${b}?`)) return;
-      const { data, error } = await sb.rpc("admin_allocate_partner_tickets", { p_partner: p.id, p_from: a, p_to: b, p_type: af.type.value });
+      if (!confirm(`Generate ${k} ${af.type.value} ticket code${k === 1 ? "" : "s"} for ${p.name}?`)) return;
+      const { data, error } = await sb.rpc("admin_issue_partner_tickets", { p_partner: p.id, p_count: k, p_type: af.type.value });
       if (error) return (msg.textContent = tpErr(error));
-      msg.textContent = `Done: ${data.allocated} tickets, ${data.from} to ${data.to}.`; af.from.value = ""; af.to.value = ""; loadPT();
+      msg.textContent = `Done: ${data.allocated} codes, ${data.from}-… to ${data.to}-…. Download the Excel list from ${p.name}'s card to send them.`; af.count.value = ""; loadPT();
     });
     loadPT();
   }

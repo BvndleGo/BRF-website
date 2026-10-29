@@ -1248,3 +1248,6 @@ html[data-theme="light"] .share .btn--ghost { color: #F3F0EB; border-color: #F3F
 .vtier .bc, .vtier .vtier__price .bc, .vipsec .vtier .vtier__price .bc { display: inline-flex; color: #FFD23F; opacity: 1; font-size: 12px; line-height: 1; }
 .bc__coin, .vtier .bc__coin, .vipsec .vtier .bc__coin { width: 16px; height: 16px; flex: none; display: block; object-fit: contain; border-radius: 0; }
 .vtier__price .bc { margin-left: 0; }
+/* countdown bar: white text in dark mode, black in light mode */
+html:not([data-theme="light"]) .topbar { color: #fff; }
+html[data-theme="light"] .topbar { color: #111; }
