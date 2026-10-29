@@ -21,7 +21,9 @@
     a { color: inherit; }
     .wrap { width: min(520px, 100% - 32px); margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 0 calc(40px + env(safe-area-inset-bottom)); }
     .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
-    .top img { height: 40px; width: auto; display: block; }
+    .top img { height: 48px; width: auto; max-width: 55%; object-fit: contain; object-position: left center; display: block; }
+    .top img[hidden] { display: none; }
+    .top--nologo { justify-content: flex-start; } .top.top--nologo .ev { text-align: left; }
     .top .ev { text-align: right; font-size: 13px; color: var(--dim); line-height: 1.3; }
     .top .ev b { display: block; color: var(--fg); font-size: 14px; }
     h1, h2 { font-family: var(--display); font-weight: 400; text-transform: uppercase; letter-spacing: .01em; line-height: .95; margin: 0; }
@@ -86,10 +88,10 @@
 <body>
   <canvas id="fx" aria-hidden="true"></canvas>
   <main class="wrap">
-    <header class="top"><img src="assets/logo-white.svg?v=2" alt="Bvndle Rewards Festival"><div class="ev" id="evName"></div></header>
+    <header class="top top--nologo"><img id="evLogo" alt="" hidden><div class="ev" id="evName"></div></header>
     <div id="app" aria-live="polite"><div class="spin">Loading...</div></div>
   </main>
   <script src="js/store.js?v=9"></script>
-  <script src="js/passport.js?v=1"></script>
+  <script src="js/passport.js?v=2"></script>
 </body>
 </html>

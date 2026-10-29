@@ -32,7 +32,15 @@
     too_many_tries: "Too many wrong codes. Ask the booth staff for help.", no_passport: "Get your passport first.",
   };
   const fail = (msg) => { app.innerHTML = `<div class="card center"><i class="ph-bold ph-warning-circle" style="font-size:40px;color:#ff9a7d" aria-hidden="true"></i><p>${esc(msg)}</p></div>`; };
-  const setEvent = (ev) => { if (ev) evName.innerHTML = `<b>${esc(ev.name)}</b>${esc(ev.location || "")}`; };
+  // each event brings its own logo (uploaded in admin); with none, the header shows just the event name
+  const evLogo = document.getElementById("evLogo");
+  const setEvent = (ev) => {
+    if (!ev) return;
+    evName.innerHTML = `<b>${esc(ev.name)}</b>${esc(ev.location || "")}`;
+    if (ev.logo && /^data:image\/(png|jpeg|webp);base64,/.test(ev.logo)) { evLogo.src = ev.logo; evLogo.alt = ev.name || ""; evLogo.hidden = false; }
+    else evLogo.hidden = true;
+    document.querySelector(".top").classList.toggle("top--nologo", evLogo.hidden);
+  };
 
   /* ---------- passport form ---------- */
   function passportForm(pk, ev, after) {

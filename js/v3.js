@@ -6,6 +6,14 @@
   // Figma export: Figma's capture tool opens the page with #figmacapture=…; in that case every section is shown
   // in its finished state (reveals in, charts full, zones laid out), since the capture is a single snapshot
   const CAPTURE = /figmacapture/.test(location.hash);
+  // the small-viewport height (100svh): stable on phones, unlike innerHeight, which grows and shrinks as the browser's
+  // address bar hides and shows. Scroll-driven sections use it so they don't jump when that happens.
+  const svhProbe = document.createElement("div"); svhProbe.style.cssText = "position:fixed;top:0;left:0;width:0;height:100svh;visibility:hidden;pointer-events:none";
+  document.documentElement.appendChild(svhProbe);
+  const COARSE = matchMedia("(pointer: coarse)").matches;
+  const VH = () => (COARSE ? svhProbe.offsetHeight || innerHeight : innerHeight);
+  // phones fire resize whenever the address bar hides or shows; only a width change needs a re-layout
+  const onWidth = (fn) => { let w = innerWidth; addEventListener("resize", () => { if (!COARSE || innerWidth !== w) { w = innerWidth; fn(); } }); };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   /* theme: dark by default; the sun/moon button switches to light and the choice is remembered */
@@ -129,7 +137,7 @@
     }
     tiles.forEach((t) => { t.fx = rr(-0.1, 1.1) * bW; t.fy = rr(-0.1, 1.1) * bH; });
   }
-  bLayout(); addEventListener("resize", bLayout);
+  bLayout(); onWidth(bLayout);
   if (reduce) bStart -= 5000;
   const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
   new IntersectionObserver(([e]) => (heroOn = e.isIntersecting)).observe(hero);
@@ -161,7 +169,7 @@
   function stackStep() {
     if (!heroOn || !bW) return;
     const t = (performance.now() - bStart) / 1000;
-    const hr = hero.getBoundingClientRect(), span = Math.max(1, hero.offsetHeight - innerHeight);
+    const hr = hero.getBoundingClientRect(), span = Math.max(1, hero.offsetHeight - VH());
     const pRaw = Math.min(1, Math.max(0, -hr.top / span));
     bSmooth = reduce ? pRaw : bSmooth + (pRaw - bSmooth) * 0.085;      // the dive glides after the scroll instead of jumping with it
     const p = bSmooth;
@@ -242,14 +250,21 @@
   if (hud) {
     const hudLabels = [$(".burst__north"), $("#bLat"), $("#bLon"), $(".burst__hint")].filter(Boolean);
     const cut = (from, to, holes) => { const out = []; let a = from; holes.sort((p, q) => p[0] - q[0]).forEach(([s, e]) => { if (e <= a || s >= to) return; if (s > a) out.push([a, s]); a = Math.max(a, e); }); if (a < to) out.push([a, to]); return out; };
+    const HUD_STILL = matchMedia("(pointer: coarse)").matches;
     const pin = hud.parentElement, navEl = $(".nav"), north = $(".burst__north"), hintEl = $(".burst__hint"), coords = [$("#bLat"), $("#bLon")];
     function drawHud() {
       // fit the frame to what is actually visible: below the nav (and the countdown bar before it scrolls away), above the
       // bottom of the screen; the north marker, hint and readouts follow its edges
       const pr = pin.getBoundingClientRect(); if (pr.bottom < 0 || pr.top > innerHeight) return;
       const gap = parseFloat(getComputedStyle(hud).left) || 24, nb = Math.max(0, navEl.getBoundingClientRect().bottom);   // top and bottom space = side space (SVG has no offsetLeft)
-      const visTop = Math.max(pr.top, nb, 0), visBot = Math.min(pr.bottom, innerHeight);
-      const top = visTop - pr.top + gap, hh = Math.max(120, visBot - visTop - 2 * gap);
+      let top, hh;
+      if (HUD_STILL) {      // phones: one fixed frame (below the nav and countdown bar) that scrolls with the hero instead of being re-fitted every frame, which judders on touch scrolling
+        const navH = navEl.offsetHeight, tb = $(".topbar") ? $(".topbar").offsetHeight : 0;
+        top = navH + gap; hh = Math.max(120, pr.height - navH - tb - 2 * gap);
+      } else {
+        const visTop = Math.max(pr.top, nb, 0), visBot = Math.min(pr.bottom, innerHeight);
+        top = visTop - pr.top + gap; hh = Math.max(120, visBot - visTop - 2 * gap);
+      }
       hud.style.top = `${top}px`; hud.style.height = `${hh}px`;
       north.style.top = `${top}px`; hintEl.style.bottom = `${pr.height - top - hh}px`;
       coords.forEach((el) => el && (el.style.top = `${top + hh / 2}px`));
@@ -269,7 +284,7 @@
       $(".hud__corner", hud).setAttribute("d", `M${k} ${C}V${k}H${C}M${W - C} ${k}H${W - k}V${C}M${W - k} ${H - C}V${H - k}H${W - C}M${C} ${H - k}H${k}V${H - C}`);
     }
     let hudQ = 0; const hudSoon = () => { cancelAnimationFrame(hudQ); hudQ = requestAnimationFrame(drawHud); };
-    addEventListener("resize", hudSoon); addEventListener("scroll", () => { if (scrollY < innerHeight * 1.6) hudSoon(); }, { passive: true });
+    addEventListener("resize", hudSoon); if (!HUD_STILL) addEventListener("scroll", () => { if (scrollY < innerHeight * 1.6) hudSoon(); }, { passive: true });
     document.fonts.ready.then(drawHud); drawHud();
     setInterval(() => { if (heroOn) drawHud(); }, 700);              // the readouts change width as the globe turns
   }
@@ -289,7 +304,7 @@
   function showSlide(i) {
     lcur = i;
     ltrack.style.transform = `translateX(${-i * 100}%)`;
-    lview.style.height = `${lslides[i].offsetHeight}px`;              // the view takes the height of the slide on show
+    // the view keeps one height (the tallest wall; the partner wall stretches to fill it), so the page below never jumps on a slide change
     lslides.forEach((sl, k) => { sl.setAttribute("aria-hidden", k !== i); sl.inert = k !== i; });
     ltabs.forEach((t, k) => { t.classList.remove("is-on"); t.classList.toggle("is-done", k < i); t.setAttribute("aria-current", k === i); });
     void ltabs[i].offsetWidth; ltabs[i].classList.add("is-on");          // restart the fill
@@ -301,7 +316,6 @@
   let lsx = null;
   lview.addEventListener("pointerdown", (e) => (lsx = e.clientX));
   lview.addEventListener("pointerup", (e) => { if (lsx === null) return; const dx = e.clientX - lsx; lsx = null; if (Math.abs(dx) > 50) showSlide(Math.max(0, Math.min(lslides.length - 1, lcur + (dx < 0 ? 1 : -1)))); });
-  addEventListener("resize", () => (lview.style.height = `${lslides[lcur].offsetHeight}px`));
   const lsec = $(".partners");
   lsec.addEventListener("pointerenter", () => lsec.classList.add("is-paused"));
   lsec.addEventListener("pointerleave", () => lsec.classList.remove("is-paused"));
@@ -324,7 +338,7 @@
     storyStep = () => {
       if (reduce || CAPTURE) { if (lit < parts.length) { parts.forEach((w) => w.classList.add("is-lit")); lit = parts.length; } return; }
       // the section is pinned inside a taller track: words light across the pinned stretch, all lit just before it releases
-      const tr = $("#storyTrack"), r = tr.getBoundingClientRect(), vh = innerHeight;
+      const tr = $("#storyTrack"), r = tr.getBoundingClientRect(), vh = VH();
       if (r.bottom < 0 || r.top > vh) return;
       const p = Math.min(1, Math.max(0, (vh * 0.35 - r.top) / (r.height - vh * 0.85) * 1.3));
       const n = Math.round(p * parts.length);
@@ -427,7 +441,7 @@
   // progress 0..1: starts when the chart's top enters the bottom of the screen, completes when its middle reaches the middle
   function chartsStep() {
     if (CAPTURE) return;
-    const vh = innerHeight;
+    const vh = VH();
     for (const c of charts) {
       const r = c.el.getBoundingClientRect();
       if (r.bottom < -200 || r.top > vh + 200) continue;
@@ -666,7 +680,8 @@
   function bindForm(f) {
     f.addEventListener("input", (e) => { const fl = e.target.closest(".field"); if (fl && fl.classList.contains("is-invalid")) { setInvalid(fl.id, false); resetErr(fl); } });
     // "Do you have a Bvndle tag?" Yes shows the tag box, No skips it
-    const tagField = $("#f-tag", f);
+    const tagField = $("#f-tag", f), codeLink = $("#haveCode", f);
+    if (codeLink) codeLink.addEventListener("click", () => { $("#f-code", f).hidden = false; codeLink.hidden = true; f.pcode.focus(); });
     f.addEventListener("change", (e) => {
       if (e.target.name !== "hasTag") return;
       $("#f-has", f).classList.remove("is-invalid");
@@ -688,8 +703,9 @@
       if (!phone) return f.phone.focus();
       if (!has) return f.querySelector('[name="hasTag"]').focus();
       if (has === "yes" && !tag) return f.tag.focus();
+      const code = f.pcode ? f.pcode.value.trim().toUpperCase().replace(/\s+/g, "") : "";
       const btn = $("#passSubmit", f), label = btn.innerHTML; btn.disabled = true; btn.textContent = "Claiming your ticket...";
-      window.PassStore.claim({ first, last, email, phone, tag }).then(({ ok, pass, isNew, error }) => {
+      (code ? window.PassStore.claimPartner({ code, first, last, email, phone, tag }) : window.PassStore.claim({ first, last, email, phone, tag })).then(({ ok, pass, isNew, error }) => {
         if (!ok) {
           btn.disabled = false; btn.innerHTML = label;
           (window.brfTrack || (() => {}))("ticket_error", error);
@@ -698,6 +714,10 @@
           if (error === "invalid_email") return failField("f-email", "That email doesn't look right. Check it and try again.");
           if (error === "invalid_phone") return failField("f-phone", "Enter a valid Nigerian number, like 0803 123 4567.");
           if (error === "missing_tag") return failField("f-tag", 'Type your tag, or choose "No, skip".');
+          if (error === "unknown_code") return failField("f-code", "We can't find that code. Check it, or clear it to claim a regular Day Pass.");
+          if (error === "code_used") return failField("f-code", "This code has already been used by someone else.");
+          if (error === "not_day_pass") return failField("f-code", "This code isn't a Day Pass code. Clear it to claim your Day Pass.");
+          if (error === "already_has_pass") return failField("f-code", "This email or phone number already has a Day Pass, so you don't need the code. Pass it on to someone else.");
           btn.textContent = "Try again";
           return alert("We couldn't reach our ticket desk. Check your connection and try again.");
         }
@@ -720,8 +740,23 @@
   syncCoins(false);
   window.PassStore.refreshCount().then(() => syncCoins(false));
   // returning ticket holders see their ticket in the section, not an empty form
+  // a partner claim link (?code=BRFV-61-K7QXM#ticket) opens the form with the code filled in, even on a phone that already has a pass
+  const linkCode = (new URLSearchParams(location.search).get("code") || "").trim().toUpperCase();
   { let mine = null; try { mine = JSON.parse(lsGet("brf-my-pass") || "null"); } catch (e) {}
-    if (mine && mine.code) showPass(mine, false); }
+    if (mine && mine.code && !linkCode) showPass(mine, false); }
+  if (linkCode && $("#passForm")) {
+    const f = $("#passForm"); f.pcode.value = linkCode; $("#f-code", f).hidden = false; f.prepend($("#f-code", f));   // the code leads the form $("#haveCode", f).hidden = true;
+    const help = $("#code-help", f);
+    window.PassStore.checkCode(linkCode).then(({ ok, data, error }) => {
+      if (!ok) return error === "unknown_code" && failField("f-code", "We can't find that code. Check the link your partner sent, or clear the code to claim a regular Day Pass.");
+      if (!data.day_pass) return failField("f-code", "This code isn't a Day Pass code. Clear it to claim your Day Pass.");
+      if (data.claimed) return failField("f-code", "This code has already been claimed. If that was you, fill in the same email and phone to see your pass.");
+      help.textContent = `Your Day Pass from ${data.partner}. Fill in your details to claim it.`;
+    });
+    // straight to the form (on phones the mascot sits above it), after the page's own scroll-to-top on load
+    const toForm = () => setTimeout(() => { const t = $(".gate__form") || $("#ticket"); if (t) t.scrollIntoView({ block: "start" }); }, 150);
+    if (document.readyState === "complete") toForm(); else addEventListener("load", toForm, { once: true });
+  }
 
   /* ===== the ticket button follows the story (nav + phone bar): "See the experience" until the zones are behind you,
      then "Get free ticket", then "My ticket" once you have one. First-timers are pulled into the story instead of
@@ -757,7 +792,7 @@
   }
   // re-fit whenever a card changes size (column changes, late fonts, pane resizes), not only on window resize
   if (window.ResizeObserver) { let fq = 0; const ro = new ResizeObserver(() => { cancelAnimationFrame(fq); fq = requestAnimationFrame(fitAll); }); $$(".gc__big--fit").forEach((el) => ro.observe(el.parentElement)); }
-  document.fonts.ready.then(fitAll); addEventListener("resize", fitAll); fitAll();
+  document.fonts.ready.then(fitAll); onWidth(fitAll); fitAll();
 
   /* sign-off: the "ride". A glass tube built from offset copies of one spine path (edges, liquid shading,
      specular). Pink-to-purple liquid fills it with scroll (scrubbed, lerped); each title letter appears once the
@@ -833,7 +868,7 @@
     let cur = 0, last = -1, lastDraw = 0, drawnAt = -1; const slosh = { x: 0, v: 0 };
     const track = $("#signoffTrack");
     decStep = () => {
-      const r = track.getBoundingClientRect(), vh = innerHeight, rh = ride.offsetHeight;
+      const r = track.getBoundingClientRect(), vh = VH(), rh = ride.offsetHeight;
       if (r.top > vh || r.bottom < 0) return;
       // the ride is pinned (sticky) inside a taller track: filling starts as the tube comes up the screen and
       // finishes as the track runs out, about a screen of scrolling while it stays in view
@@ -1115,7 +1150,7 @@
 
     // scroll geometry
     const steps = () => cur.stations.length + 1;
-    const span = () => Math.max(1, zxScroll.offsetHeight - innerHeight);
+    const span = () => Math.max(1, zxScroll.offsetHeight - VH());
     const topY = () => zxScroll.getBoundingClientRect().top + scrollY;
     const progress = () => Math.min(1, Math.max(0, -zxScroll.getBoundingClientRect().top / span()));
     function goTo(i) {                                         // jump the walk to station i (scrolls the page)

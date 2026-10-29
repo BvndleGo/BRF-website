@@ -1248,6 +1248,19 @@ html[data-theme="light"] .share .btn--ghost { color: #F3F0EB; border-color: #F3F
 .vtier .bc, .vtier .vtier__price .bc, .vipsec .vtier .vtier__price .bc { display: inline-flex; color: #FFD23F; opacity: 1; font-size: 12px; line-height: 1; }
 .bc__coin, .vtier .bc__coin, .vipsec .vtier .bc__coin { width: 16px; height: 16px; flex: none; display: block; object-fit: contain; border-radius: 0; }
 .vtier__price .bc { margin-left: 0; }
+/* partners carousel: both walls share one height so the page doesn't jump when the slide changes */
+.lslides__view { height: auto !important; transition: none; }
+.lslides__track { align-items: stretch; }
+#logoWallP { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; align-content: stretch; }
+#logoWallP li { height: auto; min-height: 84px; }
+#logoWallP img { max-height: 56px; }
+#logoWallP li:last-child:nth-child(3n + 2) { grid-column: span 2; }
+@media (max-width: 560px) { #logoWallP { grid-template-columns: repeat(2, 1fr); } #logoWallP li:last-child:nth-child(3n + 2) { grid-column: auto; } #logoWallP li:last-child:nth-child(odd) { grid-column: span 2; } }
+/* trivia result: ticket stubs wrap instead of pushing the card wider than the screen */
+.stubs { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.quiz__card, .trivia__grid > * { min-width: 0; }
+/* ticket form: partner code */
+.codelink { display: block; margin: 12px auto 0; }
 /* countdown bar: white text in dark mode, black in light mode */
 html:not([data-theme="light"]) .topbar { color: #fff; }
 html[data-theme="light"] .topbar { color: #111; }

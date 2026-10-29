@@ -670,7 +670,11 @@
         <div class="evacts__live"><span id="evLiveState"></span><button class="btn btn--sm" type="button" id="evLive"></button></div></div>
       <div class="evacts__grid">
         <div class="evpp"><div class="evpp__qr" id="evPpQr"></div><div><b>Passport QR</b><p class="muted">Print this at the entrance.</p>
-          <div class="evpp__btns"><button class="btn btn--sm btn--ghost" type="button" id="evPpPng"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Download</button><button class="btn btn--sm btn--ghost" type="button" id="evPpCopy"><i class="ph-bold ph-link" aria-hidden="true"></i> Copy link</button><button class="btn btn--sm btn--ghost" type="button" id="evPrint"><i class="ph-bold ph-printer" aria-hidden="true"></i> Print all QR codes</button></div></div></div>
+          <div class="evpp__btns"><button class="btn btn--sm btn--ghost" type="button" id="evPpPng"><i class="ph-bold ph-download-simple" aria-hidden="true"></i> Download</button><button class="btn btn--sm btn--ghost" type="button" id="evPpCopy"><i class="ph-bold ph-link" aria-hidden="true"></i> Copy link</button><button class="btn btn--sm btn--ghost" type="button" id="evPrint"><i class="ph-bold ph-printer" aria-hidden="true"></i> Print all QR codes</button></div>
+          <div class="evlogo"><b>Event logo</b><p class="muted">Shown at the top of the passport and activity pages (the BRF logo isn't shown there). PNG, JPG or WebP.</p>
+            <div class="evlogo__prev" id="evLogoPrev"></div>
+            <div class="evpp__btns"><label class="btn btn--sm btn--ghost"><input type="file" id="evLogoFile" accept="image/png,image/jpeg,image/webp" hidden><i class="ph-bold ph-upload-simple" aria-hidden="true"></i> <span id="evLogoBtn">Upload logo</span></label><button class="btn btn--sm btn--ghost" type="button" id="evLogoDel" hidden><i class="ph-bold ph-trash" aria-hidden="true"></i> Remove</button></div>
+            <p class="evmsg" id="evLogoMsg" role="status"></p></div></div></div>
         <form class="evact" id="evActForm" novalidate>
           <b>New activity</b>
           <div class="evact__row">
@@ -705,10 +709,43 @@
     document.getElementById("evPpPng").addEventListener("click", () => downloadQr(ppUrl(), `${evCur.name}`, "Get your Bvndle passport"));
     document.getElementById("evPpCopy").addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(ppUrl()); e.currentTarget.textContent = "Copied"; } catch (err) { prompt("Passport link", ppUrl()); } });
     document.getElementById("evPrint").addEventListener("click", printSheet);
+    document.getElementById("evLogoFile").addEventListener("change", uploadLogo);
+    document.getElementById("evLogoDel").addEventListener("click", () => { if (confirm("Remove this event's logo?")) saveLogo(null); });
+    paintLogo();
     document.getElementById("evActList").addEventListener("click", onActClick);
     paintLive();
     qrSvg(ppUrl(), 150).then((svg) => (document.getElementById("evPpQr").innerHTML = svg)).catch(() => {});
     loadActs();
+  }
+  function paintLogo() {
+    const has = !!evCur.logo;
+    document.getElementById("evLogoPrev").innerHTML = has ? `<img src="${esc(evCur.logo)}" alt="${esc(evCur.name)} logo">` : `<span class="muted">No logo yet: the pages show the event name only.</span>`;
+    document.getElementById("evLogoBtn").textContent = has ? "Replace logo" : "Upload logo";
+    document.getElementById("evLogoDel").hidden = !has;
+  }
+  // shrink the logo to fit 480x240 in the browser (it's saved with the event, so it must stay small), then save
+  async function uploadLogo(e) {
+    const file = e.target.files[0], msg = document.getElementById("evLogoMsg"); e.target.value = "";
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return (msg.textContent = "Use a PNG, JPG or WebP image.");
+    msg.textContent = "Preparing the logo...";
+    try {
+      const img = await new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = bad; im.src = URL.createObjectURL(file); });
+      const k = Math.min(1, 480 / img.naturalWidth, 240 / img.naturalHeight), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src);
+      let data = c.toDataURL("image/png");
+      if (data.length > 380000) data = c.toDataURL("image/webp", 0.9);
+      if (data.length > 380000 || !/^data:image\/(png|webp)/.test(data)) data = c.toDataURL("image/jpeg", 0.85);
+      if (data.length > 380000) return (msg.textContent = "That image is too detailed. Try a simpler or smaller logo.");
+      await saveLogo(data);
+    } catch (err) { msg.textContent = "Couldn't read that image. Try another file."; }
+  }
+  async function saveLogo(data) {
+    const msg = document.getElementById("evLogoMsg");
+    const { data: ev, error } = await sb.from("brf_events").update({ logo: data }).eq("id", evCur.id).select().single();
+    if (error) return (msg.textContent = "Couldn't save: " + error.message);
+    evCur = ev; paintLogo(); msg.textContent = data ? "Logo saved. It shows on the passport and activity pages." : "Logo removed.";
   }
   function paintLive() {
     document.getElementById("evLiveState").innerHTML = evCur.live ? `<span class="cstatus cstatus--approved">Live: activities accept scans</span>` : `<span class="cstatus cstatus--none">Not live: activities are closed</span>`;
@@ -898,6 +935,11 @@
      Create a partner with its code start (BRF + letter + dash), then allocate a block of serial numbers and a ticket type.
      Serials are unique across all partners (the database refuses overlaps). Check codes in at the gate; export per partner. */
   let tpPartners = [], tpTickets = [];
+  // a Day Pass code becomes a real Day Pass when the customer claims it online (pass = that free_passes row)
+  const TP_SEL = "*, pass:free_passes(id, pass_code, first_name, last_name, email, phone, checked_in_at)";
+  const isDP = (t) => t.ticket_type === "Day Pass";
+  const tpIn = (t) => (isDP(t) ? !!(t.pass && t.pass.checked_in_at) : !!t.checked_in_at);
+  const tpLink = (t) => `${siteBase()}?code=${encodeURIComponent(t.code)}`;
   const TP_TYPES = ["Day Pass", "Concert · Early Bird", "Concert · Regular", "Concert · Individual VIP", "Concert · Individual Premium", "Concert · VIP Table for 10", "Concert · Premium Table for 5", "Concert · Premium Table for 10"];
   const tpErr = (e) => { const m = e?.message || ""; if (m.startsWith("serials_taken:")) return m.slice(14) + ". Pick a different range."; return ({ bad_range: "The end number must be the same as or higher than the start.", range_too_big: "Generate at most 5,000 tickets at a time.", bad_count: "Enter how many tickets to generate.", missing_type: "Choose a ticket type." }[m]) || (/duplicate key.*prefix/.test(m) ? "Another partner already uses that code start." : m || "Something went wrong."); };
   async function renderPartnerTickets() {
@@ -908,7 +950,7 @@
       </div>
       <div class="admin-tiles admin-tiles--4">
         <div class="atile atile--glare"><span>Tickets issued</span><b id="tp-n">0</b></div>
-        <div class="atile"><span>Partners</span><b id="tp-p">0</b></div>
+        <div class="atile"><span>Day Passes claimed</span><b id="tp-p">0</b><small id="tp-pc"></small></div>
         <div class="atile"><span>Checked in</span><b id="tp-in">0</b></div>
         <div class="atile"><span>Next free number</span><b id="tp-next">–</b></div>
       </div>
@@ -930,7 +972,7 @@
       </div>
       <div id="tpList"><div class="empty"><p>Loading...</p></div></div>
       <div class="admin-bar admin-bar--split">
-        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search ticket codes</span><input class="input" id="tpSearch" type="search" placeholder="Search a ticket code (e.g. BRFV-20031), partner or name"></label>
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search ticket codes</span><input class="input" id="tpSearch" type="search" placeholder="Search a ticket code (e.g. BRFV-20031), partner, name or pass code"></label>
         <select class="input" id="tpFilter" aria-label="Filter"><option value="">All partners</option></select>
       </div>
       <div class="table-wrap" id="tpWrap"></div>`;
@@ -971,7 +1013,7 @@
     loadPT();
   }
   async function loadPT() {
-    const [{ data: ps, error }, tk] = await Promise.all([sb.from("brf_ticket_partners").select("*").order("created_at"), (async () => { const out = []; for (let f = 0; ; f += 1000) { const { data, error } = await sb.from("brf_partner_tickets").select("*").order("serial").range(f, f + 999); if (error || !data) break; out.push(...data); if (data.length < 1000) break; } return out; })()]);
+    const [{ data: ps, error }, tk] = await Promise.all([sb.from("brf_ticket_partners").select("*").order("created_at"), (async () => { const out = []; for (let f = 0; ; f += 1000) { const { data, error } = await sb.from("brf_partner_tickets").select(TP_SEL).order("serial").range(f, f + 999); if (error || !data) break; out.push(...data); if (data.length < 1000) break; } return out; })()]);
     if (error) { document.getElementById("tpList").innerHTML = `<div class="empty"><p>Couldn't load partners: ${esc(error.message)}</p></div>`; return; }
     tpPartners = ps; tpTickets = tk;
     const af = document.getElementById("tpAlloc"), keep = af.partner.value;
@@ -985,32 +1027,49 @@
   const tpRanges = (list) => { const r = []; list.forEach((t) => { const l = r[r.length - 1]; if (l && t.serial === l.to + 1 && t.ticket_type === l.type) l.to = t.serial; else r.push({ from: t.serial, to: t.serial, type: t.ticket_type }); }); return r; };
   function renderTP() {
     const n = (x) => x.toLocaleString("en-NG"), set = (i, v) => (document.getElementById(i).textContent = v);
-    set("tp-n", n(tpTickets.length)); set("tp-p", n(tpPartners.length)); set("tp-in", n(tpTickets.filter((t) => t.checked_in_at).length));
+    const dps = tpTickets.filter(isDP);
+    set("tp-n", n(tpTickets.length)); set("tp-p", n(dps.filter((t) => t.pass).length)); set("tp-pc", `of ${n(dps.length)} Day Pass codes`); set("tp-in", n(tpTickets.filter(tpIn).length));
     set("tp-next", tpTickets.length ? String(Math.max(...tpTickets.map((t) => t.serial)) + 1) : "–");
     document.getElementById("tpList").innerHTML = tpPartners.length ? `<div class="evgrid">${tpPartners.map((p) => {
       const mine = tpTickets.filter((t) => t.partner_id === p.id), rs = tpRanges(mine);
       return `<div class="evcard tpcard"><b>${esc(p.name)} <span class="tag">${esc(p.prefix)}</span></b>${p.contact ? `<span class="muted">${esc(p.contact)}</span>` : ""}
-        <span class="evcard__stats"><span><b>${n(mine.length)}</b> tickets</span><span><b>${n(mine.filter((t) => t.checked_in_at).length)}</b> checked in</span></span>
+        <span class="evcard__stats"><span><b>${n(mine.length)}</b> tickets</span><span><b>${n(mine.filter((t) => t.pass).length)}</b> claimed</span><span><b>${n(mine.filter(tpIn).length)}</b> checked in</span></span>
         ${rs.length ? `<ul class="tpranges">${rs.map((r) => `<li><span class="code">${esc(p.prefix)}${r.from}${r.to !== r.from ? ` – ${esc(p.prefix)}${r.to}` : ""}</span> <span class="muted">${n(r.to - r.from + 1)} · ${esc(r.type)}</span></li>`).join("")}</ul>` : `<span class="muted">No tickets allocated yet.</span>`}
         ${mine.length ? `<button class="btn btn--sm btn--ghost" type="button" data-tp-export="${p.id}"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Ticket list (Excel)</button>` : ""}</div>`;
     }).join("")}</div>` : `<div class="empty"><i class="ph-duotone ph-handshake" aria-hidden="true"></i><h2 class="display">No partners yet</h2><p>Add a partner above, then allocate their ticket numbers.</p></div>`;
     const q = document.getElementById("tpSearch").value.trim().toUpperCase(), f = document.getElementById("tpFilter").value, wrap = document.getElementById("tpWrap");
     if (!q && !f) { wrap.innerHTML = tpTickets.length ? `<div class="empty"><p>Search a ticket code or pick a partner to see and check in tickets.</p></div>` : ""; return; }
     const pn = (id) => tpPartners.find((p) => p.id === id) || {};
-    const rows = tpTickets.filter((t) => (!f || t.partner_id === f) && (!q || t.code.includes(q) || String(t.serial).includes(q) || (pn(t.partner_id).name || "").toUpperCase().includes(q) || (t.issued_to || "").toUpperCase().includes(q))).slice(0, 300);
-    wrap.innerHTML = `<table><thead><tr><th>Ticket code</th><th>Partner</th><th>Type</th><th>Issued to</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
-      <td class="code">${esc(t.code)}</td><td>${esc(pn(t.partner_id).name || "")}</td><td>${esc(t.ticket_type)}</td>
-      <td>${t.issued_to ? esc(t.issued_to) + " " : ""}<button class="linkish" type="button" data-tp-name="${t.id}">${t.issued_to ? "Edit" : "Add name"}</button></td>
-      <td>${t.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(t.checked_in_at))}</span> <button class="linkish" type="button" data-tp-out="${t.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-tp-in="${t.id}">Check in</button>`}</td></tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>${rows.length === 300 ? `<p class="muted">Showing the first 300. Search to narrow down.</p>` : ""}`;
+    const rows = tpTickets.filter((t) => (!f || t.partner_id === f) && (!q || t.code.includes(q) || String(t.serial).includes(q) || (pn(t.partner_id).name || "").toUpperCase().includes(q) || (t.issued_to || "").toUpperCase().includes(q) || (t.pass && [t.pass.pass_code, t.pass.email, t.pass.phone].join(" ").toUpperCase().includes(q)))).slice(0, 300);
+    const inCell = (at, undo) => `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(at))}</span> <button class="linkish" type="button" ${undo}>Undo</button>`;
+    const row = (t) => {
+      if (isDP(t)) {
+        const p = t.pass;
+        return `<td>${p ? `${esc(p.first_name)} ${esc(p.last_name)} <span class="muted code">${esc(p.pass_code)}</span>` : `<span class="muted">Not claimed yet</span> <button class="linkish" type="button" data-tp-link="${t.id}">Copy claim link</button>`}</td>
+          <td>${!p ? `<span class="muted">Can't enter until claimed</span>` : p.checked_in_at ? inCell(p.checked_in_at, `data-pass-out="${p.id}"`) : `<button class="btn btn--sm btn--ghost" type="button" data-pass-in="${p.id}">Check in</button>`}</td>`;
+      }
+      return `<td>${t.issued_to ? esc(t.issued_to) + " " : ""}<button class="linkish" type="button" data-tp-name="${t.id}">${t.issued_to ? "Edit" : "Add name"}</button></td>
+        <td>${t.checked_in_at ? inCell(t.checked_in_at, `data-tp-out="${t.id}"`) : `<button class="btn btn--sm btn--ghost" type="button" data-tp-in="${t.id}">Check in</button>`}</td>`;
+    };
+    wrap.innerHTML = `<table><thead><tr><th>Ticket code</th><th>Partner</th><th>Type</th><th>Claimed by / issued to</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
+      <td class="code">${esc(t.code)}</td><td>${esc(pn(t.partner_id).name || "")}</td><td>${esc(t.ticket_type)}</td>${row(t)}</tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>${rows.length === 300 ? `<p class="muted">Showing the first 300. Search to narrow down.</p>` : ""}`;
   }
   async function onTPClick(e) {
     const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.tpLink) { const t = tpTickets.find((x) => x.id === b.dataset.tpLink), l = tpLink(t); try { await navigator.clipboard.writeText(l); b.textContent = "Link copied"; } catch (err) { prompt("Claim link", l); } return; }
+    const pid = b.dataset.passIn || b.dataset.passOut;
+    if (pid) {      // a claimed Day Pass code: check in the Day Pass it became
+      const patch = b.dataset.passIn ? { checked_in_at: new Date().toISOString(), checked_in_by: me.id } : { checked_in_at: null, checked_in_by: null };
+      const { error } = await sb.from("free_passes").update(patch).eq("id", pid);
+      if (error) return alert("Couldn't update: " + error.message);
+      tpTickets = tpTickets.map((t) => (t.pass && t.pass.id === pid ? { ...t, pass: { ...t.pass, checked_in_at: patch.checked_in_at } } : t)); return renderTP();
+    }
     const id = b.dataset.tpIn || b.dataset.tpOut || b.dataset.tpName; if (!id) return;
     let patch;
     if (b.dataset.tpIn) patch = { checked_in_at: new Date().toISOString(), checked_in_by: me.id };
     if (b.dataset.tpOut) patch = { checked_in_at: null, checked_in_by: null };
     if (b.dataset.tpName) { const t = tpTickets.find((x) => x.id === id), v = prompt(`Who is ${t.code} for?`, t.issued_to || ""); if (v === null) return; patch = { issued_to: v.trim() || null }; }
-    const { data, error } = await sb.from("brf_partner_tickets").update(patch).eq("id", id).select().single();
+    const { data, error } = await sb.from("brf_partner_tickets").update(patch).eq("id", id).select(TP_SEL).single();
     if (error) return alert("Couldn't update: " + error.message);
     tpTickets = tpTickets.map((t) => (t.id === id ? data : t)); renderTP();
   }
@@ -1018,8 +1077,13 @@
     const p = tpPartners.find((x) => x.id === pid), list = tpTickets.filter((t) => t.partner_id === pid);
     try {
       if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
-      const X = window.XLSX, rows = list.map((t) => ({ "Ticket code": t.code, "Ticket number": t.serial, Type: t.ticket_type, "Issued to": t.issued_to || "", "Checked in": t.checked_in_at ? new Date(t.checked_in_at) : "" }));
-      const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 16 }, { wch: 14 }, { wch: 28 }, { wch: 28 }, { wch: 20 }];
+      const X = window.XLSX, rows = list.map((t) => {
+        const p = t.pass, ci = isDP(t) ? p && p.checked_in_at : t.checked_in_at;
+        return { "Ticket code": t.code, "Ticket number": t.serial, Type: t.ticket_type, "Claim link (send this)": isDP(t) ? tpLink(t) : "",
+          "Claimed by": p ? `${p.first_name} ${p.last_name}` : t.issued_to || "", Email: p ? p.email : "", Phone: p ? p.phone : "", "Pass code": p ? p.pass_code : "",
+          Claimed: t.claimed_at ? new Date(t.claimed_at) : "", "Checked in": ci ? new Date(ci) : "" };
+      });
+      const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 18 }, { wch: 12 }, { wch: 14 }, { wch: 62 }, { wch: 24 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 18 }];
       const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Tickets");
       X.writeFile(wb, `${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brf-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (err) { alert("Couldn't build the Excel file. Check your connection and try again."); }

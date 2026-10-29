@@ -72,6 +72,19 @@ window.PassStore = (() => {
         return { ok: false, error: e.code || "network" };
       }
     },
+    /* Partner Day Pass codes: check one (who it's from, used or not), and claim one with the same details as the form. */
+    checkCode: (code) => call("partner_code_check", { p_code: code }),
+    async claimPartner({ code, first, last, email, phone, tag }) {
+      try {
+        const r = await rpc("claim_partner_ticket", {
+          p_code: code, p_first_name: first, p_last_name: last, p_email: email, p_phone: phone, p_has_tag: !!tag, p_tag: tag || null,
+        });
+        if (!r.existing) total += 1;
+        return { ok: true, isNew: !r.existing, pass: { code: r.pass_code, name: `${first} ${last}`.trim(), first, last, email, phone, tag: tag || "", token: r.token, partnerCode: code } };
+      } catch (e) {
+        return { ok: false, error: e.code || "network" };
+      }
+    },
     /* 1 Million Questions, marked on the server. Each call resolves to { ok, data } or { ok: false, error }. */
     trivia: {
       status: (token) => call("trivia_status", { p_token: token }),

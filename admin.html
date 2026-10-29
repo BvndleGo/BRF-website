@@ -62,6 +62,10 @@
     .evpp { display: flex; gap: 16px; align-items: flex-start; padding: 14px; border-radius: 14px; background: rgba(243,240,235,.04); }
     .evpp__qr { flex: none; width: 150px; background: #fff; border-radius: 10px; padding: 4px; } .evpp__qr svg { display: block; width: 100%; height: auto; }
     .evpp__btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .evlogo { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(243,240,235,.14); }
+    .evlogo p { margin: 4px 0 8px; }
+    .evlogo__prev { display: flex; align-items: center; min-height: 56px; padding: 10px; border-radius: 10px; background: #111; border: 1px dashed rgba(243,240,235,.25); }
+    .evlogo__prev img { max-height: 64px; max-width: 100%; object-fit: contain; }
     .evact { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: rgba(243,240,235,.04); }
     .evact .field { display: grid; gap: 6px; margin: 0; } .evact .field > span { font-size: 13px; font-weight: 600; }
     .evact__row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
@@ -114,6 +118,6 @@
 <main class="admin wrap" id="admin"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="js/store.js?v=9"></script>
-<script src="js/admin.js?v=12"></script>
+<script src="js/admin.js?v=14"></script>
 </body>
 </html>
