@@ -630,7 +630,9 @@
   }
 
   /* ---------- Passport and QR activities for an event (passport.html on the site) ---------- */
-  let evActs = [], evDone = [];
+  let evActs = [], evDone = [], evFails = [];
+  // a question can be edited only while nobody has answered or tried it (the database enforces this too)
+  const actUsed = (a) => evDone.some((x) => x.activity_id === a.id) || evFails.some((x) => x.activity_id === a.id);
   const KIND = { quiz: "Quiz question", puzzle: "Word puzzle", staff: "Staff code" };
   const siteBase = () => location.origin + location.pathname.replace(/[^/]*$/, "");   // folder of the admin page, whether opened as /admin or /admin.html
   const ppUrl = () => `${siteBase()}passport.html?e=${evCur.passport_key}`;
@@ -674,9 +676,12 @@
           <div class="evlogo"><b>Event logo</b><p class="muted">Shown at the top of the passport and activity pages (the BRF logo isn't shown there). PNG, JPG or WebP.</p>
             <div class="evlogo__prev" id="evLogoPrev"></div>
             <div class="evpp__btns"><label class="btn btn--sm btn--ghost"><input type="file" id="evLogoFile" accept="image/png,image/jpeg,image/webp" hidden><i class="ph-bold ph-upload-simple" aria-hidden="true"></i> <span id="evLogoBtn">Upload logo</span></label><button class="btn btn--sm btn--ghost" type="button" id="evLogoDel" hidden><i class="ph-bold ph-trash" aria-hidden="true"></i> Remove</button></div>
-            <p class="evmsg" id="evLogoMsg" role="status"></p></div></div></div>
+            <p class="evmsg" id="evLogoMsg" role="status"></p></div>
+          <div class="evlogo"><b>Card name</b><p class="muted">What people's digital card is called on their phone, e.g. Hero Card. Leave empty for "passport".</p>
+            <div class="evpp__btns"><input class="input" id="evCardName" maxlength="30" placeholder="passport" style="max-width:220px"><button class="btn btn--sm btn--ghost" type="button" id="evCardSave">Save name</button></div>
+            <p class="evmsg" id="evCardMsg" role="status"></p></div></div></div>
         <form class="evact" id="evActForm" novalidate>
-          <b>New activity</b>
+          <b id="evActHead">New activity</b>
           <div class="evact__row">
             <label class="field"><span>Type</span><select class="input" name="kind"><option value="quiz">Quiz question</option><option value="puzzle">Word puzzle</option><option value="staff">Staff code</option></select></label>
             <label class="field"><span>Coins</span><input class="input" name="coins" type="number" min="1" step="1" value="2" required></label>
@@ -690,7 +695,7 @@
           <label class="field" data-for="puzzle" hidden><span>Word to spell (2 to 16 letters)</span><input class="input" name="word" maxlength="16" placeholder="BVNDLE" autocapitalize="characters"></label>
           <label class="field" data-for="staff" hidden><span>Staff code (3 to 12 characters, give it to the booth staff)</span><input class="input" name="pin" maxlength="12" placeholder="e.g. 4821"></label>
           <p class="evmsg" id="evActMsg" role="status"></p>
-          <button class="btn btn--pink btn--sm" type="submit"><i class="ph-bold ph-plus" aria-hidden="true"></i> Add activity</button>
+          <div class="evpp__btns"><button class="btn btn--pink btn--sm" type="submit" id="evActGo"><i class="ph-bold ph-plus" aria-hidden="true"></i> Add activity</button><button class="btn btn--ghost btn--sm" type="button" id="evActCancel" hidden>Cancel edit</button></div>
         </form>
       </div>
       <div class="table-wrap" id="evActList"></div>
@@ -706,7 +711,16 @@
     f.kind.addEventListener("change", syncKind); syncKind();
     f.addEventListener("submit", addActivity);
     document.getElementById("evLive").addEventListener("click", toggleLive);
-    document.getElementById("evPpPng").addEventListener("click", () => downloadQr(ppUrl(), `${evCur.name}`, "Get your Bvndle passport"));
+    document.getElementById("evPpPng").addEventListener("click", () => downloadQr(ppUrl(), `${evCur.name}`, `Get your ${evCur.card_name || "Bvndle passport"}`));
+    const cn = document.getElementById("evCardName"); cn.value = evCur.card_name || "";
+    document.getElementById("evCardSave").addEventListener("click", async () => {
+      const v = cn.value.trim().replace(/\s+/g, " "), msg = document.getElementById("evCardMsg");
+      if (v && (v.length < 2 || v.length > 30)) return (msg.textContent = "Use 2 to 30 characters, or leave it empty.");
+      const { data, error } = await sb.from("brf_events").update({ card_name: v || null }).eq("id", evCur.id).select().single();
+      if (error) return (msg.textContent = "Couldn't save: " + error.message);
+      evCur = data; msg.textContent = v ? `Saved. People now get a "${v}".` : 'Saved. The card is called "passport".';
+    });
+    document.getElementById("evActCancel").addEventListener("click", stopEdit);
     document.getElementById("evPpCopy").addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(ppUrl()); e.currentTarget.textContent = "Copied"; } catch (err) { prompt("Passport link", ppUrl()); } });
     document.getElementById("evPrint").addEventListener("click", printSheet);
     document.getElementById("evLogoFile").addEventListener("change", uploadLogo);
@@ -763,6 +777,7 @@
     evActs = data;
     const ids = evActs.map((a) => a.id);
     evDone = ids.length ? ((await sb.from("brf_activity_done").select("activity_id,correct,coins").in("activity_id", ids)).data || []) : [];
+    evFails = ids.length ? ((await sb.from("brf_activity_fails").select("activity_id").in("activity_id", ids)).data || []) : [];
     renderActs();
   }
   function renderActs() {
@@ -774,13 +789,15 @@
       return `<tr><td data-l="Activity"><b>${esc(a.title)}</b>${a.prompt ? `<br><span class="muted">${esc(a.prompt)}</span>` : ""}</td><td data-l="Type">${KIND[a.kind]}</td><td data-l="Coins" class="code">${a.coins}</td><td data-l="Answer">${ans}</td>
         <td data-l="Done">${d.length}${a.kind === "quiz" ? ` <span class="muted">(${won} right)</span>` : ""}</td>
         <td data-l="Status"><button class="linkish" type="button" data-act-toggle="${a.id}">${a.active ? "Open" : "Closed"}</button></td>
-        <td><button class="btn btn--sm btn--ghost" type="button" data-act-qr="${a.id}"><i class="ph-bold ph-qr-code" aria-hidden="true"></i> QR</button> <button class="linkish" type="button" data-act-del="${a.id}">Delete</button></td></tr>`;
+        <td><button class="btn btn--sm btn--ghost" type="button" data-act-qr="${a.id}"><i class="ph-bold ph-qr-code" aria-hidden="true"></i> QR</button> ${actUsed(a) ? `<button class="linkish" type="button" disabled title="People have already taken part, so it can't be edited">Edit</button>` : `<button class="linkish" type="button" data-act-edit="${a.id}">Edit</button>`} <button class="linkish" type="button" data-act-del="${a.id}">Delete</button></td></tr>`;
     }).join("")}</tbody></table>`;
   }
   async function addActivity(e) {
     e.preventDefault();
     const f = e.target, msg = document.getElementById("evActMsg"), kind = f.kind.value;
+    const editing = f.dataset.editing || "";
     const row = { event_id: evCur.id, kind, title: f.title.value.trim(), prompt: f.prompt.value.trim() || null, coins: Math.floor(Number(f.coins.value)), sort: evActs.length };
+    if (editing) { delete row.sort; delete row.event_id; Object.assign(row, { options: null, correct: null, word: null, pin: null }); }
     if (row.title.length < 2) return (msg.textContent = "Give the activity a title.");
     if (!(row.coins > 0)) return (msg.textContent = "Coins must be 1 or more.");
     if (kind === "quiz") {
@@ -793,15 +810,43 @@
     }
     if (kind === "puzzle") { row.word = f.word.value.replace(/\s/g, "").toUpperCase(); if (row.word.length < 2 || row.word.length > 16) return (msg.textContent = "The word needs 2 to 16 letters."); }
     if (kind === "staff") { row.pin = f.pin.value.trim(); if (row.pin.length < 3) return (msg.textContent = "The staff code needs at least 3 characters."); }
+    if (editing) {
+      const { data, error } = await sb.from("brf_event_activities").update(row).eq("id", editing).select().single();
+      if (error) return (msg.textContent = /activity_in_use/.test(error.message) ? "Someone has already taken part in this one, so it can't be edited any more." : "Couldn't save: " + error.message);
+      evActs = evActs.map((x) => (x.id === editing ? data : x)); stopEdit(); renderActs();
+      return (msg.textContent = `"${data.title}" saved. Its QR code hasn't changed, so printed codes still work.`);
+    }
     const { data, error } = await sb.from("brf_event_activities").insert(row).select().single();
     if (error) return (msg.textContent = "Couldn't add: " + error.message);
     evActs.push(data); renderActs();
     msg.textContent = `"${data.title}" added. Download its QR code from the list.`;
     const k = f.kind.value; f.reset(); f.kind.value = k; f.coins.value = row.coins; f.dispatchEvent(new Event("change")); f.kind.dispatchEvent(new Event("change"));
   }
+  function startEdit(a) {
+    if (actUsed(a)) return alert("People have already taken part in this one, so it can't be edited.");
+    const f = document.getElementById("evActForm"); f.reset();
+    f.dataset.editing = a.id; f.kind.value = a.kind; f.kind.dispatchEvent(new Event("change"));
+    f.coins.value = a.coins; f.title.value = a.title; f.prompt.value = a.prompt || "";
+    if (a.kind === "quiz") (a.options || []).forEach((o, i) => { if (f["opt" + i]) f["opt" + i].value = o; });
+    if (a.kind === "quiz") { const r = f.querySelector(`[name=correct][value="${a.correct}"]`); if (r) r.checked = true; }
+    if (a.kind === "puzzle") f.word.value = a.word || "";
+    if (a.kind === "staff") f.pin.value = a.pin || "";
+    document.getElementById("evActHead").textContent = `Edit "${a.title}"`;
+    document.getElementById("evActGo").innerHTML = '<i class="ph-bold ph-floppy-disk" aria-hidden="true"></i> Save changes';
+    document.getElementById("evActCancel").hidden = false;
+    document.getElementById("evActMsg").textContent = "Its QR code stays the same.";
+    f.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function stopEdit() {
+    const f = document.getElementById("evActForm"); delete f.dataset.editing; f.reset(); f.kind.dispatchEvent(new Event("change"));
+    document.getElementById("evActHead").textContent = "New activity";
+    document.getElementById("evActGo").innerHTML = '<i class="ph-bold ph-plus" aria-hidden="true"></i> Add activity';
+    document.getElementById("evActCancel").hidden = true; document.getElementById("evActMsg").textContent = "";
+  }
   async function onActClick(e) {
     const b = e.target.closest("button"); if (!b) return;
-    const a = evActs.find((x) => x.id === (b.dataset.actQr || b.dataset.actToggle || b.dataset.actDel)); if (!a) return;
+    const a = evActs.find((x) => x.id === (b.dataset.actQr || b.dataset.actToggle || b.dataset.actDel || b.dataset.actEdit)); if (!a) return;
+    if (b.dataset.actEdit) return startEdit(a);
     if (b.dataset.actQr) downloadQr(actUrl(a), a.title, `Earn ${a.coins} Bvndle coins`);
     if (b.dataset.actToggle) {
       const { data, error } = await sb.from("brf_event_activities").update({ active: !a.active }).eq("id", a.id).select().single();
@@ -818,7 +863,7 @@
   }
   // one printable page: the passport QR and every open activity, two per row
   async function printSheet() {
-    const items = [{ t: evCur.name, s: "Get your Bvndle passport", u: ppUrl() }].concat(evActs.filter((a) => a.active).map((a) => ({ t: a.title, s: `Earn ${a.coins} Bvndle coins`, u: actUrl(a) })));
+    const items = [{ t: evCur.name, s: `Get your ${evCur.card_name || "Bvndle passport"}`, u: ppUrl() }].concat(evActs.filter((a) => a.active).map((a) => ({ t: a.title, s: `Earn ${a.coins} Bvndle coins`, u: actUrl(a) })));
     const imgs = await Promise.all(items.map((it) => qrPng(it.u, it.t, it.s)));
     const w = open("", "_blank"); if (!w) return alert("Allow pop-ups to print the QR sheet.");
     w.document.write(`<!doctype html><title>QR codes: ${esc(evCur.name)}</title><style>body{margin:0;font-family:Arial,sans-serif}.g{display:grid;grid-template-columns:1fr 1fr;gap:10mm;padding:10mm}.g img{width:100%;border:1px solid #ddd;break-inside:avoid}@media print{.p{display:none}}</style><p class="p" style="padding:10px 10mm">Print this page (Ctrl/Cmd + P). Each code opens on the person's phone.</p><div class="g">${imgs.map((src) => `<img src="${src}" alt="">`).join("")}</div>`);

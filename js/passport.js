@@ -34,8 +34,13 @@
   const fail = (msg) => { app.innerHTML = `<div class="card center"><i class="ph-bold ph-warning-circle" style="font-size:40px;color:#ff9a7d" aria-hidden="true"></i><p>${esc(msg)}</p></div>`; };
   // each event brings its own logo (uploaded in admin); with none, the header shows just the event name
   const evLogo = document.getElementById("evLogo");
+  // each event can name its card (e.g. "Hero Card"); without a name it is the Bvndle passport
+  let CARD = "";
+  const card = () => CARD || "passport";
   const setEvent = (ev) => {
     if (!ev) return;
+    CARD = (ev.card_name || "").trim();
+    MSG.no_passport = `Get your ${card()} first.`; MSG.unknown_event = `This ${card()} QR code isn't active.`;
     evName.innerHTML = `<b>${esc(ev.name)}</b>${esc(ev.location || "")}`;
     if (ev.logo && /^data:image\/(png|jpeg|webp);base64,/.test(ev.logo)) { evLogo.src = ev.logo; evLogo.alt = ev.name || ""; evLogo.hidden = false; }
     else evLogo.hidden = true;
@@ -45,15 +50,15 @@
   /* ---------- passport form ---------- */
   function passportForm(pk, ev, after) {
     app.innerHTML = `
-      <h1>Get your passport.</h1>
-      <p class="lede">Your Bvndle digital passport for ${esc(ev.name)}. Scan the activity QR codes around the venue to earn coins, then collect them at the reward desk.</p>
+      <h1>Get your ${esc(card())}.</h1>
+      <p class="lede">Your ${CARD ? esc(CARD) : "Bvndle digital passport"} for ${esc(ev.name)}. Scan the activity QR codes around the venue to earn coins, then collect them at the reward desk.</p>
       <form class="card" id="ppForm" novalidate>
         <div class="field"><label for="ppName">Full name</label><input class="input" id="ppName" autocomplete="name" maxlength="120" required></div>
         <div class="field"><label for="ppEmail">Email</label><input class="input" id="ppEmail" type="email" autocomplete="email" inputmode="email" maxlength="160" required></div>
         <div class="field"><label for="ppPhone">Phone number</label><input class="input" id="ppPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="080..." required></div>
         <div class="field"><label for="ppTag">Bvndle tag <small>(optional, needed to get paid)</small></label><div class="affix"><span>@</span><input class="input" id="ppTag" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40"></div></div>
         <p class="err" id="ppErr" role="alert"></p>
-        <button class="btn" type="submit" id="ppGo">Issue my passport <i class="ph-bold ph-identification-card" aria-hidden="true"></i></button>
+        <button class="btn" type="submit" id="ppGo">Issue my ${esc(card())} <i class="ph-bold ph-identification-card" aria-hidden="true"></i></button>
         <p class="fine">No Bvndle tag yet? You can add it at the reward desk when you collect your coins.</p>
       </form>`;
     const f = document.getElementById("ppForm"), err = document.getElementById("ppErr"), go = document.getElementById("ppGo");
@@ -83,11 +88,11 @@
       : p.tag ? `Collect your coins at the reward desk before you leave. They'll be sent to <b>@${esc(p.tag)}</b>.`
       : `Collect your coins at the reward desk before you leave. <b>You'll need a Bvndle tag</b> to get paid: download the Bvndle app and create one.`;
     return `
-      ${opts.welcome ? `<h1>${opts.existing ? "Welcome back." : "You're a Bvndle citizen!"}</h1><p class="lede">${opts.existing ? "Here's your passport." : "Your passport is ready. Keep this page open, or come back to it from any activity QR code."}</p>` : ""}
-      <article class="pp" aria-label="Your Bvndle passport">
+      ${opts.welcome ? `<h1>${opts.existing ? "Welcome back." : CARD ? `Your ${esc(CARD)} is ready!` : "You're a Bvndle citizen!"}</h1><p class="lede">${opts.existing ? `Here's your ${esc(card())}.` : `${CARD ? "Keep" : "Your passport is ready. Keep"} this page open, or come back to it from any activity QR code.`}</p>` : ""}
+      <article class="pp" aria-label="Your ${esc(CARD || "Bvndle passport")}">
         <span class="pp__glow" aria-hidden="true"></span>
-        <div class="pp__row"><span>Bvndle passport</span><span>No. ${esc(p.number)}</span></div>
-        <p class="pp__cit">Bvndle citizen</p>
+        <div class="pp__row"><span>${CARD ? "Bvndle" : "Bvndle passport"}</span><span>No. ${esc(p.number)}</span></div>
+        <p class="pp__cit">${esc(CARD || "Bvndle citizen")}</p>
         <p class="pp__name">${esc(p.name)}</p>
         <div class="pp__meta"><span>${esc(ev.name || "")}</span>${p.tag ? `<span>@${esc(p.tag)}</span>` : ""}</div>
         <div class="pp__coins"><b>${n(p.coins)}</b><span>Bvndle coins earned</span></div>
@@ -118,7 +123,7 @@
     if (!r.ok) return fail(MSG[r.error] || MSG.network);
     const x = r.data;
     if (!x.has_passport) { dropTok(pk); return passportForm(pk, x.event, () => openActivity()); }
-    const back = `<a class="btn btn--ghost" href="passport.html?e=${encodeURIComponent(pk)}" style="margin-top:14px">View my passport <i class="ph-bold ph-identification-card" aria-hidden="true"></i></a>`;
+    const back = `<a class="btn btn--ghost" href="passport.html?e=${encodeURIComponent(pk)}" style="margin-top:14px">View my ${esc(card())} <i class="ph-bold ph-identification-card" aria-hidden="true"></i></a>`;
     const head = `<span class="act__coins"><i class="ph-fill ph-coins" aria-hidden="true"></i> ${n(x.coins)} coins</span><h2>${esc(x.title)}</h2>${x.prompt ? `<p class="lede">${esc(x.prompt)}</p>` : ""}`;
     if (x.done) return (app.innerHTML = `<div class="card">${head}<div class="result">${x.earned ? `<i class="ph-bold ph-seal-check" style="color:var(--green)" aria-hidden="true"></i><p>You earned <b>${n(x.earned)} coins</b> here.</p>` : `<i class="ph-bold ph-x-circle" style="color:#ff9a7d" aria-hidden="true"></i><p>You've already had your go at this one.</p>`}</div>${back}</div>`);
     if (!x.event.live) return (app.innerHTML = `<div class="card">${head}<p class="status">${MSG.event_not_live}</p>${back}</div>`);
@@ -131,7 +136,7 @@
     };
     const win = (res) => {
       app.innerHTML = `<div class="card"><div class="result"><p class="big">+${n(res.earned)}</p><h2>Coins earned!</h2>
-        <p class="lede">${esc(x.title)} done. You now have <b>${n(res.passport.coins)} coins</b> on your passport.</p></div>${back}</div>`;
+        <p class="lede">${esc(x.title)} done. You now have <b>${n(res.passport.coins)} coins</b> on your ${esc(card())}.</p></div>${back}</div>`;
       confetti();
     };
 
