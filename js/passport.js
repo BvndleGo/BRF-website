@@ -51,7 +51,7 @@
   function passportForm(pk, ev, after) {
     app.innerHTML = `
       <h1>Get your ${esc(card())}.</h1>
-      <p class="lede">Your ${CARD ? esc(CARD) : "Bvndle digital passport"} for ${esc(ev.name)}. Scan the activity QR codes around the venue to earn coins, then collect them at the reward desk.</p>
+      <p class="lede">Your ${CARD ? esc(CARD) : "Bvndle digital passport"} for ${esc(ev.name)}. Scan the activity QR codes around the venue to earn coins, then collect them at the Bvndle reward desk.</p>
       <form class="card" id="ppForm" novalidate>
         <div class="field"><label for="ppName">Full name</label><input class="input" id="ppName" autocomplete="name" maxlength="120" required></div>
         <div class="field"><label for="ppEmail">Email</label><input class="input" id="ppEmail" type="email" autocomplete="email" inputmode="email" maxlength="160" required></div>
@@ -59,7 +59,7 @@
         <div class="field"><label for="ppTag">Bvndle tag <small>(optional, needed to get paid)</small></label><div class="affix"><span>@</span><input class="input" id="ppTag" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40"></div></div>
         <p class="err" id="ppErr" role="alert"></p>
         <button class="btn" type="submit" id="ppGo">Issue my ${esc(card())} <i class="ph-bold ph-identification-card" aria-hidden="true"></i></button>
-        <p class="fine">No Bvndle tag yet? You can add it at the reward desk when you collect your coins.</p>
+        <p class="fine">No Bvndle tag yet? You can add it at the Bvndle reward desk when you collect your coins.</p>
       </form>`;
     const f = document.getElementById("ppForm"), err = document.getElementById("ppErr"), go = document.getElementById("ppGo");
     f.addEventListener("submit", async (e) => {
@@ -80,13 +80,27 @@
   }
 
   /* ---------- the passport ---------- */
+  // the activity grid: card i shows its number until done, then flips to the activity and what it paid.
+  // A card flips with an animation the first time it is seen done on this phone, and shows flipped after that.
+  const COLORS = ["#FF3E8E", "#FFD23F", "#69E392", "#8B80F9", "#FF8A3D", "#4FD1E8"];
+  const seenKey = (num) => "brf-pp-seen-" + num;
+  const seenGet = (num) => { try { return JSON.parse(localStorage.getItem(seenKey(num)) || "[]"); } catch (e) { return []; } };
+  function tile(a, i, num) {
+    const seen = seenGet(num), id = a.title + "|" + i, fresh = a.done && !seen.includes(id) && !reduce;
+    if (a.done && !seen.includes(id)) { try { localStorage.setItem(seenKey(num), JSON.stringify(seen.concat(id))); } catch (e) {} }
+    const cls = ["tl", a.done ? (fresh ? "is-anim" : "is-flip") : "", a.done && !a.earned ? "is-miss" : ""].filter(Boolean).join(" ");
+    const label = a.done ? `${a.title}: ${a.earned ? `earned ${a.earned} coins` : "not this time"}` : `Activity ${i + 1}, ${a.coins} coins, not done yet`;
+    return `<li class="${cls}" style="--c:${COLORS[i % COLORS.length]};animation-delay:${i * 60}ms" aria-label="${esc(label)}"><div class="tl__in" style="animation-delay:${200 + i * 90}ms">
+      <div class="tl__f" aria-hidden="true"><b>${i + 1}</b><small>${n(a.coins)} coins</small></div>
+      <div class="tl__b" aria-hidden="true"><span class="n">${i + 1}</span><span class="t">${esc(a.title)}</span><span class="c">${a.done && a.earned ? `+${n(a.earned)}` : "Not this time"}</span></div></div></li>`;
+  }
   function passportHTML(p, opts = {}) {
     const ev = p.event || {}, acts = p.activities || [], done = acts.filter((a) => a.done).length;
     const status = p.status === "paid" ? `<b>Paid.</b> Your coins have been sent to @${esc(p.tag || "your Bvndle account")}.`
       : p.status === "approved" ? `<b>Approved.</b> Your coins are on their way${p.tag ? ` to @${esc(p.tag)}` : ""}.`
       : !p.coins ? "Scan the activity QR codes around the venue to start earning."
-      : p.tag ? `Collect your coins at the reward desk before you leave. They'll be sent to <b>@${esc(p.tag)}</b>.`
-      : `Collect your coins at the reward desk before you leave. <b>You'll need a Bvndle tag</b> to get paid: download the Bvndle app and create one.`;
+      : p.tag ? `Collect your coins at the Bvndle reward desk before you leave. They'll be sent to <b>@${esc(p.tag)}</b>.`
+      : `Collect your coins at the Bvndle reward desk before you leave. <b>You'll need a Bvndle tag</b> to get paid: download the Bvndle app and create one.`;
     return `
       ${opts.welcome ? `<h1>${opts.existing ? "Welcome back." : CARD ? `Your ${esc(CARD)} is ready!` : "You're a Bvndle citizen!"}</h1><p class="lede">${opts.existing ? `Here's your ${esc(card())}.` : `${CARD ? "Keep" : "Your passport is ready. Keep"} this page open, or come back to it from any activity QR code.`}</p>` : ""}
       <article class="pp" aria-label="Your ${esc(CARD || "Bvndle passport")}">
@@ -99,8 +113,7 @@
       </article>
       <p class="status">${status}</p>
       ${acts.length ? `<p class="h3">Activities &middot; ${done} of ${acts.length} done</p>
-      <ul class="stamps">${acts.map((a) => `<li class="${a.done ? (a.earned ? "is-done" : "is-miss") : ""}"><i class="ph-${a.done ? "fill" : "bold"} ${a.done ? (a.earned ? "ph-seal-check" : "ph-x-circle") : "ph-qr-code"}" aria-hidden="true"></i>
-        <span>${esc(a.title)}<br><small>${a.done ? (a.earned ? "Done" : "Not this time") : "Find its QR code"}</small></span><span class="c">${a.done ? `+${n(a.earned)}` : `${n(a.coins)} coins`}</span></li>`).join("")}</ul>` : ""}
+      <ul class="tiles2">${acts.map((a, i) => tile(a, i, p.number)).join("")}</ul>` : ""}
       ${ev.live === false ? `<p class="fine">Activities open when the event goes live.</p>` : ""}`;
   }
   async function showPassport(pk, ev, data) {

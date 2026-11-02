@@ -1076,7 +1076,7 @@
       wallet.hidden = false;
       wallet.innerHTML = `<div class="wallet__top"><p class="wallet__label">Your BvndleCoins</p><p class="wallet__total"><b>${n(w.earned)}</b> earned</p></div>
         <ul class="wallet__list">${rows}</ul>
-        <p class="wallet__note">Each game pays once per ticket. Collect your coins at the reward desk at the festival with your pass code${Number(w.collected) ? ` &middot; ${n(w.collected)} collected` : ""}.</p>`;
+        <p class="wallet__note">Each game pays once per ticket. Collect your coins at the Bvndle reward desk at the festival with your pass code${Number(w.collected) ? ` &middot; ${n(w.collected)} collected` : ""}.</p>`;
     }
     const pc = $("#passCoins"); if (pc) pc.textContent = Number(w.earned) ? `${n(w.earned)} BvndleCoins to collect at the festival` : "";
   }
