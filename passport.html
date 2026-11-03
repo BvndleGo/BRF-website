@@ -40,6 +40,21 @@
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; padding: 0 22px; border-radius: 999px; border: 2px solid var(--ink); background: var(--pink); color: var(--ink); font: 800 17px var(--body); cursor: pointer; box-shadow: 4px 4px 0 var(--fg); text-decoration: none; }
     .btn:disabled { opacity: .5; cursor: default; }
     .btn--ghost { background: transparent; color: var(--fg); border-color: var(--fg); box-shadow: none; }
+    /* raffle nudge toast */
+    .rt { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 20; width: min(440px, calc(100% - 24px)); display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; padding: 14px 14px 14px 16px; border-radius: 20px; background: var(--yellow); color: var(--ink); border: 2px solid var(--ink); box-shadow: 5px 5px 0 var(--pink); transform: translateX(-50%); animation: rtIn .55s cubic-bezier(.2, 1.5, .4, 1) both; }
+    .rt--win { background: var(--green); }
+    .rt.is-out { animation: rtOut .35s ease-in both; }
+    .rt__ico { font-size: 32px; line-height: 1; animation: rtWig 1.2s ease-in-out .5s 2; display: inline-block; }
+    .rt__txt { display: grid; gap: 2px; font-size: 14px; line-height: 1.35; }
+    .rt__txt b { font: 400 22px/1 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+    .rt__dots { display: flex; gap: 5px; margin-top: 8px; }
+    .rt__dots i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--ink); background: transparent; }
+    .rt__dots i.on { background: var(--ink); }
+    .rt__x { border: 0; background: transparent; color: var(--ink); font-size: 26px; line-height: 1; padding: 0 2px; cursor: pointer; }
+    @keyframes rtIn { from { opacity: 0; transform: translate(-50%, 40px) scale(.9); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+    @keyframes rtOut { to { opacity: 0; transform: translate(-50%, 30px); } }
+    @keyframes rtWig { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg) scale(1.15); } 75% { transform: rotate(12deg) scale(1.15); } }
+    @media (prefers-reduced-motion: reduce) { .rt, .rt.is-out, .rt__ico { animation: none; } }
     .agree { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 12px; font-size: 14px; line-height: 1.45; color: var(--dim); cursor: pointer; }
     .agree input { flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--pink); }
     .agree a { color: var(--yellow); font-weight: 700; }
@@ -105,6 +120,6 @@
     <div id="app" aria-live="polite"><div class="spin">Loading...</div></div>
   </main>
   <script src="js/store.js?v=9"></script>
-  <script src="js/passport.js?v=5"></script>
+  <script src="js/passport.js?v=6"></script>
 </body>
 </html>

@@ -82,6 +82,29 @@
     document.getElementById("ppName").focus({ preventScroll: true });
   }
 
+  /* ---------- raffle nudge: events with a raffle draw for people who open every QR code ----------
+     A small toast pops up when someone is 2 away, 1 away, and when they've done them all (once each per phone). */
+  const RAFFLE = { "71c847a3cbe0490eb407d6830d3da262": true };   // passport key -> raffle on (Heroes Award, 3 Nov)
+  function raffleNudge(pk, p) {
+    if (!pk || !RAFFLE[pk] || !p) return;
+    const acts = p.activities || [], total = acts.length, done = acts.filter((a) => a.done).length, left = total - done;
+    if (total < 3 || left > 2) return;
+    const key = `brf-raffle-${pk}-${left}`; try { if (localStorage.getItem(key)) return; localStorage.setItem(key, "1"); } catch (e) {}
+    const head = left === 0 ? "You're in the raffle draw!" : left === 1 ? "Just one more!" : "So close!";
+    const body = left === 0 ? `You've opened all ${total} QR codes. Good luck in the draw!`
+      : `You've opened ${done} QR codes. Open ${left === 1 ? "1 more" : "2 more"} to enter our raffle draw.`;
+    const old = document.getElementById("raffleToast"); if (old) old.remove();
+    document.body.insertAdjacentHTML("beforeend", `<div class="rt${left === 0 ? " rt--win" : ""}" id="raffleToast" role="status">
+      <span class="rt__ico" aria-hidden="true">${left === 0 ? "🎉" : "🎟️"}</span>
+      <div class="rt__txt"><b>${head}</b><span>${body}</span>
+        <span class="rt__dots" aria-hidden="true">${acts.map((a) => `<i class="${a.done ? "on" : ""}"></i>`).join("")}</span></div>
+      <button class="rt__x" type="button" aria-label="Close">&times;</button></div>`);
+    const t = document.getElementById("raffleToast"), close = () => { t.classList.add("is-out"); setTimeout(() => t.remove(), 350); };
+    t.querySelector(".rt__x").addEventListener("click", close);
+    setTimeout(close, 10000);
+    if (left === 0) confetti();
+  }
+
   /* ---------- the passport ---------- */
   // the activity grid: card i shows its number until done, then flips to the activity and what it paid.
   // A card flips with an animation the first time it is seen done on this phone, and shows flipped after that.
@@ -120,12 +143,12 @@
       ${ev.live === false ? `<p class="fine">Activities open when the event goes live.</p>` : ""}`;
   }
   async function showPassport(pk, ev, data) {
-    if (data) { app.innerHTML = passportHTML(data.passport, { welcome: true, existing: data.existing }); if (!data.existing) confetti(); return; }
+    if (data) { app.innerHTML = passportHTML(data.passport, { welcome: true, existing: data.existing }); if (!data.existing) confetti(); raffleNudge(pk, data.passport); return; }
     const tok = getTok(pk);
     if (!tok) return passportForm(pk, ev, (d) => showPassport(pk, ev, d));
     const r = await rpc("passport_me", { p_token: tok });
     if (!r.ok) { if (r.error === "invalid_token") { dropTok(pk); return passportForm(pk, ev, (d) => showPassport(pk, ev, d)); } return fail(MSG[r.error] || MSG.network); }
-    app.innerHTML = passportHTML(r.data);
+    app.innerHTML = passportHTML(r.data); raffleNudge(pk, r.data);
   }
 
   /* ---------- activities ---------- */
@@ -154,6 +177,7 @@
       app.innerHTML = `<div class="card"><div class="result"><p class="big">+${n(res.earned)}</p><h2>Coins earned!</h2>
         <p class="lede">${esc(x.title)} done. You now have <b>${n(res.passport.coins)} coins</b> on your ${esc(card())}.</p></div>${back}</div>`;
       confetti();
+      setTimeout(() => raffleNudge(pk, res.passport), 900);
     };
 
     if (x.kind === "quiz") {
@@ -166,6 +190,7 @@
         if (res.correct) return win(res);
         b.classList.add("is-wrong");
         app.querySelector(".card").insertAdjacentHTML("afterbegin", `<p class="status" style="margin:0 0 14px">Not this time. Keep scanning: there are more activities around the venue.</p>`);
+        raffleNudge(pk, res.passport);
       });
     } else if (x.kind === "puzzle") {
       const letters = x.letters || []; let picked = [];
