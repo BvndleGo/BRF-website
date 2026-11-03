@@ -1030,16 +1030,33 @@
     $i("tpWrap").addEventListener("click", onTPClick);
     $i("tpList").addEventListener("click", (e) => { const b = e.target.closest("[data-tp-export]"); if (b) exportPartnerTickets(b.dataset.tpExport); });
     const nf = $i("tpNew");
-    nf.name.addEventListener("input", () => { if (!nf.prefix.dataset.touched) nf.prefix.value = nf.name.value.trim() ? "BRF" + nf.name.value.trim()[0].toUpperCase() + "-" : ""; });
-    nf.prefix.addEventListener("input", () => (nf.prefix.dataset.touched = "1"));
+    // the form's fields by selector (a field called "name" clashes with the form's own name property in some browsers)
+    const fName = nf.querySelector("[name=name]"), fPre = nf.querySelector("[name=prefix]"), fCon = nf.querySelector("[name=contact]"), fGo = nf.querySelector("[type=submit]");
+    const cleanPre = (v) => { const core = v.toUpperCase().replace(/[^A-Z0-9]/g, ""); return core ? core + "-" : ""; };   // "brf-dt" -> "BRFDT-"
+    const taken = (pre) => tpPartners.some((p) => p.prefix === pre);
+    // suggestion: BRF + the initials of the name (up to 3), made unique with a number: "The Daily Times" -> BRFTDT-
+    const suggest = (name) => {
+      const ini = name.toUpperCase().replace(/[^A-Z0-9 ]/g, " ").split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 3);
+      if (!ini) return ""; let pre = "BRF" + ini + "-", k = 2;
+      while (taken(pre) && k < 100) pre = "BRF" + ini + k++ + "-";
+      return pre;
+    };
+    fName.addEventListener("input", () => { if (!fPre.dataset.touched) fPre.value = suggest(fName.value.trim()); });
+    fPre.addEventListener("input", () => (fPre.dataset.touched = "1"));
     nf.addEventListener("submit", async (e) => {
-      e.preventDefault(); const msg = $i("tpNewMsg");
-      let prefix = nf.prefix.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, ""); if (prefix && !prefix.endsWith("-")) prefix += "-";
-      if (nf.name.value.trim().length < 2) return (msg.textContent = "Add the partner's name.");
-      if (!/^[A-Z0-9]{2,12}-$/.test(prefix)) return (msg.textContent = "Code start must be 2 to 12 letters or numbers followed by a dash, e.g. BRFV-.");
-      const { error } = await sb.from("brf_ticket_partners").insert({ name: nf.name.value.trim(), prefix, contact: nf.contact.value.trim() || null });
-      if (error) return (msg.textContent = "Couldn't add: " + tpErr(error));
-      msg.textContent = `${nf.name.value.trim()} added with code start ${prefix}`; nf.reset(); delete nf.prefix.dataset.touched; loadPT();
+      e.preventDefault(); const msg = $i("tpNewMsg"), name = fName.value.trim(), prefix = cleanPre(fPre.value);
+      const say = (t, bad) => { msg.textContent = t; msg.style.color = bad ? "#ff9a7d" : ""; };
+      if (name.length < 2) { fName.focus(); return say("Add the partner's name.", true); }
+      if (!/^[A-Z0-9]{2,12}-$/.test(prefix)) { fPre.focus(); return say("Code start must be 2 to 12 letters or numbers, e.g. BRFV (the dash is added for you).", true); }
+      if (taken(prefix)) { fPre.value = suggest(name) || prefix; fPre.focus(); return say(`${prefix} is already used by ${tpPartners.find((p) => p.prefix === prefix).name}. Try ${fPre.value} instead.`, true); }
+      fGo.disabled = true; say("Adding...");
+      try {
+        const { error } = await sb.from("brf_ticket_partners").insert({ name, prefix, contact: fCon.value.trim() || null });
+        if (error) return say("Couldn't add: " + tpErr(error), true);
+        say(`${name} added with code start ${prefix}. Pick it under Allocate tickets.`); nf.reset(); delete fPre.dataset.touched; await loadPT();
+        const sel = $i("tpAlloc").querySelector("[name=partner]"), np = tpPartners.find((p) => p.prefix === prefix); if (sel && np) sel.value = np.id;
+      } catch (err) { say("Couldn't add: " + (err && err.message ? err.message : "check your connection and try again."), true); }
+      finally { fGo.disabled = false; }
     });
     const af = $i("tpAlloc");
     const tpNext = () => (tpTickets.length ? Math.max(...tpTickets.map((t) => t.serial)) + 1 : 1);

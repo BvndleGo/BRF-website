@@ -47,6 +47,7 @@
     document.querySelector(".top").classList.toggle("top--nologo", evLogo.hidden);
   };
 
+  const TERMS_VERSION = "2026-11-03";   // event-terms.html "Last updated"; stored with each card
   /* ---------- passport form ---------- */
   function passportForm(pk, ev, after) {
     app.innerHTML = `
@@ -57,6 +58,7 @@
         <div class="field"><label for="ppEmail">Email</label><input class="input" id="ppEmail" type="email" autocomplete="email" inputmode="email" maxlength="160" required></div>
         <div class="field"><label for="ppPhone">Phone number</label><input class="input" id="ppPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="080..." required></div>
         <div class="field"><label for="ppTag">Bvndle tag <small>(optional, needed to get paid)</small></label><div class="affix"><span>@</span><input class="input" id="ppTag" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40"></div></div>
+        <label class="agree"><input type="checkbox" id="ppTerms"> <span>I agree to the <a href="event-terms.html" target="_blank" rel="noopener">Bvndle Event Terms</a>, including that unredeemed coins can be reviewed and taken back within 14 days of the event.</span></label>
         <p class="err" id="ppErr" role="alert"></p>
         <button class="btn" type="submit" id="ppGo">Issue my ${esc(card())} <i class="ph-bold ph-identification-card" aria-hidden="true"></i></button>
         <p class="fine">No Bvndle tag yet? You can add it at the Bvndle reward desk when you collect your coins.</p>
@@ -69,8 +71,9 @@
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return (err.textContent = MSG.invalid_email);
       const phone = window.normalizeNgPhone(phoneRaw) || phoneRaw;
       if (phone.replace(/\D/g, "").length < 10) return (err.textContent = MSG.invalid_phone);
+      if (!f.ppTerms.checked) return (err.textContent = "Tick the box to agree to the Bvndle Event Terms.");
       go.disabled = true; err.textContent = "";
-      const r = await rpc("passport_issue", { p_key: pk, p_name: name, p_email: email, p_phone: phone, p_tag: f.ppTag.value.trim() || null });
+      const r = await rpc("passport_issue", { p_key: pk, p_name: name, p_email: email, p_phone: phone, p_tag: f.ppTag.value.trim() || null });   // + p_terms: TERMS_VERSION once 20261103000000_event_terms.sql is applied
       go.disabled = false;
       if (!r.ok) return (err.textContent = MSG[r.error] || MSG.network);
       setTok(pk, r.data.token);
