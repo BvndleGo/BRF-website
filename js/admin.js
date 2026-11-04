@@ -583,7 +583,8 @@
         <div><button class="linkish" type="button" id="evBack"><i class="ph-bold ph-arrow-left" aria-hidden="true"></i> All events</button>
           <h1 class="display">${esc(ev.name)}</h1><p>${esc([ev.location, ev.event_date ? new Date(ev.event_date + "T12:00:00").toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""].filter(Boolean).join(" · "))}</p></div>
         <div class="admin-actions">
-          <button class="btn btn--pink" id="evExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Approved rewards (Excel)</button>
+          <button class="btn btn--pink" id="evAllExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> All attendees (Excel)</button>
+          <button class="btn btn--ghost" id="evExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Approved rewards (Excel)</button>
           <button class="btn btn--ghost" id="evPaid" type="button"><i class="ph-bold ph-check-circle" aria-hidden="true"></i> Mark approved as paid</button>
           <button class="btn btn--ghost" id="evRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
         </div>
@@ -621,6 +622,7 @@
     $i("evSearch").addEventListener("input", renderPeople);
     $i("evFilter").addEventListener("change", renderPeople);
     $i("evExcel").addEventListener("click", exportEventExcel);
+    $i("evAllExcel").addEventListener("click", exportEventAll);
     $i("evPaid").addEventListener("click", markEventPaid);
     $i("evApproveAll").addEventListener("click", approveShown);
     $i("evWrap").addEventListener("click", onPeopleClick);
@@ -961,6 +963,34 @@
     const { error } = await sb.from("brf_event_attendees").update({ reward_status: "paid" }).in("id", list.map((p) => p.id));
     if (error) alert(evErr(error));
     loadPeople();
+  }
+  // everyone on the event: who they are, how many activities they did, coins earned and where their reward stands,
+  // plus a second sheet with each person's result on every activity
+  async function exportEventAll() {
+    const btn = document.getElementById("evAllExcel"); btn.disabled = true;
+    try {
+      if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+      const ids = evActs.map((a) => a.id);
+      const done = ids.length ? ((await sb.from("brf_activity_done").select("attendee_id,activity_id,correct,coins").in("activity_id", ids)).data || []) : [];
+      const byPerson = (pid) => done.filter((d) => d.attendee_id === pid), total = evActs.length;
+      const X = window.XLSX, d = (v) => (v ? new Date(v) : "");
+      const people = evPeople.slice().sort((a, b) => (b.reward_coins || 0) - (a.reward_coins || 0) || a.full_name.localeCompare(b.full_name));
+      const rows = people.map((p) => { const mine = byPerson(p.id); return {
+        "Full name": p.full_name, Email: p.email || "", Phone: p.phone || "", "Bvndle tag": p.bvndle_tag ? "@" + p.bvndle_tag : "",
+        "Signed up": d(p.created_at), "How they joined": p.source === "passport" ? "Scanned the QR" : "Added by admin", "Checked in": d(p.checked_in_at),
+        "Activities done": total ? `${mine.length} of ${total}` : mine.length, "Right answers": mine.filter((x) => x.correct).length,
+        "Coins earned": p.reward_coins || 0, "Naira value": (p.reward_coins || 0) * NAIRA, "Reward status": EV_STATUS[p.reward_status] || p.reward_status || "",
+        "Approved at": d(p.reward_approved_at), "Paid at": d(p.reward_paid_at) }; });
+      const detail = [];
+      people.forEach((p) => evActs.forEach((a, i) => { const r = done.find((x) => x.attendee_id === p.id && x.activity_id === a.id);
+        detail.push({ "Full name": p.full_name, Email: p.email || "", Activity: `${i + 1}. ${a.title}`, Result: !r ? "Not done" : r.correct ? "Earned" : "Not this time", Coins: r ? r.coins : 0 }); }));
+      const wb = X.utils.book_new(), sheet = (data, name) => { const ws = X.utils.json_to_sheet(data, { cellDates: true, dateNF: "d mmm yyyy h:mm" }); ws["!cols"] = Object.keys(data[0] || { a: 1 }).map((k) => ({ wch: Math.max(14, k.length + 4) })); X.utils.book_append_sheet(wb, ws, name); };
+      sheet(rows.length ? rows : [{ "Full name": "No attendees yet" }], "Attendees");
+      if (detail.length) sheet(detail, "Activity results");
+      const slug = evCur.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "event";
+      X.writeFile(wb, `${slug}-attendees-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (e) { alert("Couldn't build the Excel file. Check your connection and try again."); }
+    btn.disabled = false;
   }
   async function exportEventExcel() {
     const btn = document.getElementById("evExcel"); btn.disabled = true;
