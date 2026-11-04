@@ -630,7 +630,7 @@
   }
   /* Share the Day Pass: after claiming, invite friends with the phone's share sheet, WhatsApp, X or a copied link.
      The link carries utm_source=friend and the sharer's pass code, so the admin's "source" column shows who brought whom. */
-  const shareLink = (pass) => `${location.origin}${location.pathname}?utm_source=friend&utm_medium=share&utm_campaign=${encodeURIComponent(pass.code || "")}#ticket`;
+  const shareLink = (pass) => `${location.origin}/ticket?utm_source=friend&utm_medium=share&utm_campaign=${encodeURIComponent(pass.code || "")}`;
   const shareText = "I just claimed my free Day Pass to the Bvndle Rewards Festival, " + (cfg.shortDates || "11th – 12th Dec") + " at " + cfg.venue + ". Games, brands, rewards and a concert night. Get yours:";
   function shareHTML(isNew) {
     return `<div class="share" id="share">
@@ -745,7 +745,7 @@
   { let mine = null; try { mine = JSON.parse(lsGet("brf-my-pass") || "null"); } catch (e) {}
     if (mine && mine.code && !linkCode) showPass(mine, false); }
   if (linkCode && $("#passForm")) {
-    const f = $("#passForm"); f.pcode.value = linkCode; $("#f-code", f).hidden = false; f.prepend($("#f-code", f));   // the code leads the form $("#haveCode", f).hidden = true;
+    const f = $("#passForm"); f.pcode.value = linkCode; $("#f-code", f).hidden = false; f.prepend($("#f-code", f)); $("#haveCode", f).hidden = true;   // the code leads the form
     const help = $("#code-help", f);
     window.PassStore.checkCode(linkCode).then(({ ok, data, error }) => {
       if (!ok) return error === "unknown_code" && failField("f-code", "We can't find that code. Check the link your partner sent, or clear the code to claim a regular Day Pass.");
@@ -753,8 +753,23 @@
       if (data.claimed) return failField("f-code", "This code has already been claimed. If that was you, fill in the same email and phone to see your pass.");
       help.textContent = `Your Day Pass from ${data.partner}. Fill in your details to claim it.`;
     });
-    // straight to the form (on phones the mascot sits above it), after the page's own scroll-to-top on load
-    const toForm = () => setTimeout(() => { const t = $(".gate__form") || $("#ticket"); if (t) t.scrollIntoView({ block: "start" }); }, 150);
+  }
+  /* The Day Pass form has its own address, rewardfest.bvndle.com/ticket (Netlify serves the home page there, see
+     _redirects). Every "Get Day Pass" / "Claim" link lands on the form itself, not the top of the section: on phones
+     the mascot sits above the form. Old #ticket links and partner claim links (?code=) land there too. */
+  const formEl = () => $(".gate__form") || $("#ticket");
+  const goForm = (smooth) => { const t = formEl(); if (t) t.scrollIntoView({ block: "start", behavior: smooth ? "smooth" : "auto" }); };
+  const TICKET_PATH = location.pathname.replace(/[^/]*$/, "") + "ticket";
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href="#ticket"]'); if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey) return;
+    e.preventDefault(); goForm(true);
+    try { if (!/\/ticket\/?$/.test(location.pathname)) history.pushState(null, "", TICKET_PATH + location.search); } catch (err) {}
+  });
+  const atTicket = /\/ticket\/?$/.test(location.pathname) || location.hash === "#ticket" || !!linkCode;
+  if (atTicket) {
+    if (location.hash === "#ticket") try { history.replaceState(null, "", TICKET_PATH + location.search); } catch (err) {}
+    // after the page's own scroll-to-top on load
+    const toForm = () => setTimeout(() => goForm(false), 150);
     if (document.readyState === "complete") toForm(); else addEventListener("load", toForm, { once: true });
   }
 

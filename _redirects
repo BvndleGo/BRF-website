@@ -1,0 +1,7 @@
+# The Day Pass form has its own address: /ticket serves the home page (js/v3.js scrolls to the form).
+# Assets requested relative to /ticket/ (with a trailing slash) still resolve.
+/ticket/css/*     /css/:splat     200
+/ticket/js/*      /js/:splat      200
+/ticket/assets/*  /assets/:splat  200
+/ticket           /index.html     200
+/ticket/          /index.html     200
