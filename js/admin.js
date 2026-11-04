@@ -13,9 +13,10 @@
       <button type="button" data-tab="partners" class="${on === "partners" ? "is-on" : ""}">Partners</button>
       <button type="button" data-tab="events" class="${on === "events" ? "is-on" : ""}">Events</button>
       <button type="button" data-tab="ptickets" class="${on === "ptickets" ? "is-on" : ""}">Partner tickets</button>
+      <button type="button" data-tab="paid" class="${on === "paid" ? "is-on" : ""}">Concert tickets</button>
       <button type="button" data-tab="analytics" class="${on === "analytics" ? "is-on" : ""}">Analytics</button></nav>`;
   function bindTabs() {
-    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "events" ? renderEvents() : b.dataset.tab === "ptickets" ? renderPartnerTickets() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
+    root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "events" ? renderEvents() : b.dataset.tab === "ptickets" ? renderPartnerTickets() : b.dataset.tab === "paid" ? renderPaid() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
   }
 
   function renderLogin(msg) {
@@ -1148,6 +1149,81 @@
       const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 18 }, { wch: 12 }, { wch: 14 }, { wch: 62 }, { wch: 24 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 18 }, { wch: 18 }];
       const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Tickets");
       X.writeFile(wb, `${p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-brf-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) { alert("Couldn't build the Excel file. Check your connection and try again."); }
+  }
+
+  /* ===================== Concert tickets: paid tickets bought in the Bvndle app =====================
+     Customer.io sends the ticket email, then posts the Ticket ID and buyer here (record_paid_ticket,
+     supabase/migrations/20261104000000_paid_tickets.sql). The gate checks people in against this list. */
+  let paid = [];
+  function renderPaid() {
+    root.innerHTML = `${tabs("paid")}
+      <div class="admin-head">
+        <div><h1 class="display">Concert tickets</h1><p>Paid tickets bought in the Bvndle app. Each one appears here as soon as its ticket email is sent. Search a Ticket ID (e.g. BRC-N44QHA6K), name or email to check someone in at the gate.</p></div>
+        <div class="admin-actions">
+          <button class="btn btn--pink" id="paidExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Export (Excel)</button>
+          <button class="btn btn--ghost" id="paidRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
+          <button class="btn btn--ghost" id="signOut" type="button">Sign out</button>
+        </div>
+      </div>
+      <div class="admin-tiles admin-tiles--4">
+        <div class="atile atile--glare"><span>Tickets sold</span><b id="pd-n">0</b></div>
+        <div class="atile"><span>Sold today</span><b id="pd-today">0</b></div>
+        <div class="atile"><span>Checked in</span><b id="pd-in">0</b></div>
+        <div class="atile"><span>Not checked in</span><b id="pd-out">0</b></div>
+      </div>
+      <div class="admin-bar admin-bar--split">
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search concert tickets</span><input class="input" id="pdSearch" type="search" placeholder="Search Ticket ID, name or email"></label>
+        <select class="input" id="pdFilter" aria-label="Filter"><option value="">Everyone</option><option value="out">Not checked in</option><option value="in">Checked in</option></select>
+      </div>
+      <div class="table-wrap" id="pdWrap"><div class="empty"><p>Loading...</p></div></div>`;
+    bindTabs();
+    const $i = (x) => document.getElementById(x);
+    $i("signOut").addEventListener("click", signOut);
+    $i("paidRefresh").addEventListener("click", loadPaid);
+    $i("pdSearch").addEventListener("input", drawPaid);
+    $i("pdFilter").addEventListener("change", drawPaid);
+    $i("pdWrap").addEventListener("click", onPaidClick);
+    $i("paidExcel").addEventListener("click", exportPaid);
+    loadPaid();
+  }
+  async function loadPaid() {
+    const out = [];
+    for (let f = 0; ; f += 1000) {
+      const { data, error } = await sb.from("brf_paid_tickets").select("*").order("purchased_at", { ascending: false }).range(f, f + 999);
+      if (error) { document.getElementById("pdWrap").innerHTML = `<div class="empty"><p>Couldn't load tickets: ${esc(error.message)}</p></div>`; return; }
+      out.push(...data); if (data.length < 1000) break;
+    }
+    paid = out; drawPaid();
+  }
+  const paidName = (t) => [t.first_name, t.last_name].filter(Boolean).join(" ");
+  function drawPaid() {
+    const n = (x) => x.toLocaleString("en-NG"), set = (i, v) => (document.getElementById(i).textContent = v), today = new Date().toDateString();
+    set("pd-n", n(paid.length)); set("pd-today", n(paid.filter((t) => new Date(t.purchased_at).toDateString() === today).length));
+    set("pd-in", n(paid.filter((t) => t.checked_in_at).length)); set("pd-out", n(paid.filter((t) => !t.checked_in_at).length));
+    const q = document.getElementById("pdSearch").value.trim().toLowerCase(), f = document.getElementById("pdFilter").value;
+    const rows = paid.filter((t) => (!f || (f === "in") === !!t.checked_in_at) && (!q || [t.ticket_code, paidName(t), t.email].join(" ").toLowerCase().includes(q)));
+    const wrap = document.getElementById("pdWrap");
+    if (!paid.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-ticket" aria-hidden="true"></i><h2 class="display">No tickets yet</h2><p>Tickets appear here as soon as the ticket email goes out.</p></div>`; return; }
+    wrap.innerHTML = `<table><thead><tr><th>Ticket ID</th><th>Buyer</th><th>Email</th><th>Bought</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
+      <td class="code">${esc(t.ticket_code)}</td><td>${esc(paidName(t)) || `<span class="muted">No name</span>`}</td><td>${esc(t.email || "")}</td><td>${fmt.format(new Date(t.purchased_at))}</td>
+      <td>${t.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(t.checked_in_at))}</span> <button class="linkish" type="button" data-pd-out="${t.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-pd-in="${t.id}">Check in</button>`}</td></tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>`;
+  }
+  async function onPaidClick(e) {
+    const b = e.target.closest("button"); if (!b) return;
+    const id = b.dataset.pdIn || b.dataset.pdOut; if (!id) return;
+    const patch = b.dataset.pdIn ? { checked_in_at: new Date().toISOString(), checked_in_by: me.id } : { checked_in_at: null, checked_in_by: null };
+    const { data, error } = await sb.from("brf_paid_tickets").update(patch).eq("id", id).select().single();
+    if (error) return alert("Couldn't update: " + error.message);
+    paid = paid.map((t) => (t.id === id ? data : t)); drawPaid();
+  }
+  async function exportPaid() {
+    try {
+      if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+      const X = window.XLSX, rows = paid.map((t) => ({ "Ticket ID": t.ticket_code, "First name": t.first_name || "", "Last name": t.last_name || "", Email: t.email || "", Bought: new Date(t.purchased_at), "Checked in": t.checked_in_at ? new Date(t.checked_in_at) : "" }));
+      const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 30 }, { wch: 18 }, { wch: 18 }];
+      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Concert tickets");
+      X.writeFile(wb, `brf-concert-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (err) { alert("Couldn't build the Excel file. Check your connection and try again."); }
   }
 
