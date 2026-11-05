@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your Bvndle Rewards Festival ticket</title>
+  <meta name="description" content="Claim the Bvndle Rewards Festival ticket a partner has for you.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#111111">
+  <link rel="icon" href="/assets/favicon.svg?v=2" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #111; --card: #1b1b1b; --line: rgba(243,240,235,.18); --fg: #F3F0EB; --dim: #bdb7af; --pink: #FF3E8E; --purple: #5b4bd6; --yellow: #FFD23F; --green: #69E392; --ink: #111;
+            --display: "Anton", Impact, sans-serif; --body: "Inter Tight", system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; min-height: 100svh; background: var(--bg); color: var(--fg); font: 500 16px/1.5 var(--body); }
+    a { color: var(--yellow); }
+    .wrap { width: min(520px, 100% - 32px); margin: 0 auto; padding: max(20px, env(safe-area-inset-top)) 0 calc(40px + env(safe-area-inset-bottom)); }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 26px; }
+    .top img { height: 42px; width: auto; display: block; }
+    .top span { font-size: 13px; color: var(--dim); text-align: right; line-height: 1.3; }
+    h1, h2 { font-family: var(--display); font-weight: 400; text-transform: uppercase; letter-spacing: .01em; line-height: .95; margin: 0; }
+    h1 { font-size: clamp(38px, 11vw, 54px); }
+    .from { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(243,240,235,.08); font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .type { display: inline-block; padding: 6px 12px; border-radius: 999px; background: var(--yellow); color: var(--ink); font-weight: 800; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+    .type--vip { background: var(--pink); }
+    .lede { color: var(--dim); margin: 12px 0 18px; }
+    .left { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; font-weight: 700; font-size: 14px; }
+    .bar { flex: 1; height: 8px; border-radius: 999px; background: rgba(243,240,235,.12); overflow: hidden; }
+    .bar i { display: block; height: 100%; background: var(--green); border-radius: 999px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 20px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field { display: grid; gap: 6px; margin-bottom: 14px; }
+    .field label { font-weight: 600; font-size: 14px; }
+    .field small { color: var(--dim); font-weight: 400; }
+    .input { width: 100%; min-height: 52px; padding: 0 16px; border-radius: 14px; border: 2px solid rgba(243,240,235,.3); background: #000; color: var(--fg); font: 500 17px var(--body); }
+    .input:focus { outline: none; border-color: var(--pink); box-shadow: 4px 4px 0 var(--pink); }
+    .affix { position: relative; } .affix span { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--dim); } .affix .input { padding-left: 36px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; padding: 0 22px; border-radius: 999px; border: 2px solid var(--ink); background: var(--pink); color: var(--ink); font: 800 17px var(--body); cursor: pointer; box-shadow: 4px 4px 0 var(--fg); text-decoration: none; }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .btn--ghost { background: transparent; color: var(--fg); border-color: var(--fg); box-shadow: none; margin-top: 12px; }
+    .err { color: #ff9a7d; font-weight: 600; font-size: 14px; min-height: 1.3em; margin: 2px 0 10px; }
+    .fine { color: var(--dim); font-size: 13px; margin: 14px 0 0; text-align: center; }
+    .who { display: grid; gap: 2px; padding: 14px 16px; border-radius: 14px; background: rgba(243,240,235,.06); margin-bottom: 14px; }
+    .who b { font-size: 17px; } .who span { color: var(--dim); font-size: 14px; }
+    .linkish { background: none; border: 0; color: var(--fg); text-decoration: underline; font: 600 14px var(--body); cursor: pointer; display: block; margin: 12px auto 0; }
+    /* the ticket */
+    .tk { position: relative; overflow: hidden; border-radius: 24px; background: var(--purple); color: #fff; border: 2px solid #fff; box-shadow: 6px 6px 0 var(--pink); }
+    .tk--vip { background: #1a1a1a; border-color: var(--yellow); box-shadow: 6px 6px 0 var(--yellow); }
+    .tk__top { padding: 20px 20px 16px; }
+    .tk__row { display: flex; justify-content: space-between; gap: 10px; font: 800 11px/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+    .tk__kind { font-family: var(--display); font-size: clamp(32px, 9vw, 42px); line-height: .95; text-transform: uppercase; margin: 16px 0 6px; }
+    .tk--vip .tk__kind { color: var(--yellow); }
+    .tk__name { font-size: 19px; font-weight: 800; margin: 0; }
+    .tk__meta { font-size: 13px; opacity: .85; margin-top: 4px; }
+    .tk__cut { border-top: 2px dashed rgba(255,255,255,.45); margin: 0 16px; }
+    .tk__bot { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 16px 20px 20px; }
+    .tk__code { font: 800 clamp(16px, 4.6vw, 20px)/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; word-break: break-all; }
+    .tk__lab { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .75; margin-bottom: 4px; }
+    .tk__qr { width: 104px; height: 104px; background: #fff; border-radius: 10px; padding: 6px; }
+    .tk__qr svg, .tk__qr img { display: block; width: 100%; height: 100%; }
+    .note { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: rgba(243,240,235,.06); font-size: 14px; color: var(--dim); }
+    .note b { color: var(--fg); }
+    .spin { display: grid; place-items: center; min-height: 50svh; color: var(--dim); }
+    /* partner stats */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+    .stat { padding: 14px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+    .stat span { display: block; font-size: 12px; color: var(--dim); font-weight: 700; }
+    .stat b { font: 400 34px/1.1 var(--display); }
+    .days { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .days li { display: grid; grid-template-columns: 90px 1fr 40px; gap: 10px; align-items: center; font-size: 14px; }
+    #fx { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+    @media (prefers-reduced-motion: reduce) { #fx { display: none; } }
+  </style>
+</head>
+<body>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <main class="wrap">
+    <header class="top"><img src="/assets/logo-white.svg?v=2" alt="Bvndle Rewards Festival"><span>11th &ndash; 12th December 2026<br>Landmark Event Centre, Lagos</span></header>
+    <div id="app" aria-live="polite"><div class="spin">Loading...</div></div>
+  </main>
+  <script src="/js/store.js?v=10"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="/js/partner.js?v=1"></script>
+</body>
+</html>

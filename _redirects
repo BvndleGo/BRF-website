@@ -5,3 +5,5 @@
 /ticket/assets/*  /assets/:splat  200
 /ticket           /index.html     200
 /ticket/          /index.html     200
+# Partner claim links: one link per partner and ticket type (partner.html reads the slug from the path)
+/p/*              /partner.html   200
