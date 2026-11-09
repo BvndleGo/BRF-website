@@ -63,6 +63,7 @@ window.BRF_DATA = {
     { id: "escape", name: "Catharsis", hall: "Hall 1 · back right, through to Hall 2", tag: "Four rooms. Fifteen minutes. One way out.",
       color: "#69E392", art: "assets/zones/escape.svg?v=1", view: "248 0 1050 418",
       reward: null,
+      partner: { name: "Kon10dr", lead: "Escape rooms by", url: "https://kon10dr.gg/events", cta: "See Kon10dr events" },   // 9 Nov
       stations: [
       { n: "01", name: "Booking Gate", desc: "The clock is already running. Grab your slot before another crew does.", x: 44.58, y: 70.5 },
       { n: "02", name: "Briefing Booth", desc: "This is where you get the mission. That’s all we’re saying.", x: 14.68, y: 38.25 },

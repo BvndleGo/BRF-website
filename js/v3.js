@@ -1154,7 +1154,8 @@
       $$(".zx__dot", hs).forEach((b) => b.classList.toggle("on", b.dataset.n === active));
       $$(".zx__st", list).forEach((b) => b.classList.toggle("on", b.dataset.n === active));
       if (!st) {
-        card.innerHTML = `<p class="zx__cnum">${cur.stations.length} stations</p><h4>${esc(cur.name)}</h4><p>${esc(cur.tag)} Scroll to walk it, or tap a number.</p>`;
+        const pt = cur.partner;
+        card.innerHTML = `<p class="zx__cnum">${cur.stations.length} stations</p><h4>${esc(cur.name)}</h4><p>${esc(cur.tag)} Scroll to walk it, or tap a number.</p>${pt ? `<a class="zx__pcta" href="${esc(pt.url)}" target="_blank" rel="noopener">${esc(pt.cta || pt.name)} <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>` : ""}`;
         return;
       }
       card.innerHTML = `<p class="zx__cnum"><span>${esc(st.n)}</span> Station ${i + 1} of ${cur.stations.length}</p><h4>${esc(st.name)}</h4><p>${esc(st.desc)}</p>`;
@@ -1184,6 +1185,8 @@
       zxEl.style.setProperty("--zc", z.color);
       zxScroll.style.setProperty("--steps", steps());
       $("#zxName").textContent = z.name; $("#zxTag").textContent = z.tag; $("#zxHall").textContent = z.hall;
+      const zp = $("#zxPartner");   // a zone run with a partner shows who, with a link to them
+      if (zp) { zp.hidden = !z.partner; if (z.partner) { zp.href = z.partner.url; zp.style.setProperty("--pc", z.color); zp.innerHTML = `<span>${esc(z.partner.lead || "In partnership with")}</span> <b>${esc(z.partner.name)}</b> <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i>`; } }
       hs.innerHTML = ""; list.innerHTML = "";
       z.stations.forEach((st, i) => {
         const was = z.reward && seen.has(st.n) ? " seen" : "";

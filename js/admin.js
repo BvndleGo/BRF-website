@@ -4,6 +4,7 @@
   const root = document.getElementById("admin");
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fmt = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  const dfmt = new Intl.DateTimeFormat("en-NG", { day: "numeric", month: "short", year: "numeric" });
   const sb = window.supabase.createClient(window.BRF_DB.url, window.BRF_DB.key);
   let all = [], me = null;
   const COLS = "id,created_at,pass_code,first_name,last_name,email,phone,has_bvndle_tag,bvndle_tag,source,checked_in_at,checked_in_by";
@@ -1026,7 +1027,7 @@
   const tpWho = (t) => (t.pass ? { name: `${t.pass.first_name} ${t.pass.last_name}`, email: t.pass.email, phone: t.pass.phone } : t.holder_name ? { name: t.holder_name, email: t.holder_email, phone: t.holder_phone } : t.issued_to ? { name: t.issued_to } : null);
   const tpClaimed = (t) => !!(t.pass || t.holder_name);
   const typeShort = (t) => String(t).replace(/^Concert\s*·\s*/, "");
-  const TP_TYPES = ["Day Pass", "Concert · Early Bird", "Concert · Regular", "Concert · Individual VIP", "Concert · Individual Premium", "Concert · VIP Table for 10", "Concert · Premium Table for 5", "Concert · Premium Table for 10"];
+  const TP_TYPES = ["Day Pass", "Executive Day Pass", "Concert · Early Bird", "Concert · Regular", "Concert · Individual VIP", "Concert · Individual Premium", "Concert · VIP Table for 10", "Concert · Premium Table for 5", "Concert · Premium Table for 10"];
   const tpErr = (e) => { const m = e?.message || ""; if (/brf_partner_links_slug_key|duplicate key.*slug/.test(m)) return "That link name is already used. Pick another."; if (m.startsWith("serials_taken:")) return m.slice(14) + ". Pick a different range."; return ({ bad_range: "The end number must be the same as or higher than the start.", range_too_big: "Generate at most 5,000 tickets at a time.", bad_count: "Enter how many tickets to generate.", missing_type: "Choose a ticket type." }[m]) || (/duplicate key.*prefix/.test(m) ? "Another partner already uses that code start." : m || "Something went wrong."); };
   async function renderPartnerTickets() {
     root.innerHTML = `${tabs("ptickets")}
@@ -1130,7 +1131,7 @@
       msg.textContent = `Done: ${data.allocated} codes, ${data.from}-… to ${data.to}-…. Download the Excel list from ${p.name}'s card to send them.`; af.count.value = ""; loadPT();
     });
     const lf = $i("plNew"), lSlug = lf.querySelector("[name=slug]");
-    const TYPE_SLUG = { "Day Pass": "day-pass", "Concert · Early Bird": "early-bird", "Concert · Regular": "regular", "Concert · Individual VIP": "vip", "Concert · Individual Premium": "premium", "Concert · VIP Table for 10": "vip-table-10", "Concert · Premium Table for 5": "premium-table-5", "Concert · Premium Table for 10": "premium-table-10" };
+    const TYPE_SLUG = { "Day Pass": "day-pass", "Concert · Early Bird": "early-bird", "Concert · Regular": "regular", "Concert · Individual VIP": "vip", "Executive Day Pass": "exec", "Concert · Individual Premium": "premium", "Concert · VIP Table for 10": "vip-table-10", "Concert · Premium Table for 5": "premium-table-5", "Concert · Premium Table for 10": "premium-table-10" };
     const cleanSlug = (v) => v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
     const slugSuggest = () => {
       const p = tpPartners.find((x) => x.id === lf.partner.value); if (!p) return "";
@@ -1182,7 +1183,7 @@
     const n = (x) => x.toLocaleString("en-NG"), pn = (id) => (tpPartners.find((p) => p.id === id) || {}).name || "";
     el.innerHTML = `<h2 class="an-h">Claim links</h2><div class="table-wrap"><table class="pltable"><thead><tr><th>Link</th><th>Partner</th><th>Type</th><th>Claimed</th><th>Status</th><th></th></tr></thead><tbody>${tpLinks.map((l) => {
       const c = plClaimed(l), st = plStatus(l), inn = tpTickets.filter((t) => t.link_id === l.id && tpIn(t)).length;
-      return `<tr><td data-l="Link"><span class="code" style="white-space:nowrap">/p/${esc(l.slug)}</span></td><td data-l="Partner">${esc(pn(l.partner_id))}</td><td data-l="Type"><span class="tptype${/vip|premium|table/i.test(l.ticket_type) ? " tptype--vip" : ""}">${esc(typeShort(l.ticket_type))}</span></td>
+      return `<tr><td data-l="Link"><span class="code" style="white-space:nowrap">/p/${esc(l.slug)}</span></td><td data-l="Partner">${esc(pn(l.partner_id))}</td><td data-l="Type"><span class="tptype${/vip|premium|table|executive/i.test(l.ticket_type) ? " tptype--vip" : ""}">${esc(typeShort(l.ticket_type))}</span></td>
         <td data-l="Claimed"><div class="plbar"><span><b>${n(c)}</b> of ${n(l.cap)} <button class="linkish" type="button" data-pl="cap" data-id="${l.id}">Change</button></span><span class="abar__track"><i style="width:${Math.min(100, Math.round((c / l.cap) * 100))}%"></i></span>${inn ? `<small class="muted">${n(inn)} checked in</small>` : ""}</div></td>
         <td data-l="Status"><span class="plst plst--${st}">${PL_LABEL[st]}</span>${l.expires_at ? `<small class="muted" style="display:block">${st === "expired" ? "Closed" : "Closes"} ${fmt.format(new Date(l.expires_at))}</small>` : ""}</td>
         <td><div class="plbtns"><button class="btn btn--sm btn--pink" type="button" data-pl="copy" data-id="${l.id}"><i class="ph-bold ph-copy" aria-hidden="true"></i> Copy link</button>
@@ -1213,7 +1214,7 @@
     // every ticket type side by side: issued, claimed, checked in (click one to list them)
     const types = TP_TYPES.concat([...new Set(tpTickets.map((t) => t.ticket_type))].filter((t) => !TP_TYPES.includes(t))).filter((ty) => tpTickets.some((t) => t.ticket_type === ty) || tpLinks.some((l) => l.ticket_type === ty));
     document.getElementById("tpTypes").innerHTML = types.length ? `<h2 class="an-h">By ticket type</h2><div class="tptypes">${types.map((ty) => { const l = tpTickets.filter((t) => t.ticket_type === ty), cap = tpLinks.filter((x) => x.ticket_type === ty).reduce((a, x) => a + x.cap, 0), linkN = tpTickets.filter((t) => t.ticket_type === ty && t.link_id).length;
-      return `<button type="button" class="tptypecard${/vip|premium|table/i.test(ty) ? " tptypecard--vip" : ""}" data-tp-type="${esc(ty)}"><span>${esc(typeShort(ty))}</span><b>${n(l.length)}</b><small>${n(l.filter(tpClaimed).length)} claimed · ${n(l.filter(tpIn).length)} in${cap ? ` · ${n(Math.max(cap - linkN, 0))} left on links` : ""}</small></button>`; }).join("")}</div>` : "";
+      return `<button type="button" class="tptypecard${/vip|premium|table|executive/i.test(ty) ? " tptypecard--vip" : ""}" data-tp-type="${esc(ty)}"><span>${esc(typeShort(ty))}</span><b>${n(l.length)}</b><small>${n(l.filter(tpClaimed).length)} claimed · ${n(l.filter(tpIn).length)} in${cap ? ` · ${n(Math.max(cap - linkN, 0))} left on links` : ""}</small></button>`; }).join("")}</div>` : "";
     document.getElementById("tpList").innerHTML = tpPartners.length ? `<div class="evgrid">${tpPartners.map((p) => {
       const mine = tpTickets.filter((t) => t.partner_id === p.id), rs = tpRanges(mine);
       return `<div class="evcard tpcard"><b>${esc(p.name)} <span class="tag">${esc(p.prefix)}</span></b>${p.contact ? `<span class="muted">${esc(p.contact)}</span>` : ""}
@@ -1238,7 +1239,7 @@
         <td>${t.checked_in_at ? inCell(t.checked_in_at, `data-tp-out="${t.id}"`) : `<button class="btn btn--sm btn--ghost" type="button" data-tp-in="${t.id}">Check in</button>`}</td>`;
     };
     wrap.innerHTML = `<table><thead><tr><th>Ticket code</th><th>Partner</th><th>Type</th><th>Claimed by / issued to</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
-      <td class="code">${esc(t.code)}${t.link_id ? ` <span class="muted" title="Claimed through a claim link" style="font-size:12px">link</span>` : ""}</td><td>${esc(pn(t.partner_id).name || "")}</td><td><span class="tptype${/vip|premium|table/i.test(t.ticket_type) ? " tptype--vip" : ""}">${esc(typeShort(t.ticket_type))}</span></td>${row(t)}</tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>${rows.length === 300 ? `<p class="muted">Showing the first 300. Search to narrow down.</p>` : ""}`;
+      <td class="code">${esc(t.code)}${t.link_id ? ` <span class="muted" title="Claimed through a claim link" style="font-size:12px">link</span>` : ""}</td><td>${esc(pn(t.partner_id).name || "")}</td><td><span class="tptype${/vip|premium|table|executive/i.test(t.ticket_type) ? " tptype--vip" : ""}">${esc(typeShort(t.ticket_type))}</span></td>${row(t)}</tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>${rows.length === 300 ? `<p class="muted">Showing the first 300. Search to narrow down.</p>` : ""}`;
   }
   async function onTPClick(e) {
     const b = e.target.closest("button"); if (!b) return;
@@ -1282,7 +1283,7 @@
   function renderPaid() {
     root.innerHTML = `${tabs("paid")}
       <div class="admin-head">
-        <div><h1 class="display">Concert tickets</h1><p>Paid tickets bought in the Bvndle app. Each one appears here as soon as its ticket email is sent. Search a Ticket ID (e.g. BRC-N44QHA6K), name or email to check someone in at the gate.</p></div>
+        <div><h1 class="display">Concert tickets</h1><p>Paid concert tickets: bought in the Bvndle app (they appear as soon as the ticket email is sent) and orders from the earlier ticketing site (Tix). Search a Ticket or Order ID (e.g. BRC-N44QHA6K), name, email or phone to check someone in at the gate. One check-in covers the whole order.</p></div>
         <div class="admin-actions">
           <button class="btn btn--pink" id="paidExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Export (Excel)</button>
           <button class="btn btn--ghost" id="paidRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
@@ -1290,14 +1291,14 @@
         </div>
       </div>
       <div class="admin-tiles admin-tiles--4">
-        <div class="atile atile--glare"><span>Tickets sold</span><b id="pd-n">0</b></div>
+        <div class="atile atile--glare"><span>Tickets sold</span><b id="pd-n">0</b><small id="pd-nc"></small></div>
         <div class="atile"><span>Sold today</span><b id="pd-today">0</b></div>
         <div class="atile"><span>Checked in</span><b id="pd-in">0</b></div>
         <div class="atile"><span>Not checked in</span><b id="pd-out">0</b></div>
       </div>
       <div class="admin-bar admin-bar--split">
-        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search concert tickets</span><input class="input" id="pdSearch" type="search" placeholder="Search Ticket ID, name or email"></label>
-        <select class="input" id="pdFilter" aria-label="Filter"><option value="">Everyone</option><option value="out">Not checked in</option><option value="in">Checked in</option></select>
+        <label class="affix"><span><i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i></span><span class="sr-only">Search concert tickets</span><input class="input" id="pdSearch" type="search" placeholder="Search Ticket ID, name, email or phone"></label>
+        <select class="input" id="pdFilter" aria-label="Filter"><option value="">Everyone</option><option value="out">Not checked in</option><option value="in">Checked in</option><option value="app">Bought in the Bvndle app</option><option value="tix">Bought on Tix</option></select>
       </div>
       <div class="table-wrap" id="pdWrap"><div class="empty"><p>Loading...</p></div></div>`;
     bindTabs();
@@ -1322,15 +1323,19 @@
   const paidName = (t) => [t.first_name, t.last_name].filter(Boolean).join(" ");
   function drawPaid() {
     const n = (x) => x.toLocaleString("en-NG"), set = (i, v) => (document.getElementById(i).textContent = v), today = new Date().toDateString();
-    set("pd-n", n(paid.length)); set("pd-today", n(paid.filter((t) => new Date(t.purchased_at).toDateString() === today).length));
-    set("pd-in", n(paid.filter((t) => t.checked_in_at).length)); set("pd-out", n(paid.filter((t) => !t.checked_in_at).length));
+    const qty = (l) => l.reduce((a, t) => a + (t.quantity || 1), 0), tix = (t) => /^tix/.test(t.source || "");
+    set("pd-n", n(qty(paid))); set("pd-nc", `${n(paid.length)} orders · ${n(qty(paid.filter((t) => !tix(t))))} app · ${n(qty(paid.filter(tix)))} Tix`);
+    set("pd-today", n(qty(paid.filter((t) => new Date(t.purchased_at).toDateString() === today))));
+    set("pd-in", n(qty(paid.filter((t) => t.checked_in_at)))); set("pd-out", n(qty(paid.filter((t) => !t.checked_in_at))));
     const q = document.getElementById("pdSearch").value.trim().toLowerCase(), f = document.getElementById("pdFilter").value;
-    const rows = paid.filter((t) => (!f || (f === "in") === !!t.checked_in_at) && (!q || [t.ticket_code, paidName(t), t.email].join(" ").toLowerCase().includes(q)));
+    const qd = q.replace(/\D/g, "").replace(/^0/, "");
+    const rows = paid.filter((t) => (!f || (f === "app" ? !tix(t) : f === "tix" ? tix(t) : (f === "in") === !!t.checked_in_at)) && (!q || [t.ticket_code, paidName(t), t.email].join(" ").toLowerCase().includes(q) || (qd.length >= 6 && (t.phone || "").includes(qd))));
     const wrap = document.getElementById("pdWrap");
     if (!paid.length) { wrap.innerHTML = `<div class="empty"><i class="ph-duotone ph-ticket" aria-hidden="true"></i><h2 class="display">No tickets yet</h2><p>Tickets appear here as soon as the ticket email goes out.</p></div>`; return; }
-    wrap.innerHTML = `<table><thead><tr><th>Ticket ID</th><th>Buyer</th><th>Email</th><th>Bought</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
-      <td class="code">${esc(t.ticket_code)}</td><td>${esc(paidName(t)) || `<span class="muted">No name</span>`}</td><td>${esc(t.email || "")}</td><td>${fmt.format(new Date(t.purchased_at))}</td>
-      <td>${t.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(t.checked_in_at))}</span> <button class="linkish" type="button" data-pd-out="${t.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-pd-in="${t.id}">Check in</button>`}</td></tr>`).join("") : `<tr><td colspan="5" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>`;
+    wrap.innerHTML = `<table><thead><tr><th>Ticket ID</th><th>Buyer</th><th>Ticket</th><th>Admits</th><th>Bought</th><th>At the gate</th></tr></thead><tbody>${rows.length ? rows.map((t) => `<tr>
+      <td class="code">${esc(t.ticket_code)}${tix(t) ? ` <span class="muted" style="font-size:12px">Tix</span>` : ""}</td><td>${esc(paidName(t)) || `<span class="muted">No name</span>`}<span class="muted" style="display:block;font-size:13px">${esc(t.email || "")}${t.phone ? " · " + esc(t.phone) : ""}</span></td>
+      <td>${esc(t.ticket_type || "Concert ticket")}</td><td><b>${t.quantity || 1}</b></td><td>${tix(t) ? dfmt.format(new Date(t.purchased_at)) : fmt.format(new Date(t.purchased_at))}</td>
+      <td>${t.checked_in_at ? `<span class="checkin is-in"><i class="ph-bold ph-check" aria-hidden="true"></i> ${fmt.format(new Date(t.checked_in_at))}</span> <button class="linkish" type="button" data-pd-out="${t.id}">Undo</button>` : `<button class="btn btn--sm btn--ghost" type="button" data-pd-in="${t.id}">Check in</button>`}</td></tr>`).join("") : `<tr><td colspan="6" class="muted" style="text-align:center;padding:36px">No ticket matches.</td></tr>`}</tbody></table>`;
   }
   async function onPaidClick(e) {
     const b = e.target.closest("button"); if (!b) return;
@@ -1343,8 +1348,8 @@
   async function exportPaid() {
     try {
       if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
-      const X = window.XLSX, rows = paid.map((t) => ({ "Ticket ID": t.ticket_code, "First name": t.first_name || "", "Last name": t.last_name || "", Email: t.email || "", Bought: new Date(t.purchased_at), "Checked in": t.checked_in_at ? new Date(t.checked_in_at) : "" }));
-      const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 30 }, { wch: 18 }, { wch: 18 }];
+      const X = window.XLSX, rows = paid.map((t) => ({ "Ticket / Order ID": t.ticket_code, "First name": t.first_name || "", "Last name": t.last_name || "", Email: t.email || "", Phone: t.phone || "", Ticket: t.ticket_type || "Concert ticket", Admits: t.quantity || 1, "Bought on": /^tix/.test(t.source || "") ? "Tix" : "Bvndle app", Bought: new Date(t.purchased_at), "Checked in": t.checked_in_at ? new Date(t.checked_in_at) : "" }));
+      const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 30 }, { wch: 16 }, { wch: 34 }, { wch: 8 }, { wch: 12 }, { wch: 18 }, { wch: 18 }];
       const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Concert tickets");
       X.writeFile(wb, `brf-concert-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (err) { alert("Couldn't build the Excel file. Check your connection and try again."); }

@@ -1264,3 +1264,10 @@ html[data-theme="light"] .share .btn--ghost { color: #F3F0EB; border-color: #F3F
 /* countdown bar: white text in dark mode, black in light mode */
 html:not([data-theme="light"]) .topbar { color: #fff; }
 html[data-theme="light"] .topbar { color: #111; }
+/* zone partner (Catharsis escape rooms by Kon10dr, 9 Nov) */
+.zx__partner { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; margin: -4px 0 2px; padding: 8px 14px; border: 2px solid #111; border-radius: 999px; background: var(--pc, #69E392); color: #111; font: 600 13px/1.2 var(--font-body); text-decoration: none; box-shadow: 3px 3px 0 var(--zx-line); transition: transform .15s; }
+.zx__partner[hidden] { display: none; }
+.zx__partner b { font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+.zx__partner:hover { transform: translate(-1px, -1px); }
+.zx__partner:focus-visible, .zx__pcta:focus-visible { outline: 3px solid var(--zx-yellow); outline-offset: 3px; }
+.zx__pcta { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-weight: 700; color: inherit; text-underline-offset: 3px; }

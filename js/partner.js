@@ -36,10 +36,11 @@
     full: ["All claimed", "Every ticket on this link has been claimed. You can still get a free Day Pass on the festival site."],
   };
   const isDay = (t) => t === "Day Pass";
-  const isVip = (t) => /vip|premium|table/i.test(t || "");
+  const isVip = (t) => /vip|premium|table|executive/i.test(t || "");
+  const isFest = (t) => /day pass/i.test(t || "");   // Day Pass and Executive Day Pass are for the festival days
   const kind = (t) => String(t || "").replace(/^Concert\s*·\s*/, "");
-  const when = (t) => isDay(t) ? "11th &ndash; 12th December 2026" : "Saturday, 12th December 2026 &middot; 9pm";
-  const what = (t) => isDay(t) ? "Bvndle Rewards Festival" : "Bvndle Rewards Concert";
+  const when = (t) => isFest(t) ? "11th &ndash; 12th December 2026" : "Saturday, 12th December 2026 &middot; 9pm";
+  const what = (t) => isFest(t) ? "Bvndle Rewards Festival" : "Bvndle Rewards Concert";
 
   function qrSvg(text) {
     if (typeof window.qrcode !== "function") return "";
@@ -148,7 +149,7 @@
           <div class="tk__qr">${qrSvg(gate)}</div>
         </div>
       </article>
-      <div class="note"><b>At the gate:</b> show this screen, the email, or a screenshot. ${day ? "Your Day Pass works on both days." : "This ticket works once, for one person."}</div>
+      <div class="note"><b>At the gate:</b> show this screen, the email, or a screenshot. ${day ? "Your Day Pass works on both days." : isFest(r.ticket_type) ? "It admits one person." : "This ticket works once, for one person."}</div>
       ${day ? `<a class="btn" style="margin-top:20px" href="/">Explore the festival and earn coins</a>` : `<a class="btn btn--ghost" href="/">See what's on at the festival</a>`}`;
     if (fresh && !r.existing) confetti();
   }
