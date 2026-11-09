@@ -14,7 +14,7 @@
       <button type="button" data-tab="partners" class="${on === "partners" ? "is-on" : ""}">Partners</button>
       <button type="button" data-tab="events" class="${on === "events" ? "is-on" : ""}">Events</button>
       <button type="button" data-tab="ptickets" class="${on === "ptickets" ? "is-on" : ""}">Partner tickets</button>
-      <button type="button" data-tab="paid" class="${on === "paid" ? "is-on" : ""}">Concert tickets</button>
+      <button type="button" data-tab="paid" class="${on === "paid" ? "is-on" : ""}">Paid tickets</button>
       <button type="button" data-tab="analytics" class="${on === "analytics" ? "is-on" : ""}">Analytics</button></nav>`;
   function bindTabs() {
     root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => (b.dataset.tab === "coins" ? renderCoins() : b.dataset.tab === "partners" ? renderPartners() : b.dataset.tab === "events" ? renderEvents() : b.dataset.tab === "ptickets" ? renderPartnerTickets() : b.dataset.tab === "paid" ? renderPaid() : b.dataset.tab === "analytics" ? renderAnalytics() : renderDashboard())));
@@ -1283,7 +1283,7 @@
   function renderPaid() {
     root.innerHTML = `${tabs("paid")}
       <div class="admin-head">
-        <div><h1 class="display">Concert tickets</h1><p>Paid concert tickets: bought in the Bvndle app (they appear as soon as the ticket email is sent) and orders from the earlier ticketing site (Tix). Search a Ticket or Order ID (e.g. BRC-N44QHA6K), name, email or phone to check someone in at the gate. One check-in covers the whole order.</p></div>
+        <div><h1 class="display">Paid tickets</h1><p>Paid tickets: concert tickets bought in the Bvndle app (they appear as soon as the ticket email is sent), and concert and Day Pass orders from the earlier ticketing site (Tix). Search a Ticket or Order ID (e.g. BRC-N44QHA6K), name, email or phone to check someone in at the gate. One check-in covers the whole order.</p></div>
         <div class="admin-actions">
           <button class="btn btn--pink" id="paidExcel" type="button"><i class="ph-bold ph-microsoft-excel-logo" aria-hidden="true"></i> Export (Excel)</button>
           <button class="btn btn--ghost" id="paidRefresh" type="button"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i> Refresh</button>
@@ -1350,8 +1350,8 @@
       if (!window.XLSX) await new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
       const X = window.XLSX, rows = paid.map((t) => ({ "Ticket / Order ID": t.ticket_code, "First name": t.first_name || "", "Last name": t.last_name || "", Email: t.email || "", Phone: t.phone || "", Ticket: t.ticket_type || "Concert ticket", Admits: t.quantity || 1, "Bought on": /^tix/.test(t.source || "") ? "Tix" : "Bvndle app", Bought: new Date(t.purchased_at), "Checked in": t.checked_in_at ? new Date(t.checked_in_at) : "" }));
       const ws = X.utils.json_to_sheet(rows, { cellDates: true }); ws["!cols"] = [{ wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 30 }, { wch: 16 }, { wch: 34 }, { wch: 8 }, { wch: 12 }, { wch: 18 }, { wch: 18 }];
-      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Concert tickets");
-      X.writeFile(wb, `brf-concert-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Paid tickets");
+      X.writeFile(wb, `brf-paid-tickets-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (err) { alert("Couldn't build the Excel file. Check your connection and try again."); }
   }
 
