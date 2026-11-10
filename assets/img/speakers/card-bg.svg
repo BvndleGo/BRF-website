@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 560" preserveAspectRatio="none">
+  <defs>
+    <pattern id="arch" width="150" height="150" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+      <rect width="150" height="150" fill="#E5338C"/>
+      <g fill="none" stroke="#F069AE" stroke-width="13">
+        <circle cx="0" cy="150" r="22"/><circle cx="0" cy="150" r="54"/><circle cx="0" cy="150" r="86"/><circle cx="0" cy="150" r="118"/>
+        <circle cx="150" cy="0" r="22"/><circle cx="150" cy="0" r="54"/>
+      </g>
+    </pattern>
+    <pattern id="arch2" width="150" height="150" patternUnits="userSpaceOnUse">
+      <rect width="150" height="150" fill="#8D45C4"/>
+      <g fill="none" stroke="#9B57D0" stroke-width="13"><circle cx="0" cy="150" r="40"/><circle cx="0" cy="150" r="72"/><circle cx="0" cy="150" r="104"/></g>
+    </pattern>
+  </defs>
+  <path d="M0 345 L170 437 L320 560 L0 560 Z" fill="url(#arch2)"/>
+  <path d="M156 441 L750 124 L750 560 L320 560 Z" fill="url(#arch)"/>
+</svg>

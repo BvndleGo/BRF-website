@@ -63,7 +63,6 @@ window.BRF_DATA = {
     { id: "escape", name: "Catharsis", hall: "Hall 1 · back right, through to Hall 2", tag: "Four rooms. Fifteen minutes. One way out.",
       color: "#69E392", art: "assets/zones/escape.svg?v=1", view: "248 0 1050 418",
       reward: null,
-      partner: { name: "Kon10dr", lead: "Escape rooms by", url: "https://kon10dr.gg/events", cta: "See Kon10dr events" },   // 9 Nov
       stations: [
       { n: "01", name: "Booking Gate", desc: "The clock is already running. Grab your slot before another crew does.", x: 44.58, y: 70.5 },
       { n: "02", name: "Briefing Booth", desc: "This is where you get the mission. That’s all we’re saying.", x: 14.68, y: 38.25 },
@@ -91,6 +90,7 @@ window.BRF_DATA = {
       ] },
     { id: "adrenaline", name: "Adrenaline", hall: "", tag: "Gaming, esports and cosplay.", color: "#66E0E0", art: "assets/zones/adrenaline.svg?v=1", view: "58 22 1225 660",
       reward: null,
+      partner: { name: "Kon10dr", lead: "Gaming and esports by", url: "https://kon10dr.gg/events", cta: "See Kon10dr events" },   // 10 Nov: moved from Catharsis
       stations: [
       { n: "01", name: "Entry and exit", desc: "Check in with the Bvndle app and start earning coins.", x: 26.2, y: 68.3 },
       { n: "02", name: "Gaming pods", desc: "Open play stations for casual matches and qualifiers.", x: 36.2, y: 21.5 },
@@ -108,6 +108,30 @@ window.BRF_DATA = {
      An empty list shows "Speakers announced soon". ---- */
   speakers: {
     intro: "While the fun never stops, there will be conversations that spark ideas, challenge perspectives, and get the room talking, led by some of the brightest minds on the continent across industries, interests, and everything in between.",
+    // Confirmed speakers (10 Nov). Shown under "All speakers"; to show someone under a track too, put their exact name in
+    // that track's speakers list, e.g. speakers: ["Rita Dominic"]. Cards show photo + name only (role is kept for alt text).
+    people: [
+      { name: "Rita Dominic", role: "Co-founder, The Audrey Silva Company", photo: "assets/img/speakers/rita-dominic.webp?v=1" },
+      { name: "Theodore Asamoah", role: "Acting MD, VFD MFB", photo: "assets/img/speakers/theodore-asamoah.webp?v=1" },
+      { name: "Adatugo Oyebanji", role: "General Manager, Products & Marketing, VFD MFB", photo: "assets/img/speakers/adatugo-oyebanji.webp?v=1" },
+      { name: "Motolani Alake", role: "Label & Marketing Manager / A&R Coordinator, Virgin Music Group", photo: "assets/img/speakers/motolani-alake.webp?v=1" },
+      { name: "Idris Aregbe", role: "Special Adviser to the Governor, Tourism, Arts and Culture", photo: "assets/img/speakers/idris-aregbe.webp?v=1" },
+      { name: "Abdul-Gafar Olaniyan", role: "Co-founder, CiDAR Africa", photo: "assets/img/speakers/abdul-gafar-olaniyan.webp?v=1" },
+      { name: "Gbade A. Adeyemi", role: "MD, Anchoria Securities", photo: "assets/img/speakers/gbade-a-adeyemi.webp?v=1" },
+      { name: "Nneji Akunne", role: "Chief Marketing Officer, FLEX", photo: "assets/img/speakers/nneji-akunne.webp?v=1" },
+      { name: "Arese Ugwu", role: "Author, filmmaker and founder, Azuwa Studios", photo: "assets/img/speakers/arese-ugwu.webp?v=1" },
+      { name: "Edeh Sylvester Chisom", role: "MC Monica Dchildrensdadi", photo: "assets/img/speakers/edeh-sylvester-chisom.webp?v=1" },
+      { name: "Cynthia Salami", role: "Food influencer", photo: "assets/img/speakers/cynthia-salami.webp?v=1" },
+      { name: "Alex Unusual", role: "Creator and product experience specialist", photo: "assets/img/speakers/alex-unusual.webp?v=1" },
+      { name: "Ruth Kadiri", role: "CEO, Ruth Kadiri Productions", photo: "assets/img/speakers/ruth-kadiri.webp?v=1" },
+      { name: "Aderinola Odugbesan-Thomas", role: "Founder, IsaleekoFromDerin", photo: "assets/img/speakers/aderinola-odugbesan-thomas.webp?v=1" },
+      { name: "Chef Amaka", role: "Chiamaka Nwakalor-Egemba, Founder & Executive Chef, Dish L'Afrique", photo: "assets/img/speakers/chiamaka-nwakalor-egemba.webp?v=1" },
+      { name: "Joseph Sampson Edgar", role: "Duke of Shomolu", photo: "assets/img/speakers/joseph-sampson-edgar.webp?v=1" },
+      { name: "Tunde Onakoya", role: "Founder, Chess in Slums Africa", photo: "assets/img/speakers/tunde-onakoya.webp?v=1" },
+      { name: "Pelumi Buari", role: "Media personality", photo: "assets/img/speakers/pelumi-buari.webp?v=1" },
+      { name: "Amaka Amaku", role: "Founder & CEO, Voyagers Nigeria", photo: "assets/img/speakers/amaka-amaku.webp?v=1" },
+      { name: "Olumide Soyombo", role: "Tech entrepreneur and investor", photo: "assets/img/speakers/olumide-soyombo.webp?v=1" }
+    ],
     tracks: [
       { name: "The Chronicles of <i>Japa</i>", speakers: [] },
       { name: "Brands, Marketing & What's In Between", speakers: [] },

@@ -1267,18 +1267,24 @@
   { const SP = BD.speakers, tabsEl = $("#spkTabs"), panel = $("#spkPanel");
     if (SP && tabsEl && SP.tracks && SP.tracks.length) {
       $("#spkLede").textContent = SP.intro || "";
+      const people = SP.people || [], byName = new Map(people.map((p) => [p.name, p]));
+      // "All speakers" first when there are any; a track lists names (or full objects, the older shape)
+      const tabs = (people.length ? [{ name: "All speakers", all: true }] : []).concat(SP.tracks);
+      const listOf = (tr) => (tr.all ? people : (tr.speakers || []).map((x) => (typeof x === "string" ? byName.get(x) || { name: x } : x)));
       let t = 0;
       const initials = (n) => n.split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+      // the card: the speaker over the festival's pink arches (the 2025 speaker artwork, without dates or roles)
+      const card = (p) => `<li class="spk__card${p.photo ? "" : " spk__card--np"}">${p.photo ? `<img src="${esc(p.photo)}" alt="${esc(p.name)}${p.role ? ", " + esc(p.role) : ""}" loading="lazy" decoding="async">` : `<span class="spk__ph" aria-hidden="true">${esc(initials(p.name))}</span>`}<b class="spk__name">${esc(p.name)}</b></li>`;
       const draw = () => {
         $$(".spk__tab", tabsEl).forEach((b, k) => { b.setAttribute("aria-selected", k === t); b.tabIndex = k === t ? 0 : -1; });
-        const list = SP.tracks[t].speakers || [];
+        const list = listOf(tabs[t]);
         panel.innerHTML = list.length
-          ? `<ul class="spk__list">${list.map((p) => `<li class="spk__card">${p.photo ? `<img src="${esc(p.photo)}" alt="" loading="lazy">` : `<span class="spk__ph" aria-hidden="true">${esc(initials(p.name))}</span>`}<b>${esc(p.name)}</b>${p.role ? `<span>${esc(p.role)}</span>` : ""}</li>`).join("")}</ul>`
-          : `<p class="spk__soon"><i class="ph-bold ph-microphone-stage" aria-hidden="true"></i> Speakers for <b>${SP.tracks[t].name}</b> are announced soon.</p>`;
+          ? `<ul class="spk__list">${list.map(card).join("")}</ul>`
+          : `<p class="spk__soon"><i class="ph-bold ph-microphone-stage" aria-hidden="true"></i> Speakers for <b>${tabs[t].name}</b> are announced soon.</p>`;
       };
-      tabsEl.innerHTML = SP.tracks.map((x, k) => `<button class="spk__tab" role="tab" type="button" data-t="${k}">${x.name}</button>`).join("");
+      tabsEl.innerHTML = tabs.map((x, k) => `<button class="spk__tab" role="tab" type="button" data-t="${k}">${x.name}</button>`).join("");
       tabsEl.addEventListener("click", (e) => { const b = e.target.closest(".spk__tab"); if (b) { t = +b.dataset.t; draw(); (window.brfTrack || (() => {}))("speaker_track", b.textContent); } });
-      tabsEl.addEventListener("keydown", (e) => { if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; t = (t + (e.key === "ArrowRight" ? 1 : SP.tracks.length - 1)) % SP.tracks.length; draw(); $$(".spk__tab", tabsEl)[t].focus(); });
+      tabsEl.addEventListener("keydown", (e) => { if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; t = (t + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length; draw(); $$(".spk__tab", tabsEl)[t].focus(); });
       draw();
     }
   }

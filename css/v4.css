@@ -1224,12 +1224,14 @@ html[data-theme="light"] .spk__soon { color: #555; }
 .spk__soon i { margin-right: 6px; vertical-align: -2px; }
 .spk__soon b { color: var(--cloud); font-weight: 700; }
 html[data-theme="light"] .spk__soon b { color: #111; }
-.spk__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
-.spk__card { display: grid; gap: 4px; }
-.spk__card img, .spk__ph { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 18px; margin-bottom: 8px; }
-.spk__ph { display: grid; place-items: center; background: #5b4bd6; color: #F3F0EB; font: 800 40px/1 var(--font-body); }
-.spk__card b { font-size: 17px; }
-.spk__card span { color: var(--cloud-dim); font-size: 14px; }
+/* speaker cards (10 Nov): photo on the 2025 artwork background: grey top, pink arches + purple corner (card-bg.svg) */
+.spk__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.spk__card { position: relative; aspect-ratio: 750 / 560; border-radius: 18px; overflow: hidden; background: #E7E5E9; container-type: inline-size; }
+.spk__card::after { content: ""; position: absolute; inset: 0; background: url("../assets/img/speakers/card-bg.svg?v=1") 0 0 / 100% 100% no-repeat; pointer-events: none; }
+.spk__card img { position: absolute; left: 0; top: 0; width: 80%; height: auto; aspect-ratio: 480 / 376; }
+.spk__name { position: absolute; z-index: 1; right: 5%; bottom: 7%; max-width: 58%; text-align: right; color: #fff; font: 800 clamp(15px, 7.2cqi, 30px)/1.02 var(--font-body); letter-spacing: -.01em; text-wrap: balance; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+.spk__ph { position: absolute; left: 12%; top: 12%; width: 34%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: #5b4bd6; color: #F3F0EB; font: 800 clamp(20px, 9cqi, 40px)/1 var(--font-body); }
+@media (max-width: 560px) { .spk__list { grid-template-columns: 1fr 1fr; gap: 10px; } .spk__card { border-radius: 14px; } .spk__name { max-width: 62%; bottom: 6%; font-size: clamp(12px, 8cqi, 22px); } }
 @media (max-width: 760px) { .spk__intro { grid-template-columns: 1fr; } .spk__tab { font-size: 14px; padding: 9px 14px; } }
 
 /* ===== Share your Day Pass (after claiming) ===== */
