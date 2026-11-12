@@ -148,7 +148,7 @@ window.BRF_DATA = {
     note: "Speakers and hosts are announced closer to the day.",
     topics: { Welcome: "#F3F0EB", Performance: "#FF3E8E", Talk: "#FFD23F", "Fireside chat": "#FFD23F", Session: "#8B80F9", Zones: "#2e4bff", "Game show": "#FF5A2D", Podcast: "#8B80F9", Auction: "#FF5A2D", Showcase: "#FF3E8E", Comedy: "#FFD23F", Awards: "#FFD23F", Activation: "#2e4bff", Party: "#FF3E8E", Concert: "#5b4bd6" },
     days: [
-      { label: "Day 1", date: "11th Dec", talks: [
+      { label: "Day 1", date: "", talks: [
         { time: "10:00am", until: "10:10am", title: "Introduction", topic: "Welcome" },
         { time: "10:10am", until: "10:20am", title: "Opening act", note: "Theatre and dance troupe", topic: "Performance" },
         { time: "10:35am", until: "11:25am", title: "The Jara Economics: who decides?", topic: "Talk" },
@@ -156,7 +156,7 @@ window.BRF_DATA = {
         { time: "11:40am", until: "12:25pm", title: "Japa or Japada?", note: "Fireside chat", topic: "Fireside chat" },
         { time: "12:30pm", until: "1:00pm", title: "PwC Report Hotline", topic: "Session" },
       ] },
-      { label: "Day 2", date: "12th Dec", talks: [
+      { label: "Day 2", date: "", talks: [
         { time: "10:00am", until: "10:30am", title: "Recap and spoken word", topic: "Performance" },
         { time: "10:35am", until: "11:25am", title: "What Is Loyalty When Value Is Unclear?", topic: "Talk" },
         { time: "11:30am", until: "11:40am", title: "Award ceremony", topic: "Awards" },

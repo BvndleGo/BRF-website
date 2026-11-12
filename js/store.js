@@ -1,10 +1,15 @@
 /* Event settings and pass storage, shared by the landing page and the admin page.
    Change event details here only. */
 window.BRF = {
-  // TODO: confirm dates with the client. The voice note says 11-12 Dec, the old site says 10-11 Dec.
-  eventStart: "2026-12-11T12:00:00+01:00",
-  datesLabel: "11th – 12th December 2026",   // client wording, 23 Oct
-  shortDates: "11th – 12th Dec",
+  // 12 Nov: the date is being moved. No countdown; every date on the site reads "coming soon".
+  // When the new date is set: put eventStart back (e.g. "2026-12-11T12:00:00+01:00") and the two labels.
+  eventStart: null,
+  datesLabel: "Date coming soon",
+  shortDates: "date coming soon",
+  // 12 Nov: free Day Pass claims and concert ticket sales are closed (the database refuses new Day Passes too:
+  // public.brf_flags). Set back to true to reopen.
+  claimsOpen: false,
+  concertOpen: false,
   venue: "Landmark Event Centre, Lagos",
 
   tixUrl: "https://tix.africa/discover/bvndlerewardfestival2026",

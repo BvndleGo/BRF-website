@@ -30,6 +30,11 @@
   });
 
   /* config + links */
+  // 12 Nov: Day Pass claims and concert sales closed (cfg.claimsOpen / cfg.concertOpen in store.js); CSS hides every
+  // claim / buy button and shows the "closed" notes instead
+  const CLAIMS_CLOSED = cfg.claimsOpen === false, CONCERT_CLOSED = cfg.concertOpen === false;
+  document.documentElement.classList.toggle("claims-closed", CLAIMS_CLOSED);
+  document.documentElement.classList.toggle("concert-closed", CONCERT_CLOSED);
   $$("[data-brf]").forEach((el) => { if (cfg[el.dataset.brf]) el.textContent = cfg[el.dataset.brf]; });
   $$("[data-tix]").forEach((a) => (a.href = cfg.tixUrl));
   /* Become a Partner: every [data-partner] link opens the enquiry form (#partnerBox). Saved through
@@ -87,8 +92,9 @@
 
   /* countdown */
   const clock = $("#clock"), start = new Date(cfg.eventStart).getTime(), pad = (n) => String(n).padStart(2, "0");
-  const tick = () => { const d = Math.max(0, start - Date.now()); clock.textContent = d ? `${Math.floor(d / 864e5)}d ${pad(Math.floor((d % 864e5) / 36e5))}h ${pad(Math.floor((d % 36e5) / 6e4))}m ${pad(Math.floor((d % 6e4) / 1e3))}s` : "WE'RE LIVE"; };
-  tick(); setInterval(tick, 1000);
+  if (!cfg.eventStart) { $("#clockLead").textContent = "Bvndle Rewards Festival 2026"; clock.textContent = "New date coming soon"; }   // no date yet: no countdown
+  else { const tick = () => { const d = Math.max(0, start - Date.now()); clock.textContent = d ? `${Math.floor(d / 864e5)}d ${pad(Math.floor((d % 864e5) / 36e5))}h ${pad(Math.floor((d % 36e5) / 6e4))}m ${pad(Math.floor((d % 6e4) / 1e3))}s` : "WE'RE LIVE"; };
+  tick(); setInterval(tick, 1000); }
 
   /* ===== 1. Hero: a globe of 2025 photos on black. On load the photos fly in from all over the screen and
      assemble into a slowly spinning sphere (drag to spin, the cursor tilts it, tap a photo to open it).
@@ -602,6 +608,7 @@
   };
   function nudges(keys, title) {
     const d = doneSteps();
+    keys = keys.filter((k) => !(CLAIMS_CLOSED && k === "claim") && !(CONCERT_CLOSED && k === "concert"));
     return `<div class="nudge"><p class="nudge__t">${esc(title)}</p><ul>${keys.map((k) => {
       const [label, href, icon] = STEPS[k], ext = !href;
       return `<li class="${d[k] ? "is-done" : ""}"><a href="${esc(ext ? cfg.tixUrl : href)}"${ext ? ' target="_blank" rel="noopener" data-tixclick' : ""}><i class="ph-bold ${d[k] ? "ph-check-circle" : icon}" aria-hidden="true"></i><span>${esc(label)}</span><i class="ph-bold ${ext ? "ph-arrow-up-right" : "ph-arrow-right"}" aria-hidden="true"></i></a></li>`;
@@ -667,12 +674,12 @@
         <p class="yourpass__code">${esc(pass.code)}</p>${(() => { let n = 0; try { n = +localStorage.getItem("brf-trivia-best") || 0; } catch (e) {} return n ? `<p class="yourpass__entries">${n} trivia ${n === 1 ? "entry" : "entries"} in the draw</p>` : ""; })()}<p class="yourpass__entries" id="passCoins"></p>
         <p class="gc__big gc__big--r" aria-hidden="true">2026</p>
       </div>
-      ${shareHTML(isNew)}
+      ${CLAIMS_CLOSED ? "" : shareHTML(isNew)}
       ${nudges(["play", "guess", "concert"], "Your day pass is set. What's next?")}
-      <button class="linkish" type="button" id="another">Get a pass for someone else</button>`;
+      ${CLAIMS_CLOSED ? "" : `<button class="linkish" type="button" id="another">Get a pass for someone else</button>`}`;
     $("#passCard").focus({ preventScroll: true });
-    bindShare(pass);
-    $("#another").addEventListener("click", () => { area.innerHTML = formHTML; bindForm($("#passForm")); $("#first").focus(); });
+    if (!CLAIMS_CLOSED) { bindShare(pass);
+      $("#another").addEventListener("click", () => { area.innerHTML = formHTML; bindForm($("#passForm")); $("#first").focus(); }); }
   }
   // server-side problems reuse the field's error line with a more specific message, restored on the next edit
   function failField(id, msg) { const fl = $("#" + id), p = $(".err", fl); if (p) { if (p.dataset.def === undefined) p.dataset.def = p.textContent; p.textContent = msg; } setInvalid(id, true); $(".input", fl)?.focus(); }
@@ -736,7 +743,13 @@
       });
     });
   }
-  bindForm($("#passForm"));
+  // claims closed: anyone without a pass on this phone sees a note instead of the form (the database refuses new passes too)
+  if (CLAIMS_CLOSED && !lsGet("brf-my-pass")) {
+    const g = $(".gate__form");
+    if (g) { $(".gate__title", g).textContent = "Day Pass claims are closed."; $(".gate__sub", g).textContent = "Thank you for the love. Free Day Pass claims have closed for now."; const dp = $(".daypass", g); if (dp) dp.style.display = "none"; }
+    area.innerHTML = `<div class="closednote"><p><i class="ph-bold ph-lock-simple" aria-hidden="true"></i> <b>Already claimed one?</b> Your Day Pass is in your email. Open this page on the phone you claimed with to see it here.</p><p>The new festival date is coming soon. Follow Bvndle for the announcement.</p></div>`;
+  }
+  if ($("#passForm")) bindForm($("#passForm"));
   syncCoins(false);
   window.PassStore.refreshCount().then(() => syncCoins(false));
   // returning ticket holders see their ticket in the section, not an empty form
@@ -744,7 +757,7 @@
   const linkCode = (new URLSearchParams(location.search).get("code") || "").trim().toUpperCase();
   { let mine = null; try { mine = JSON.parse(lsGet("brf-my-pass") || "null"); } catch (e) {}
     if (mine && mine.code && !linkCode) showPass(mine, false); }
-  if (linkCode && $("#passForm")) {
+  if (linkCode && $("#passForm") && !CLAIMS_CLOSED) {
     const f = $("#passForm"); f.pcode.value = linkCode; $("#f-code", f).hidden = false; f.prepend($("#f-code", f)); $("#haveCode", f).hidden = true;   // the code leads the form
     const help = $("#code-help", f);
     window.PassStore.checkCode(linkCode).then(({ ok, data, error }) => {
@@ -779,7 +792,7 @@
   function storyCta() {
     const navB = $(".nav__cta"), barB = $("#mobileCta .btn"), js = $("#journey");
     const mine = !!lsGet("brf-my-pass"), passed = js && js.getBoundingClientRect().bottom < innerHeight * 0.4;   // the zones have scrolled above mid-screen
-    const state = mine ? "mine" : passed ? "ticket" : "explore";
+    const state = mine ? "mine" : passed && !CLAIMS_CLOSED ? "ticket" : "explore";
     if (navB && navB.dataset.state === state) return;
     const L = { explore: ["See the experience", "#journey", "ph-map-trifold"], ticket: ["Get Day Pass", "#ticket", "ph-arrow-right"], mine: ["My passes", "#ticket", "ph-ticket"] }[state];
     [navB, barB].forEach((b) => { if (!b) return; b.dataset.state = state; b.href = L[1];
@@ -1123,7 +1136,7 @@
       if (!cur.reward) return cur.id === "escape" ? `<p class="zx__q zx__q--seal"><i class="ph-bold ph-lock-simple" aria-hidden="true"></i> Sealed until you play. No spoilers.</p>` : `<p class="zx__q zx__q--plain">${cur.stations.length} stations</p>`;
       const total = cur.stations.length, k = cur.stations.filter((s) => seen.has(s.n)).length;
       if (lsGet(DONE) === "1") return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked. +${cur.reward.coins} BvndleCoins earned</p>`;
-      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! <a href="#ticket">Get your Day Pass</a> to collect ${cur.reward.coins} BvndleCoins</p>`;
+      if (k >= total && !myToken()) return `<p class="zx__q zx__q--done"><i class="ph-bold ph-coins" aria-hidden="true"></i> Wealth walked! ${CLAIMS_CLOSED ? "" : `<a href="#ticket">Get your Day Pass</a> to collect ${cur.reward.coins} BvndleCoins`}</p>`;
       return `<p class="zx__q"><span class="zx__qbar" style="--p:${k / total}"></span><span><b>${k}/${total}</b> stations &middot; walk them all for ${cur.reward.coins} BvndleCoins</span></p>`;
     }
     const paint = () => { quest.innerHTML = questHTML(); };
@@ -1339,7 +1352,7 @@
     let vGroup = groups[0][0];
     // BvndleCoin equivalent of a naira price (1 BC = ₦10)
     const bcTag = (amt) => amt ? ` <span class="bc" title="BvndleCoin equivalent"><img class="bc__coin" src="assets/bc-coin.png" alt="BvndleCoins" width="16" height="16">${Math.round(amt / (V.coinNaira || 10)).toLocaleString("en-NG")}</span>` : "";
-    const tierHTML = (t) => `<li class="vtier" data-z="${zoneOf(t)}"><img src="${t.view}" alt="" loading="lazy"><div><b>${esc(t.name)}</b><span>${esc(t.line)}</span><span class="vtier__price">${esc(t.price)}${bcTag(t.amount)}${t.status ? ` <em>${esc(t.status)}</em>` : ""}</span></div><a class="btn btn--sm" href="${esc(t.buy || cfg.tixUrl)}" target="_blank" rel="noopener" aria-label="Buy ${esc(t.name)}">Buy <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a></li>`;
+    const tierHTML = (t) => `<li class="vtier" data-z="${zoneOf(t)}"><img src="${t.view}" alt="" loading="lazy"><div><b>${esc(t.name)}</b><span>${esc(t.line)}</span><span class="vtier__price">${esc(t.price)}${bcTag(t.amount)}${t.status ? ` <em>${esc(t.status)}</em>` : ""}</span></div>${CONCERT_CLOSED ? `<span class="btn btn--sm is-off">Not on sale</span>` : `<a class="btn btn--sm" href="${esc(t.buy || cfg.tixUrl)}" target="_blank" rel="noopener" aria-label="Buy ${esc(t.name)}">Buy <i class="ph-bold ph-arrow-up-right" aria-hidden="true"></i></a>`}</li>`;
     function showGroup(g) {
       vGroup = g;
       $("#vtabs").innerHTML = groups.map(([id, lab]) => `<button type="button" role="tab" class="vtab${id === g ? " is-on" : ""}" aria-selected="${id === g}" data-g="${id}">${esc(lab)} <small>${V.tiers.filter((t) => (t.group || "all") === id).length}</small></button>`).join("");

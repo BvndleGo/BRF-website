@@ -29,17 +29,19 @@
     link_paused: "This link is paused for now. Check back with the partner who sent it.",
     link_expired: "This link has expired.",
     link_full: "All the tickets on this link have been claimed.",
+    claims_closed: "Day Pass claims are closed for now. If you already claimed one, use the same email and phone to see it.",
   };
   const CLOSED = {
-    paused: ["Paused for now", "The partner has paused this link. Check back with them, or get a free Day Pass on the festival site."],
-    expired: ["This link has expired", "The tickets on this link are no longer available. You can still get a free Day Pass on the festival site."],
-    full: ["All claimed", "Every ticket on this link has been claimed. You can still get a free Day Pass on the festival site."],
+    paused: ["Paused for now", "The partner has paused this link. Check back with them."],
+    expired: ["This link has expired", "The tickets on this link are no longer available."],
+    full: ["All claimed", "Every ticket on this link has been claimed."],
+    dayclosed: ["Day Pass claims are closed", "Free Day Pass claims have closed for now. The new festival date is coming soon."],
   };
   const isDay = (t) => t === "Day Pass";
   const isVip = (t) => /vip|premium|table|executive/i.test(t || "");
   const isFest = (t) => /day pass/i.test(t || "");   // Day Pass and Executive Day Pass are for the festival days
   const kind = (t) => String(t || "").replace(/^Concert\s*·\s*/, "");
-  const when = (t) => isFest(t) ? "11th &ndash; 12th December 2026" : "Saturday, 12th December 2026 &middot; 9pm";
+  const when = (t) => (isFest(t) ? "Festival days" : "Concert night, 9pm") + " &middot; date coming soon";   // 12 Nov: date being moved
   const what = (t) => isFest(t) ? "Bvndle Rewards Festival" : "Bvndle Rewards Concert";
 
   function qrSvg(text) {
@@ -69,7 +71,7 @@
   function closed(info) {
     const [t, d] = CLOSED[info.status];
     app.innerHTML = `<div class="from">From ${esc(info.partner)}</div><h1>${t}</h1><p class="lede">${d}</p>
-      <a class="btn" href="/ticket">Get a free Day Pass</a>
+      <a class="btn" href="/">Visit the festival site</a>
       <button class="linkish" type="button" id="haveOne">Already claimed from this link? Get your ticket again</button>`;
     document.getElementById("haveOne").onclick = () => form(info, true);
   }
@@ -185,12 +187,12 @@
   }
 
   async function start() {
-    if (!slug) { app.innerHTML = `<h1>Link not found</h1><p class="lede">Check the link the partner sent you.</p><a class="btn" href="/ticket">Get a free Day Pass</a>`; return; }
+    if (!slug) { app.innerHTML = `<h1>Link not found</h1><p class="lede">Check the link the partner sent you.</p><a class="btn" href="/">Visit the festival site</a>`; return; }
     if (q.get("stats")) return stats(q.get("stats"));
     const { ok, data, error } = await rpc("partner_link_info", { p_slug: slug });
     if (!ok) {
       app.innerHTML = error === "unknown_link"
-        ? `<h1>Link not found</h1><p class="lede">We can't find this ticket link. Check the link the partner sent you.</p><a class="btn" href="/ticket">Get a free Day Pass</a>`
+        ? `<h1>Link not found</h1><p class="lede">We can't find this ticket link. Check the link the partner sent you.</p><a class="btn" href="/">Visit the festival site</a>`
         : `<h1>Can't load your ticket</h1><p class="lede">${MSG.network}</p><button class="btn" onclick="location.reload()">Try again</button>`;
       return;
     }
@@ -204,6 +206,8 @@
       return;
     }
     if (data.status !== "open") return closed(data);
+    // 12 Nov: free Day Pass claims are closed everywhere (the database refuses them); only re-showing an existing one works
+    if (isDay(data.ticket_type)) { const f = await rpc("brf_flag", { p_key: "day_pass_claims" }); if (f.ok && f.data === false) return closed(Object.assign({}, data, { status: "dayclosed" })); }
     valid(pre) ? quick(data) : form(data);
   }
   start();

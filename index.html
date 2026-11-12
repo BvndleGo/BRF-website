@@ -10,7 +10,7 @@
   <link rel="icon" href="assets/favicon.svg?v=2" type="image/svg+xml">
   <link rel="icon" href="assets/favicon-32.png?v=2" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=2">
-  <meta name="description" content="Two days of games, brand deals, prizes and a headline concert at Landmark Event Centre, Lagos. Get a Day Pass to Lagos' biggest rewards festival, 11-12 December.">
+  <meta name="description" content="Two days of games, brand deals, prizes and a headline concert at Landmark Event Centre, Lagos. The Bvndle Rewards Festival: new date coming soon.">
   <meta name="theme-color" content="#111111">
   <!-- set the saved theme before the page paints, so there is no dark-to-light flash -->
   <script>try{if(localStorage.getItem("brf-theme-v2")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
@@ -26,15 +26,15 @@
   <link rel="stylesheet" href="css/v32.css?v=40">
   <link rel="stylesheet" href="css/v34.css?v=110">
   <link rel="stylesheet" href="css/theme.css?v=20">
-  <link rel="stylesheet" href="css/v4.css?v=113">
+  <link rel="stylesheet" href="css/v4.css?v=114">
 </head>
 <body>
 
 
 <div class="topbar">
-  <span>Gates open in</span>
+  <span id="clockLead">Gates open in</span>
   <b class="dots" id="clock">--d --h --m</b>
-  <a href="#ticket">Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
+  <a href="#ticket" data-claim>Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
 </div>
 
 <header class="nav">
@@ -70,7 +70,7 @@
         <p class="burst__eyebrow">Lagos&#39; largest gamified reward experience</p>
         <h1 class="display burst__h1"><span>Be the </span><span>moment.</span></h1>
         <p class="bline"><b class="bline__date" data-brf="datesLabel">11th &ndash; 12th December 2026</b><span class="bline__dot" aria-hidden="true">&middot;</span><span data-brf="venue">Landmark Event Centre, Lagos</span></p>
-        <div class="burst__ctas bline__cta"><a class="btn" href="#ticket">Claim day pass <i class="ph-bold ph-ticket" aria-hidden="true"></i></a><a class="btn btn--ghost burst__ghost" href="#vip">Get concert ticket <i class="ph-bold ph-music-notes" aria-hidden="true"></i></a></div>
+        <div class="burst__ctas bline__cta"><a class="btn" href="#ticket" data-claim>Claim day pass <i class="ph-bold ph-ticket" aria-hidden="true"></i></a><a class="btn when-closed" href="#journey">See the experience <i class="ph-bold ph-map-trifold" aria-hidden="true"></i></a><a class="btn btn--ghost burst__ghost" href="#vip" data-concert>Get concert ticket <i class="ph-bold ph-music-notes" aria-hidden="true"></i></a></div>
       </div>
       <figure class="burst__zoom" id="burstZoom" hidden><img alt=""><figcaption>2025 &middot; tap to close</figcaption></figure>
       <p class="burst__top" aria-hidden="true"><span>Bvndle Rewards Festival 2026</span><span>Lagos&#39; largest gamified reward experience</span></p>
@@ -194,7 +194,7 @@
   <section class="poster poster--blue poster--globe" id="concert">
     <div class="wrap concert concert--globe">
       <div class="concert__head">
-        <p class="eyebrow">After dark &middot; 12 December</p>
+        <p class="eyebrow">After dark &middot; date coming soon</p>
         <h2 class="display concert__title">When the lights dim, the concert starts.</h2>
       </div>
       <div class="concert__copy">
@@ -215,7 +215,7 @@
   <section class="section lineup" id="lineup">
     <div class="wrap">
       <div class="lineup__head">
-        <div><p class="eyebrow">The concert &middot; 12th December, 9pm</p><h2 class="display h2">Guess who's headlining.</h2></div>
+        <div><p class="eyebrow">The concert &middot; date coming soon</p><h2 class="display h2">Guess who's headlining.</h2></div>
         <div><p class="lede">Three names. No announcement yet. A new clue drops every week. Lock in a guess with your Bvndle tag.</p><p class="reward-tag"><i class="ph-bold ph-gift" aria-hidden="true"></i>Guess right, get rewarded</p></div>
       </div>
       <div class="mystery" id="mystery"></div>
@@ -248,7 +248,7 @@
   <section class="vipsec" id="vip" aria-label="Concert tickets">
     <div class="wrap vip">
       <div class="vip__head">
-        <div><p class="eyebrow">Concert tickets &middot; 12 December, 9pm</p><h3 class="display vip__title">Choose your night.</h3></div>
+        <div><p class="eyebrow">Concert tickets &middot; <span class="when-sale">on sale</span><span class="when-nosale">not on sale yet</span></p><h3 class="display vip__title">Choose your night.</h3></div>
         <p class="vip__note" id="vipNote"></p>
       </div>
       <div class="vip__grid">
@@ -287,7 +287,7 @@
         <li class="dstop" style="--c:#FF3E8E"><p class="dstop__time">1pm</p><h3>Zones open</h3><p>Wealth, Connection, Catharsis, Alte and Adrenaline switch on. Meet the brands, play, watch, then redeem your coins.</p></li>
         <li class="dstop" style="--c:#8B80F9"><p class="dstop__time">Through the afternoon</p><h3>Games at intervals</h3><p>Game rounds run across the live zones, with 1 Million Questions draws along the way.</p></li>
         <li class="dstop" style="--c:#FF5A2D"><p class="dstop__time">Through the afternoon</p><h3>Group activities</h3><p>Team challenges on the main stage. Bring your crew.</p><span class="dstop__tag"><i class="ph-bold ph-trophy" aria-hidden="true"></i>Win prizes</span></li>
-        <li class="dstop dstop--night" style="--c:#5b4bd6"><p class="dstop__time">12 Dec &middot; 9pm</p><h3>The concert</h3><p>The Bvndle Rewards Concert. Paid ticket.</p><a class="dstop__link" href="#vip">See ticket prices <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></li>
+        <li class="dstop dstop--night" style="--c:#5b4bd6"><p class="dstop__time">Night &middot; 9pm</p><h3>The concert</h3><p>The Bvndle Rewards Concert. Paid ticket.</p><a class="dstop__link" href="#vip">See ticket prices <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></li>
       </ol>
     </div>
   </section>
@@ -299,7 +299,7 @@
       <div class="access__grid">
         <article class="acard acard--day">
           <div class="acard__top"><span class="acard__kind">Day Pass</span><b class="acard__price">Free</b></div>
-          <p class="acard__when">11th &ndash; 12th December &middot; from 10am</p>
+          <p class="acard__when">Date coming soon &middot; from 10am</p>
           <ul class="acard__list">
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>Entry on both festival days</li>
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>Main stage talks and group activities</li>
@@ -307,11 +307,11 @@
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>Games, raffles and the 1 Million Questions draw</li>
             <li class="is-no"><i class="ph-bold ph-x" aria-hidden="true"></i>The concert (separate ticket)</li>
           </ul>
-          <a class="btn btn--block" href="#ticket">Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
+          <a class="btn btn--block" href="#ticket" data-claim>Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><span class="btn btn--block is-off when-closed">Day Pass claims are closed</span>
         </article>
         <article class="acard acard--night">
           <div class="acard__top"><span class="acard__kind">Paid ticket &middot; Night</span><b class="acard__price">From ₦15,000</b></div>
-          <p class="acard__when">12 December &middot; 9pm</p>
+          <p class="acard__when">Date coming soon &middot; 9pm</p>
           <ul class="acard__list">
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>The Bvndle Rewards Concert</li>
             <li><i class="ph-bold ph-check" aria-hidden="true"></i>Regular from ₦15,000 (Early Bird), VIP ₦250,000, Premium ₦500,000, group tables from ₦2,000,000</li>
@@ -348,7 +348,7 @@
         <div class="coin3d" id="coin" hidden role="img" aria-label="The Bvndle Rewards Festival 2026 token. Drag to spin it.">
           <div class="coin3d__spin" id="coinSpin">
             <div class="coin3d__face coin3d__front"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="coinRingA" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0"/></defs><circle cx="100" cy="100" r="95" class="coin__rim"/><circle cx="100" cy="100" r="60" class="coin__inner"/><text class="coin__ring"><textPath href="#coinRingA" textLength="462">BVNDLE REWARDS FESTIVAL &#183; LAGOS &#183; 2026 &#183; </textPath></text><text x="94" y="124" class="coin__mark" text-anchor="middle">b</text><circle cx="124" cy="118" r="7" class="coin__dot"/></svg></div>
-            <div class="coin3d__face coin3d__back"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="coinRingB" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0"/></defs><circle cx="100" cy="100" r="95" class="coin__rim"/><circle cx="100" cy="100" r="60" class="coin__inner"/><text class="coin__ring"><textPath href="#coinRingB" textLength="462">FESTIVAL TOKEN &#183; DAY PASS &#183; 11&#8211;12 DEC &#183; </textPath></text><text x="100" y="118" class="coin__mine" text-anchor="middle" id="coinMine">YOU</text></svg></div>
+            <div class="coin3d__face coin3d__back"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="coinRingB" d="M100 100 m-74 0 a74 74 0 1 1 148 0 a74 74 0 1 1 -148 0"/></defs><circle cx="100" cy="100" r="95" class="coin__rim"/><circle cx="100" cy="100" r="60" class="coin__inner"/><text class="coin__ring"><textPath href="#coinRingB" textLength="462">FESTIVAL TOKEN &#183; DAY PASS &#183; LAGOS 2026 &#183; </textPath></text><text x="100" y="118" class="coin__mine" text-anchor="middle" id="coinMine">YOU</text></svg></div>
           </div>
         </div>
         <p class="coin__count"><b id="coinCount">0</b><span id="coinLabel">tickets claimed</span></p>
@@ -359,7 +359,7 @@
         <p class="eyebrow gate__eyebrow">Become a Bvndle citizen</p>
         <h2 class="display gate__title">Claim your Day Pass.</h2>
         <p class="gate__sub">Free entry to two days of games, brands and rewards. It takes a minute.</p>
-        <p class="daypass"><i class="ph-bold ph-sun-horizon" aria-hidden="true"></i><span><b>This is your day pass.</b> Both days, 11th &ndash; 12th December, from 10am. The night concert is a separate paid ticket.</span></p>
+        <p class="daypass"><i class="ph-bold ph-sun-horizon" aria-hidden="true"></i><span><b>This is your day pass.</b> Both festival days, from 10am (new date coming soon). The night concert is a separate paid ticket.</span></p>
         <div id="passArea">
           <form class="form" id="passForm" novalidate>
             <div class="field-row">
@@ -435,7 +435,7 @@
         <div class="faq__list" role="tabpanel" id="faq-people" aria-labelledby="tab-people">
           <details><summary>Is it really free?<i class="ph-bold ph-plus"></i></summary><p>Yes. The festival ticket is free and covers the market, games, raffles and brand activities. The Bvndle Rewards Concert is a separate paid ticket.</p></details>
           <details><summary>What is Bvndle Rewards Festival?<i class="ph-bold ph-plus"></i></summary><p>A two-day festival where brands reward their loyal customers with games, raffles, prizes, music and experiences.</p></details>
-          <details><summary>When and where is it happening?<i class="ph-bold ph-plus"></i></summary><p><span data-brf="datesLabel">11th &ndash; 12th December 2026</span> at <span data-brf="venue">Landmark Event Centre, Lagos</span>.</p></details>
+          <details><summary>When and where is it happening?<i class="ph-bold ph-plus"></i></summary><p>The new date is coming soon. It will be at <span data-brf="venue">Landmark Event Centre, Lagos</span>.</p></details>
           <details><summary>What are the rewards, and how do I redeem them?<i class="ph-bold ph-plus"></i></summary><p>Prizes include appliances, gadgets, skincare, merch and cash. Redemption happens instantly at the redemption booths.</p></details>
           <details><summary>Can I combine festival rewards with other discounts?<i class="ph-bold ph-plus"></i></summary><p>Festival rewards stand alone but may unlock special brand offers.</p></details>
           <details><summary>Do my points expire after the event?<i class="ph-bold ph-plus"></i></summary><p>Festival-only rewards must be claimed during the event. Your BvndleCoins in the app stay valid.</p></details>
@@ -459,16 +459,16 @@
       <path id="rideSpine" fill="none" stroke="none" d="M-40 530 C 320 530, 600 490, 800 340 S 1110 110, 1310 60 S 1560 0, 1680 -14"/>
     </svg>
     <div class="ride__copy wrap">
-      <p class="ride__title" id="rideTitle" aria-label="See you in December.">See you in December.</p>
+      <p class="ride__title" id="rideTitle" aria-label="See you soon.">See you soon.</p>
       <p class="ride__date"><span data-brf="datesLabel">11th &ndash; 12th December 2026</span> &middot; <span data-brf="venue">Landmark Event Centre, Lagos</span></p>
-      <div class="ride__ctas"><a class="btn" href="#ticket">Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><a class="btn btn--ghost ride__ghost" href="#partner" data-partner>Become a Partner <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
+      <div class="ride__ctas"><a class="btn" href="#ticket" data-claim>Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a><a class="btn btn--ghost ride__ghost" href="#partner" data-partner>Become a Partner <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
     </div>
   </div>
   </div>
   <div class="wrap">
     
     <div class="footer__grid">
-      <div><img class="footer__logo logo--dark" src="assets/logo-footer-white.svg?v=2" alt="Bvndle Rewards Festival"><img class="footer__logo logo--light" src="assets/logo-footer.svg?v=2" alt="Bvndle Rewards Festival"><a class="btn" href="#ticket">Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
+      <div><img class="footer__logo logo--dark" src="assets/logo-footer-white.svg?v=2" alt="Bvndle Rewards Festival"><img class="footer__logo logo--light" src="assets/logo-footer.svg?v=2" alt="Bvndle Rewards Festival"><a class="btn" data-claim href="#ticket">Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a></div>
       <div><h3>Festival</h3><ul><li><a href="#ticket">Day Pass</a></li><li><a href="#journey">Experience</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">2025 gallery</a></li><li><a href="#" data-tix target="_blank" rel="noopener">Get concert ticket</a></li></ul></div>
       <div><h3>Bvndle</h3><ul><li><a href="https://bvndle.com" target="_blank" rel="noopener">About Bvndle</a></li><li><a href="#partner" data-partner>Become a Partner</a></li><li><a href="mailto:engage@bvndle.com">Contact us</a></li><li><a href="https://bvndle.com/terms" target="_blank" rel="noopener">Terms</a> and <a href="https://bvndle.com/privacy" target="_blank" rel="noopener">Privacy</a></li></ul></div>
       <div><h3>Follow</h3><ul class="socials"><li><a href="https://www.instagram.com/trybvndle" target="_blank" rel="noopener" aria-label="Instagram"><i class="ph-bold ph-instagram-logo"></i></a></li><li><a href="https://www.tiktok.com/@bvndlerewardsfest" target="_blank" rel="noopener" aria-label="TikTok"><i class="ph-bold ph-tiktok-logo"></i></a></li><li><a href="https://x.com/trybvndle" target="_blank" rel="noopener" aria-label="X"><i class="ph-bold ph-x-logo"></i></a></li><li><a href="https://www.youtube.com/@Bvndleapp" target="_blank" rel="noopener" aria-label="YouTube"><i class="ph-bold ph-youtube-logo"></i></a></li></ul></div>
@@ -538,13 +538,13 @@
     <li><a href="#journey">Experience</a></li><li><a href="#trivia">Trivia</a></li><li><a href="#talks">Main stage</a></li><li><a href="#concert">Concert</a></li><li><a href="#day">Your day</a></li>
     <li><a href="#vip">VIP night</a></li><li><a href="#" data-gallery target="_blank" rel="noopener">Gallery</a></li><li><a href="#brands">Partner</a></li><li><a href="#faq">FAQs</a></li>
   </ul>
-  <a class="btn btn--block" href="#ticket">Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
+  <a class="btn btn--block" href="#ticket" data-claim>Get Day Pass <i class="ph-bold ph-arrow-right" aria-hidden="true"></i></a>
 </dialog>
 
-<script src="js/store.js?v=10"></script>
+<script src="js/store.js?v=11"></script>
 <script src="js/analytics.js?v=1"></script>
-<script src="js/festival-data.js?v=27"></script>
+<script src="js/festival-data.js?v=28"></script>
 <script src="js/trivia.js?v=5"></script>
-<script src="js/v3.js?v=244"></script>
+<script src="js/v3.js?v=245"></script>
 </body>
 </html>

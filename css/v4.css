@@ -1273,3 +1273,14 @@ html[data-theme="light"] .topbar { color: #111; }
 .zx__partner:hover { transform: translate(-1px, -1px); }
 .zx__partner:focus-visible, .zx__pcta:focus-visible { outline: 3px solid var(--zx-yellow); outline-offset: 3px; }
 .zx__pcta { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-weight: 700; color: inherit; text-underline-offset: 3px; }
+/* 12 Nov: Day Pass claims and concert sales closed (html.claims-closed / html.concert-closed, set from store.js) */
+.when-closed { display: none !important; }
+html.claims-closed .when-closed { display: inline-flex !important; }
+html.claims-closed span.when-closed:not(.btn) { display: inline !important; }
+html.claims-closed .when-open { display: none !important; }
+html.claims-closed [data-claim], html.claims-closed #quizClaim { display: none !important; }
+html.concert-closed [data-tix], html.concert-closed [data-concert] { display: none !important; }
+.when-nosale { display: none; } html.concert-closed .when-nosale { display: inline; } html.concert-closed .when-sale { display: none; }
+.btn.is-off { opacity: .55; cursor: default; pointer-events: none; box-shadow: none; filter: grayscale(.4); }
+.closednote { display: grid; gap: 10px; padding: 18px 20px; border-radius: 18px; border: 1px dashed rgba(127,127,127,.55); line-height: 1.5; }
+.closednote p { margin: 0; } .closednote i { color: var(--pink); vertical-align: -2px; }
