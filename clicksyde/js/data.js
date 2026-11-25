@@ -15,7 +15,7 @@ window.CS = {
      Never put the secret / service_role key here. Leave key empty and the form falls back to email/WhatsApp. */
   supabase: {
     url: "https://jcwekuxjhcceqprefudc.supabase.co",
-    key: ""                                // TODO: paste the publishable key from Supabase → Project Settings → API Keys
+    key: "sb_publishable_Bu3WBDBC2YCVlThNQFE-IQ_WLCXAQxr"
   },
 
   /* The storybook: each page is a chapter answering one visitor question */
