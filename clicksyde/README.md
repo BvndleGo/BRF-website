@@ -37,6 +37,11 @@ All copy lives in `js/data.js`: services, case studies, comments, articles, fun 
 1. **Hero video**: put the campaign mashup at `assets/reel.mp4` (muted, about 15–30s, under 8MB). It replaces the animated frame wall automatically.
 2. **Client logos**: the slideshow uses text names in `clients`. Swap in logo images if you prefer.
 3. **Contact settings** in `js/data.js → contact`: the real inbox, WhatsApp number, booking link and social links.
-4. **Where leads go**: set `contact.formEndpoint` (Formspree, Netlify Forms, a Supabase function…) so form answers and newsletter sign-ups are saved automatically. Until then, the confirmation card asks the visitor to send their answers by email or WhatsApp.
+4. **Where leads go**: form answers and newsletter sign-ups are saved to the Clicksyde Supabase project (`https://jcwekuxjhcceqprefudc.supabase.co`). To switch it on:
+   1. In Supabase, open **SQL Editor**, paste in `supabase/migrations/20261125000000_clicksyde_leads.sql` and run it. This creates the `leads` and `subscribers` tables. Visitors can only add rows; only admins can read them.
+   2. Copy the **publishable key** (Project Settings → API Keys, starts with `sb_publishable_`) into `supabase.key` in `js/data.js`. Never use the secret or service_role key.
+   3. Leads then appear in **Table Editor → leads**. To let a teammate read them from an admin page later, add their user id to the `admins` table.
+
+   Until the key is set, the form still works: the confirmation card asks the visitor to send their answers by email or WhatsApp, and the newsletter says sign-ups aren't open yet.
 5. **Real case studies and client-approved testimonials** (cases 2 and 3 are placeholders), photos for the carousels, team photos and the real origin story.
 6. **Logo**: the header uses an SVG approximation of the mark. Drop in the official SVG when available.

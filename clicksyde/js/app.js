@@ -402,7 +402,10 @@
       e.preventDefault();
       const email = $("input", form).value.trim(), note = $(".nl-note");
       if (!/^\S+@\S+\.\S+$/.test(email)) { note.textContent = "That email doesn't look right. Try again?"; return; }
-      await sendLead({ type: "newsletter", email });
+      const btn = $("button", form); btn.disabled = true;
+      const saved = await save("subscribers", { email: email.toLowerCase(), source: location.pathname });
+      btn.disabled = false;
+      if (!saved) { note.textContent = "Sign-ups aren't open yet. Please try again soon."; return; }
       form.innerHTML = `<span style="padding:12px 16px;color:var(--ink);font-weight:600">You're on the list. First issue lands soon ✉️</span>`;
       note.textContent = "";
     });
@@ -519,9 +522,13 @@
           ans.contact = $("#f-contact", pane).value.trim();
           const okEmail = /^\S+@\S+\.\S+$/.test(ans.contact), okPhone = ans.contact.replace(/\D/g, "").length >= 10;
           if (!okEmail && !okPhone) return ($(".err", pane).textContent = "That doesn't look like an email or phone number.");
+          const btn = $("[data-next]", pane); btn.disabled = true; btn.firstChild.textContent = "Sending… ";
+          const saved = await save("leads", {
+            name: ans.name, business: ans.business, needs: ans.need, service: ans.service || null,
+            budget: ans.budget, timeline: ans.when, contact: ans.contact, about: ans.about || null, page: location.pathname
+          });
           pane.remove(); reply(ans.contact, 3); setBar(4);
-          await sendLead({ type: "proposal", ...ans, need: ans.need.join(", ") });
-          done();
+          done(saved);
         };
       }
       scroll();
@@ -529,18 +536,19 @@
 
     const answer = (html) => { body.insertAdjacentHTML("beforeend", `<div class="answer">${html}</div>`); return body.lastElementChild; };
 
-    const done = () => {
+    const done = (saved) => {
       const summary = `Hi Clicksyde! I'm ${ans.name} from ${ans.business}.\nI need: ${ans.need.join(", ")}${ans.service ? ` (${ans.service})` : ""}\nBudget: ${ans.budget}\nTimeline: ${ans.when}\nReach me: ${ans.contact}${ans.about ? `\nAbout us: ${ans.about}` : ""}`;
       const wa = D.contact.whatsapp ? `https://wa.me/${D.contact.whatsapp}?text=${encodeURIComponent(summary)}` : "";
       const mail = `mailto:${D.contact.email}?subject=${encodeURIComponent("New project: " + ans.business)}&body=${encodeURIComponent(summary)}`;
       body.insertAdjacentHTML("beforeend", `<div class="done-card">
-        <h3>Got it, ${esc(ans.name.split(" ")[0])} 🎉</h3>
+        <h3>${saved ? `Got it, ${esc(ans.name.split(" ")[0])} 🎉` : `Almost there, ${esc(ans.name.split(" ")[0])}`}</h3>
+        ${saved ? "" : `<p>We couldn't send this from the page. Tap below to send it by email${wa ? " or WhatsApp" : ""}, or write to <b>${esc(D.contact.email)}</b>.</p>`}
         <p>Here's what happens next:</p>
         <ol><li>A strategist reads this today and replies within one working day.</li>
           <li>A 30-minute discovery call to understand your goals.</li>
           <li>A proposal with a plan, timeline and price, within 5 working days.</li></ol>
-        <div class="acts">${D.contact.formEndpoint ? "" : `<a class="btn btn-brand" href="${mail}">Send it by email</a>`}
-          ${wa ? `<a class="btn btn-light" href="${wa}" target="_blank" rel="noopener">Send on WhatsApp</a>` : ""}
+        <div class="acts">${saved ? "" : `<a class="btn btn-brand" href="${mail}">Send it by email</a>`}
+          ${wa && !saved ? `<a class="btn btn-light" href="${wa}" target="_blank" rel="noopener">Send on WhatsApp</a>` : ""}
           <a class="btn btn-light" href="${D.contact.calendly}">Book the call now</a></div>
       </div>`);
       scroll();
@@ -550,12 +558,18 @@
     render(0);
   };
 
-  /* Lead hand-off: posts to formEndpoint when set; otherwise the visitor sends it by email/WhatsApp from the done card */
-  async function sendLead(data) {
-    if (!D.contact.formEndpoint) return;
+  /* Saves a row to the Clicksyde Supabase project (tables in supabase/migrations).
+     Returns true when saved. Returns false when Supabase isn't set up yet or the save failed,
+     so the page can offer email/WhatsApp instead. */
+  async function save(table, row) {
+    const sb = D.supabase || {};
+    if (!sb.url || !sb.key) return false;
+    const headers = { "Content-Type": "application/json", apikey: sb.key, Prefer: "return=minimal" };
+    if (sb.key.startsWith("eyJ")) headers.Authorization = "Bearer " + sb.key; // legacy anon key
     try {
-      await fetch(D.contact.formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ ...data, page: location.pathname, at: new Date().toISOString() }) });
-    } catch (_) { /* the done card still offers email/WhatsApp */ }
+      const r = await fetch(`${sb.url.replace(/\/$/, "")}/rest/v1/${table}`, { method: "POST", headers, body: JSON.stringify(row) });
+      return r.ok || r.status === 409; // 409 = already subscribed
+    } catch (_) { return false; }
   }
   function safeGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
   function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }

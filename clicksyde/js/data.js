@@ -7,7 +7,15 @@ window.CS = {
     whatsapp: "",                          // PLACEHOLDER: business WhatsApp number in international format, digits only (e.g. 2347000000000)
     calendly: "#",                         // PLACEHOLDER: discovery-call booking link (Calendly, Cal.com, Google appointment page)
     instagram: "#", linkedin: "#", x: "#", tiktok: "#",
-    formEndpoint: ""                       // Optional: a form backend URL (Formspree, Netlify Forms, Supabase function). Empty = email/WhatsApp hand-off only.
+  },
+
+  /* Where form answers and newsletter sign-ups are saved: the Clicksyde Supabase project.
+     key = the project's publishable key (sb_publishable_...) or legacy anon key. Both are safe in a public page:
+     the database only lets visitors ADD rows, never read them (supabase/migrations/20261125000000_clicksyde_leads.sql).
+     Never put the secret / service_role key here. Leave key empty and the form falls back to email/WhatsApp. */
+  supabase: {
+    url: "https://jcwekuxjhcceqprefudc.supabase.co",
+    key: ""                                // TODO: paste the publishable key from Supabase → Project Settings → API Keys
   },
 
   /* The storybook: each page is a chapter answering one visitor question */
